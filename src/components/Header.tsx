@@ -1,7 +1,12 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const Header = () => {
+interface HeaderProps {
+  activeItem?: string;
+}
+
+const Header = ({ activeItem }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   return (
@@ -16,11 +21,21 @@ const Header = () => {
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <span className="text-yellow-400 border-b-2 border-yellow-400 pb-1 cursor-pointer">Accueil</span>
-            <span className="hover:text-yellow-400 transition duration-300 cursor-pointer">Spectacles</span>
-            <span className="hover:text-yellow-400 transition duration-300 cursor-pointer">Le lieu</span>
-            <span className="hover:text-yellow-400 transition duration-300 cursor-pointer">Réservation</span>
-            <span className="hover:text-yellow-400 transition duration-300 cursor-pointer">Contact</span>
+            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+              Accueil
+            </Link>
+            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+              Spectacles
+            </Link>
+            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+              Le lieu
+            </Link>
+            <Link to="/reservation" className={`${activeItem === 'Réservation' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+              Réservation
+            </Link>
+            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+              Contact
+            </Link>
           </nav>
           
           {/* Right section */}
@@ -47,11 +62,21 @@ const Header = () => {
             <i className="fa-solid fa-xmark text-2xl"></i>
           </button>
           <nav className="flex flex-col space-y-6 text-center">
-            <span className="text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1">Accueil</span>
-            <span className="text-white text-2xl hover:text-yellow-400 transition duration-300">Spectacles</span>
-            <span className="text-white text-2xl hover:text-yellow-400 transition duration-300">Le lieu</span>
-            <span className="text-white text-2xl hover:text-yellow-400 transition duration-300">Réservation</span>
-            <span className="text-white text-2xl hover:text-yellow-400 transition duration-300">Contact</span>
+            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+              Accueil
+            </Link>
+            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+              Spectacles
+            </Link>
+            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+              Le lieu
+            </Link>
+            <Link to="/reservation" className={`${activeItem === 'Réservation' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+              Réservation
+            </Link>
+            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+              Contact
+            </Link>
             <span className="text-white text-2xl hover:text-yellow-400 transition duration-300">Connexion</span>
             <span className="bg-yellow-400 text-black px-6 py-3 rounded text-xl mt-4 hover:bg-yellow-300 transition duration-300">Réserver</span>
           </nav>
