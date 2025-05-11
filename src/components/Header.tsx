@@ -40,8 +40,8 @@ const Header = ({ activeItem }: HeaderProps) => {
           
           {/* Right section */}
           <div className="flex items-center space-x-4">
-            <span className="hover:text-yellow-400 transition duration-300 hidden md:block cursor-pointer">Connexion</span>
-            <span className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 hidden md:block cursor-pointer">Réserver</span>
+            <Link to="/connexion" className={`hover:text-yellow-400 transition duration-300 hidden md:block cursor-pointer ${activeItem === 'Connexion' ? 'text-yellow-400' : ''}`}>Connexion</Link>
+            <Link to="/reservation" className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 hidden md:block cursor-pointer">Réserver</Link>
             <button 
               className="md:hidden text-white focus:outline-none"
               onClick={() => setIsMobileMenuOpen(true)}
@@ -77,8 +77,10 @@ const Header = ({ activeItem }: HeaderProps) => {
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
               Contact
             </Link>
-            <span className="text-white text-2xl hover:text-yellow-400 transition duration-300">Connexion</span>
-            <span className="bg-yellow-400 text-black px-6 py-3 rounded text-xl mt-4 hover:bg-yellow-300 transition duration-300">Réserver</span>
+            <Link to="/connexion" className={`${activeItem === 'Connexion' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+              Connexion
+            </Link>
+            <Link to="/reservation" className="bg-yellow-400 text-black px-6 py-3 rounded text-xl mt-4 hover:bg-yellow-300 transition duration-300">Réserver</Link>
           </nav>
         </div>
       </div>
