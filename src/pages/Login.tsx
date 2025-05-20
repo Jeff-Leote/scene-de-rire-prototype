@@ -131,9 +131,11 @@ const Login = () => {
         </div>
         
         {/* Create account button */}
-        <Button className="w-full border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-medium py-3 px-4 rounded-md transition-colors duration-200 mb-6 bg-transparent">
-          Créer un compte
-        </Button>
+        <Link to="/inscription">
+          <Button className="w-full border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-medium py-3 px-4 rounded-md transition-colors duration-200 mb-6 bg-transparent">
+            Créer un compte
+          </Button>
+        </Link>
         
         {/* Social login options */}
         <div id="social-login" className="space-y-3 mb-4">
