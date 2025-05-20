@@ -16,7 +16,7 @@ const Header = ({ activeItem }: HeaderProps) => {
           {/* Logo */}
           <div className="flex items-center">
             <i className="fa-solid fa-microphone-lines text-yellow-400 text-2xl mr-2"></i>
-            <span className="text-2xl font-bold tracking-tight">L'espace comedie</span>
+            <span className="text-2xl font-bold tracking-tight">L'espace Comedie</span>
           </div>
           
           {/* Navigation */}

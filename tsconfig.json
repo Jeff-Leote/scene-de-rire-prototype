@@ -6,6 +6,7 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
+    "type": ["node", "react", "react-dom", "prop-types"],
     "paths": {
       "@/*": ["./src/*"]
     },

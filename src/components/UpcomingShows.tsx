@@ -13,7 +13,7 @@ const UpcomingShows = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Show Card 1 */}
-          <div id="show-card-1" className="bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
+          <div id="show-card-1" className="w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
             <div className="relative h-64">
               <img 
                 className="w-full h-full object-cover" 
@@ -38,7 +38,7 @@ const UpcomingShows = () => {
           </div>
           
           {/* Show Card 2 */}
-          <div id="show-card-2" className="bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
+          <div id="show-card-2" className="w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
             <div className="relative h-64">
               <img 
                 className="w-full h-full object-cover" 
@@ -63,7 +63,7 @@ const UpcomingShows = () => {
           </div>
           
           {/* Show Card 3 */}
-          <div id="show-card-3" className="bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
+          <div id="show-card-3" className="w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
             <div className="relative h-64">
               <img 
                 className="w-full h-full object-cover" 
