@@ -1,91 +1,115 @@
-//components/UpcomingShows.tsx
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+
+export interface Spectacle {
+  id: number;
+  title: string;
+  img: string;
+  description: string;
+  date: string;
+  prix: number;
+  lieu: string;
+  artiste_id: number;
+  artiste_name: string;
+  artiste_photo: string;
+}
+
 const UpcomingShows = () => {
+  const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSpectacles = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/spectacles/upcoming");
+        if (!res.ok) throw new Error("Erreur lors du chargement des spectacles");
+        const data: Spectacle[] = await res.json();
+        console.log("Nombre de spectacles reçus:", data.length);
+        console.log("Spectacles:", data);
+        setSpectacles(data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        setError(err.message || "Erreur inconnue");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSpectacles();
+  }, []);
+
+  if (loading)
+    return (
+      <section id="upcoming-shows" className="bg-black py-12">
+        <div className="container mx-auto px-6 text-white text-center">Chargement...</div>
+      </section>
+    );
+
+  if (error)
+    return (
+      <section id="upcoming-shows" className="bg-black py-12">
+        <div className="container mx-auto px-6 text-red-500 text-center">{error}</div>
+      </section>
+    );
+
   return (
     <section id="upcoming-shows" className="bg-black py-12">
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-white">Prochains spectacles</h2>
-          <span className="text-yellow-400 hover:text-yellow-300 transition duration-300 flex items-center cursor-pointer">
+          <span className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300">
             Voir le calendrier complet
             <i className="fa-solid fa-arrow-right ml-2"></i>
           </span>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Show Card 1 */}
-          <div id="show-card-1" className="w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
-            <div className="relative h-64">
-              <img 
-                className="w-full h-full object-cover" 
-                src="https://storage.googleapis.com/uxpilot-auth.appspot.com/f14790a161-1dd2ab43578de3fadacc.png" 
-                alt="female comedian on stage with microphone, laughing audience, dark comedy club atmosphere" 
-              />
-              <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
-                16 MAI
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
+          {spectacles.length === 0 && <p className="text-gray-400 col-span-full text-center">Aucun spectacle à venir pour le moment.</p>}
+
+          {spectacles.map((spectacle) => (
+            <div
+              key={spectacle.id}
+              className="w-full max-w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:scale-[1.02] transition duration-300"
+            >
+              <div className="relative h-64">
+                <img
+                  src={spectacle.img || spectacle.artiste_photo || "https://via.placeholder.com/400x300"}
+                  alt={spectacle.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
+                  {format(new Date(spectacle.date), "d MMM", { locale: fr }).toUpperCase()}
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
+                <p className="text-gray-400 mb-4">{spectacle.description}</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="flex items-center">
+                      <i className="fa-regular fa-calendar mr-2 text-yellow-400"></i>
+                      <span className="text-gray-300">{format(new Date(spectacle.date), "d MMMM yyyy", { locale: fr })}</span>
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <i className="fa-regular fa-clock mr-2 text-yellow-400"></i>
+                      <span className="text-gray-300">{format(new Date(spectacle.date), "HH:mm", { locale: fr })}</span>
+                    </div>
+                    <div className="mt-1 text-gray-300">
+                      <i className="fa-solid fa-location-dot mr-2 text-yellow-400"></i>
+                      <span>{spectacle.lieu}</span>
+                    </div>
+                  </div>
+                  <span className="text-white font-bold text-lg">{spectacle.prix}€</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300">
+                    Réserver <i className="fa-solid fa-arrow-right ml-2"></i>
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-white mb-2">Katherine Levac</h3>
-              <p className="text-gray-400 mb-4">Un mélange d'observations fines et d'anecdotes hilarantes sur la vie quotidienne.</p>
-              <div className="flex items-center justify-between">
-                <span className="text-white">20h30 · 25€</span>
-                <span className="text-yellow-400 hover:text-yellow-300 transition duration-300 flex items-center cursor-pointer">
-                  Réserver
-                  <i className="fa-solid fa-arrow-right ml-2"></i>
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Show Card 2 */}
-          <div id="show-card-2" className="w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
-            <div className="relative h-64">
-              <img 
-                className="w-full h-full object-cover" 
-                src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4af276394f-b2acae8abc28d2dd2b9e.png" 
-                alt="male comedian with expressive face, performing stand-up comedy, spotlight focused on him" 
-              />
-              <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
-                23 MAI
-              </div>
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-white mb-2">Adib Alkhalidey</h3>
-              <p className="text-gray-400 mb-4">Un regard unique sur notre société avec un humour intelligent et percutant.</p>
-              <div className="flex items-center justify-between">
-                <span className="text-white">21h00 · 28€</span>
-                <span className="text-yellow-400 hover:text-yellow-300 transition duration-300 flex items-center cursor-pointer">
-                  Réserver
-                  <i className="fa-solid fa-arrow-right ml-2"></i>
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Show Card 3 */}
-          <div id="show-card-3" className="w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:transform hover:scale-[1.02] transition duration-300">
-            <div className="relative h-64">
-              <img 
-                className="w-full h-full object-cover" 
-                src="https://storage.googleapis.com/uxpilot-auth.appspot.com/656615cbc5-fcb405c69aac617508e7.png" 
-                alt="energetic comedian in colorful outfit, dynamic pose, comedy stage lighting" 
-              />
-              <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
-                30 MAI
-              </div>
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-white mb-2">Virginie Fortin</h3>
-              <p className="text-gray-400 mb-4">Un spectacle surréaliste qui vous fera rire et réfléchir en même temps.</p>
-              <div className="flex items-center justify-between">
-                <span className="text-white">20h00 · 22€</span>
-                <span className="text-yellow-400 hover:text-yellow-300 transition duration-300 flex items-center cursor-pointer">
-                  Réserver
-                  <i className="fa-solid fa-arrow-right ml-2"></i>
-                </span>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

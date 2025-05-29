@@ -1,10 +1,10 @@
-// routes/index.js
 const express = require("express");
 const router = express.Router();
 
 const authRoutes = require("./auth");
+const spectaclesRoutes = require("./spectacles");
 
-// Utiliser le préfixe /auth pour toutes les routes d'authentification
 router.use("/auth", authRoutes);
+router.use("/spectacles", spectaclesRoutes);  // <-- ajout
 
 module.exports = router;

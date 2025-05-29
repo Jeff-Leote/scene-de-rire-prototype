@@ -95,6 +95,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
 
     toast.success("Inscription réussie ! Vous allez recevoir un email de confirmation.");
     form.reset();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     toast.error(err.message || "Erreur inconnue");
   } finally {
