@@ -37,7 +37,7 @@ router.post('/login', async (req, res) => {
       civility: user.civility,
       firstName: user.prenom,
       lastName: user.nom
-    }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '24h' });
+    }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '5m' });
 
     return res.status(200).json({
       message: 'Connexion réussie !',
@@ -126,7 +126,7 @@ router.put('/update-profile', async (req, res) => {
       civility,
       firstName,
       lastName
-    }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '24h' });
+    }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '5m' });
 
     return res.status(200).json({
       message: 'Profil mis à jour avec succès !',

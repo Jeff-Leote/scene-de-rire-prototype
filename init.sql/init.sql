@@ -16,8 +16,10 @@ CREATE TABLE user (
 CREATE TABLE spectacle (
   id int PRIMARY KEY AUTO_INCREMENT,
   title varchar(255) NOT NULL,
+  img varchar(999) NOT NULL,
   description text NOT NULL,
   date timestamp DEFAULT CURRENT_TIMESTAMP,
+  prix int NOT NULL,
   lieu varchar(255) COMMENT "L'espace comédie",
   artiste_id int NOT NULL
 );

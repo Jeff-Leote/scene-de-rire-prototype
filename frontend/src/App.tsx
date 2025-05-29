@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AutoLogout from "./components/AutoLogout";
 import Index from "./pages/Index";
 import Shows from "./pages/Shows";
 import Venue from "./pages/Venue";
@@ -20,6 +21,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <AuthProvider>
+    <AutoLogout/>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />

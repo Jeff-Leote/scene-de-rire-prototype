@@ -1,4 +1,4 @@
-
+//pages/Shows.tsx
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ShowsList from "../components/ShowsList";
