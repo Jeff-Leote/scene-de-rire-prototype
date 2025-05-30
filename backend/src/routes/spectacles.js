@@ -86,4 +86,30 @@ router.get("/upcoming", async (req, res) => {
   }
 });
 
+router.get("/all", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        spectacle.id,
+        spectacle.title,
+        spectacle.img,
+        spectacle.description,
+        spectacle.date,
+        spectacle.prix,
+        spectacle.lieu,
+        spectacle.artiste_id,
+        artiste.name AS artiste_name,
+        artiste.photo AS artiste_photo
+      FROM spectacle
+      JOIN artiste ON spectacle.artiste_id = artiste.id
+      ORDER BY spectacle.date ASC
+    `);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Erreur lors de la récupération de tous les spectacles :", err);
+    res.status(500).json({ error: "Erreur serveur lors de la récupération de tous les spectacles" });
+  }
+});
+
 module.exports = router;
