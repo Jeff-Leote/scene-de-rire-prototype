@@ -4,6 +4,37 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 
+// Middleware d'authentification
+const auth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Token manquant' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement');
+
+    const [users] = await db.query('SELECT * FROM user WHERE id = ?', [decoded.id]);
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    req.user = users[0];
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Token invalide ou expiré' });
+  }
+};
+
+// Middleware de vérification du rôle admin
+const isAdmin = async (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Accès non autorisé' });
+  }
+  next();
+};
+
 // Test route
 router.get('/test', (req, res) => {
   res.json({ message: 'Auth routes are working!' });
@@ -36,7 +67,8 @@ router.post('/login', async (req, res) => {
       email: user.email,
       civility: user.civility,
       firstName: user.prenom,
-      lastName: user.nom
+      lastName: user.nom,
+      role: user.role
     }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '3h' });
 
     return res.status(200).json({
@@ -47,7 +79,8 @@ router.post('/login', async (req, res) => {
         email: user.email,
         civility: user.civility,
         firstName: user.prenom,
-        lastName: user.nom
+        lastName: user.nom,
+        role: user.role
       }
     });
   } catch (error) {
@@ -86,7 +119,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Update profile route
-router.put('/update-profile', async (req, res) => {
+router.put('/update-profile', auth, async (req, res) => {
   const { id, civility, firstName, lastName, email } = req.body;
 
   if (!id || !civility || !firstName || !lastName || !email) {
@@ -125,7 +158,8 @@ router.put('/update-profile', async (req, res) => {
       email,
       civility,
       firstName,
-      lastName
+      lastName,
+      role: existingUser[0].role
     }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '3h' });
 
     return res.status(200).json({
@@ -136,7 +170,8 @@ router.put('/update-profile', async (req, res) => {
         email,
         civility,
         firstName,
-        lastName
+        lastName,
+        role: existingUser[0].role
       }
     });
   } catch (error) {
@@ -145,37 +180,19 @@ router.put('/update-profile', async (req, res) => {
 });
 
 // Vérifie si le token est encore valide et l'utilisateur toujours en base
-router.get("/me", async (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) return res.status(401).json({ error: "Token manquant" });
-
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement');
-
-    const [users] = await db.query("SELECT * FROM user WHERE id = ?", [decoded.id]);
-    if (users.length === 0) {
-      return res.status(401).json({ error: "Utilisateur supprimé ou inexistant" });
-    }
-
-    const user = users[0];
-
-    return res.status(200).json({
-      id: user.id,
-      email: user.email,
-      civility: user.civility,
-      firstName: user.prenom,
-      lastName: user.nom,
-    });
-  } catch (err) {
-    return res.status(401).json({ error: "Token invalide ou expiré" });
-  }
+router.get("/me", auth, async (req, res) => {
+  return res.status(200).json({
+    id: req.user.id,
+    email: req.user.email,
+    civility: req.user.civility,
+    firstName: req.user.prenom,
+    lastName: req.user.nom,
+    role: req.user.role
+  });
 });
 
 // Delete account route
-router.delete('/delete-account', async (req, res) => {
+router.delete('/delete-account', auth, async (req, res) => {
   const { id } = req.body;
 
   if (!id) {
@@ -199,4 +216,4 @@ router.delete('/delete-account', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = { router, auth, isAdmin };

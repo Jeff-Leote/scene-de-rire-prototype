@@ -16,6 +16,7 @@ import Register from "./pages/Register";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import MyAccount from "./pages/MyAccount";
+import Dashboard from "./components/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth>
                   <MyAccount />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute requireAuth requireAdmin>
+                  <Dashboard />
                 </ProtectedRoute>
               } 
             />

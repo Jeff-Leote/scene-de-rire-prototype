@@ -61,6 +61,15 @@ const Header = ({ activeItem }: HeaderProps) => {
                     >
                       Mon compte
                     </Link>
+                    {user?.role === 'admin' && (
+                      <Link 
+                        to="/dashboard" 
+                        className="block px-4 py-2 hover:bg-yellow-400 hover:text-black transition duration-300"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
                     <button 
                       onClick={() => {
                         logout();
@@ -121,6 +130,11 @@ const Header = ({ activeItem }: HeaderProps) => {
                 <Link to="/mon-compte" className="text-white text-2xl hover:text-yellow-400 transition duration-300">
                   Mon compte
                 </Link>
+                {user?.role === 'admin' && (
+                  <Link to="/dashboard" className="text-white text-2xl hover:text-yellow-400 transition duration-300">
+                    Dashboard
+                  </Link>
+                )}
                 <button 
                   onClick={() => {
                     logout();

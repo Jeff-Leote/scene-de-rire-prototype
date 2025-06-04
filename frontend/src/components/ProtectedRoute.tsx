@@ -5,10 +5,11 @@ import { useEffect, useState } from 'react';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
+  requireAdmin?: boolean;
 }
 
-const ProtectedRoute = ({ children, requireAuth = false }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ children, requireAuth = false, requireAdmin = false }: ProtectedRouteProps) => {
+  const { isAuthenticated, user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,6 +33,11 @@ const ProtectedRoute = ({ children, requireAuth = false }: ProtectedRouteProps) 
   // Si requireAuth est true (page protégée) et l'utilisateur n'est pas connecté
   if (requireAuth && !isAuthenticated) {
     return <Navigate to="/connexion" replace />;
+  }
+
+  // Si requireAdmin est true et l'utilisateur n'est pas admin
+  if (requireAdmin && (!user || user.role !== 'admin')) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
