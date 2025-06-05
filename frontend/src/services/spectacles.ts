@@ -4,7 +4,8 @@ export interface Spectacle {
   title: string;
   img: string;
   description: string;
-  date: string;
+  date_spectacle: string;
+  heure_spectacle: string;
   prix: number;
   lieu: string;
   artiste_id: number;

@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
       SELECT a.*, COUNT(s.id) as upcoming_shows
       FROM artiste a
       LEFT JOIN spectacle s ON a.id = s.artiste_id
-      WHERE s.date > NOW()
+      WHERE CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
       GROUP BY a.id
       ORDER BY a.created_at DESC
     `);

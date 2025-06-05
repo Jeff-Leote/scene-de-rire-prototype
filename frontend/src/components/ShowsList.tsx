@@ -7,7 +7,8 @@ export interface Spectacle {
   title: string;
   img: string;
   description: string;
-  date: string;
+  date_spectacle: string;
+  heure_spectacle: string;
   prix: number;
   lieu: string;
   artiste_id: number;
@@ -101,7 +102,9 @@ const ShowsList = () => {
                       className="object-cover w-full h-full"
                     />
                     <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
-                      {format(new Date(spectacle.date), "d MMM", { locale: fr }).toUpperCase()}
+                      {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
+                      <br />
+                      {spectacle.heure_spectacle}
                     </div>
                   </div>
                   <div className="p-6">
@@ -112,13 +115,13 @@ const ShowsList = () => {
                         <div className="flex items-center">
                           <i className="fa-regular fa-calendar mr-2 text-yellow-400"></i>
                           <span className="text-gray-300">
-                            {format(new Date(spectacle.date), "d MMMM yyyy", { locale: fr })}
+                            {format(new Date(spectacle.date_spectacle), "d MMMM yyyy", { locale: fr })}
                           </span>
                         </div>
                         <div className="flex items-center mt-1">
                           <i className="fa-regular fa-clock mr-2 text-yellow-400"></i>
                           <span className="text-gray-300">
-                            {format(new Date(spectacle.date), "HH:mm", { locale: fr })}
+                            {format(new Date(spectacle.date_spectacle), "HH:mm", { locale: fr })}
                           </span>
                         </div>
                         <div className="mt-1 text-gray-300">

@@ -18,7 +18,8 @@ CREATE TABLE spectacle (
   title varchar(255) NOT NULL,
   img varchar(999) NOT NULL,
   description text NOT NULL,
-  date timestamp DEFAULT CURRENT_TIMESTAMP,
+  date_spectacle date NOT NULL,
+  heure_spectacle time NOT NULL,
   prix int NOT NULL,
   lieu varchar(255) COMMENT "L'espace comédie",
   artiste_id int NOT NULL

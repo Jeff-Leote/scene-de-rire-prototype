@@ -17,7 +17,8 @@ import { fr } from "date-fns/locale/fr";
 
 type Spectacle = {
   id: number;
-  date: string;
+  date_spectacle: string;
+  heure_spectacle: string;
   title: string;
   artiste_name: string;
 };
@@ -25,15 +26,25 @@ type Spectacle = {
 const ShowsCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSpectacles = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/spectacles/all");
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
-        setSpectacles(data || []); // ✅ la route renvoie directement un tableau
+        if (Array.isArray(data)) {
+          setSpectacles(data);
+        } else {
+          console.error("Les données reçues ne sont pas un tableau:", data);
+          setError("Format de données invalide");
+        }
       } catch (err) {
         console.error("Erreur lors du chargement des spectacles", err);
+        setError("Erreur lors du chargement des spectacles");
       }
     };
 
@@ -60,7 +71,7 @@ const ShowsCalendar = () => {
         const isInCurrentMonth = isSameMonth(day, monthStart);
 
         const spectaclesForDay = spectacles.filter((s) =>
-          isSameDay(parseISO(s.date), day)
+          isSameDay(parseISO(s.date_spectacle), day)
         );
 
         let classes = "text-center p-2 rounded ";
@@ -82,10 +93,7 @@ const ShowsCalendar = () => {
                 {spectaclesForDay
                   .map(
                     (s) =>
-                      `${s.artiste_name} - ${format(
-                        parseISO(s.date),
-                        "HH:mm"
-                      )}`
+                      `${s.artiste_name} - ${s.heure_spectacle}`
                   )
                   .join("\n")}
               </div>
@@ -135,6 +143,18 @@ const ShowsCalendar = () => {
       </div>
     </div>
   );
+
+  if (error) {
+    return (
+      <section id="calendrier-spectacles" className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="bg-red-500 text-white p-4 rounded-lg">
+            {error}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="calendrier-spectacles" className="py-16">

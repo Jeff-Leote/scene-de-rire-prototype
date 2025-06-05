@@ -9,14 +9,14 @@ router.get("/", async (req, res) => {
     const limit = parseInt(req.query.limit) || 6;
     const offset = (page - 1) * limit;
 
-    // Ajout du filtre "futurs uniquement"
     const [spectacles] = await pool.query(`
       SELECT 
         spectacle.id,
         spectacle.title,
         spectacle.img,
         spectacle.description,
-        spectacle.date,
+        spectacle.date_spectacle,
+        spectacle.heure_spectacle,
         spectacle.prix,
         spectacle.lieu,
         spectacle.artiste_id,
@@ -24,16 +24,15 @@ router.get("/", async (req, res) => {
         artiste.photo AS artiste_photo
       FROM spectacle
       JOIN artiste ON spectacle.artiste_id = artiste.id
-      WHERE spectacle.date >= NOW() -- ✅ ne garde que les spectacles à venir
-      ORDER BY spectacle.date ASC
+      WHERE CONCAT(spectacle.date_spectacle, ' ', spectacle.heure_spectacle) >= NOW()
+      ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
-    // Compte seulement les spectacles à venir
     const [[{ total }]] = await pool.query(`
       SELECT COUNT(*) as total 
       FROM spectacle 
-      WHERE date >= NOW()
+      WHERE CONCAT(date_spectacle, ' ', heure_spectacle) >= NOW()
     `);
 
     res.json({
@@ -63,7 +62,8 @@ router.get("/upcoming", async (req, res) => {
         spectacle.title,
         spectacle.img,
         spectacle.description,
-        spectacle.date,
+        spectacle.date_spectacle,
+        spectacle.heure_spectacle,
         spectacle.prix,
         spectacle.lieu,
         spectacle.artiste_id,
@@ -71,8 +71,8 @@ router.get("/upcoming", async (req, res) => {
         artiste.photo AS artiste_photo
       FROM spectacle
       JOIN artiste ON spectacle.artiste_id = artiste.id
-      WHERE spectacle.date >= NOW()
-      ORDER BY spectacle.date ASC
+      WHERE CONCAT(spectacle.date_spectacle, ' ', spectacle.heure_spectacle) >= NOW()
+      ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ?
     `, [limit]);
 
@@ -94,7 +94,8 @@ router.get("/all", async (req, res) => {
         spectacle.title,
         spectacle.img,
         spectacle.description,
-        spectacle.date,
+        spectacle.date_spectacle,
+        spectacle.heure_spectacle,
         spectacle.prix,
         spectacle.lieu,
         spectacle.artiste_id,
@@ -102,7 +103,7 @@ router.get("/all", async (req, res) => {
         artiste.photo AS artiste_photo
       FROM spectacle
       JOIN artiste ON spectacle.artiste_id = artiste.id
-      ORDER BY spectacle.date ASC
+      ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
     `);
 
     res.json(rows);
