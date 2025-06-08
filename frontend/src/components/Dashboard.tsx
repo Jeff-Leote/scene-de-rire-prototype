@@ -8,7 +8,8 @@ interface Spectacle {
   title: string;
   img: string;
   description: string;
-  date: string;
+  date_spectacle: string;
+  heure_spectacle: string;
   prix: number;
   lieu: string;
   artiste_name: string;
@@ -91,8 +92,8 @@ const Dashboard = () => {
       title: spectacle.title,
       img: spectacle.img,
       description: spectacle.description,
-      date_spectacle: new Date(spectacle.date).toISOString().split('T')[0],
-      heure_spectacle: new Date(spectacle.date).toISOString().split('T')[1],
+      date_spectacle: spectacle.date_spectacle,
+      heure_spectacle: spectacle.heure_spectacle,
       prix: spectacle.prix.toString(),
       artiste_id: spectacle.artiste_id.toString(),
       lieu: spectacle.lieu
@@ -355,7 +356,7 @@ const Dashboard = () => {
                     <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
                     <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
                     <p className="text-gray-400 mb-2">
-                      Date: {new Date(spectacle.date).toLocaleDateString('fr-FR')}
+                      Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
                     </p>
                     <p className="text-gray-400 mb-4">Prix: {spectacle.prix}€</p>
                     <div className="flex space-x-2">

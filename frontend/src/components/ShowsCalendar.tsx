@@ -54,6 +54,17 @@ const ShowsCalendar = () => {
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
+  const formatHeure = (heure: string) => {
+    // Si l'heure est au format HH:mm:ss, on ne garde que HH:mm
+    return heure.split(':').slice(0, 2).join(':');
+  };
+
+  const isSpectacleExpired = (date: string, heure: string) => {
+    const now = new Date();
+    const spectacleDateTime = new Date(`${date.split('T')[0]}T${heure}`);
+    return spectacleDateTime < now;
+  };
+
   const renderDays = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
@@ -86,14 +97,14 @@ const ShowsCalendar = () => {
         const content =
           spectaclesForDay.length > 0 ? (
             <div className="relative group">
-              <div className="bg-yellow-400 text-black rounded-full h-8 w-8 flex items-center justify-center mx-auto cursor-pointer">
+              <div className={`${spectaclesForDay.some(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle)) ? 'bg-yellow-200' : 'bg-yellow-400'} text-black rounded-full h-8 w-8 flex items-center justify-center mx-auto cursor-pointer`}>
                 {format(day, "d")}
               </div>
               <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs p-2 rounded whitespace-nowrap">
                 {spectaclesForDay
                   .map(
                     (s) =>
-                      `${s.artiste_name} - ${s.heure_spectacle}`
+                      `${s.artiste_name} - ${formatHeure(s.heure_spectacle)}`
                   )
                   .join("\n")}
               </div>

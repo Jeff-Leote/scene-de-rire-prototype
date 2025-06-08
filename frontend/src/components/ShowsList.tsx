@@ -24,6 +24,11 @@ const ShowsList = () => {
   const [error, setError] = useState<string | null>(null);
   const limit = 9;
 
+  const formatHeure = (heure: string) => {
+    // Si l'heure est au format HH:mm:ss, on ne garde que HH:mm
+    return heure.split(':').slice(0, 2).join(':');
+  };
+
   useEffect(() => {
     const fetchSpectacles = async () => {
       try {
@@ -34,7 +39,15 @@ const ShowsList = () => {
         const data = await res.json();
 
         if (data.spectacles && Array.isArray(data.spectacles)) {
-          setSpectacles(data.spectacles);
+          const now = new Date();
+
+          const filtered = data.spectacles.filter((spectacle: Spectacle) => {
+            const datePart = spectacle.date_spectacle.split("T")[0]; // assure compatibilité format ISO
+            const fullDate = new Date(`${datePart}T${spectacle.heure_spectacle}`);
+            return fullDate > now;
+          });
+
+          setSpectacles(filtered);
           setTotal(data.pagination.total);
         } else {
           setError("Format de données inattendu");
@@ -104,7 +117,7 @@ const ShowsList = () => {
                     <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
                       {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
                       <br />
-                      {spectacle.heure_spectacle}
+                      {formatHeure(spectacle.heure_spectacle)}
                     </div>
                   </div>
                   <div className="p-6">
@@ -120,9 +133,7 @@ const ShowsList = () => {
                         </div>
                         <div className="flex items-center mt-1">
                           <i className="fa-regular fa-clock mr-2 text-yellow-400"></i>
-                          <span className="text-gray-300">
-                            {format(new Date(spectacle.date_spectacle), "HH:mm", { locale: fr })}
-                          </span>
+                          <span className="text-gray-300">{formatHeure(spectacle.heure_spectacle)}</span>
                         </div>
                         <div className="mt-1 text-gray-300">
                           <i className="fa-solid fa-location-dot mr-2 text-yellow-400"></i>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
 export interface Spectacle {
@@ -21,15 +21,27 @@ const UpcomingShows = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const formatHeure = (heure: string) => {
+    // Si l'heure est au format HH:mm:ss, on ne garde que HH:mm
+    return heure.split(':').slice(0, 2).join(':');
+  };
+
   useEffect(() => {
     const fetchSpectacles = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/spectacles/upcoming");
         if (!res.ok) throw new Error("Erreur lors du chargement des spectacles");
         const data: Spectacle[] = await res.json();
-        console.log("Nombre de spectacles reçus:", data.length);
-        console.log("Spectacles:", data);
-        setSpectacles(data);
+
+        const now = new Date();
+
+        // 🔍 Combine date + heure et filtre
+        const filtered = data.filter((spectacle) => {
+          const fullDateTime = new Date(`${spectacle.date_spectacle.split("T")[0]}T${spectacle.heure_spectacle}`);
+          return fullDateTime > now;
+        });
+
+        setSpectacles(filtered);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError(err.message || "Erreur inconnue");
@@ -37,6 +49,7 @@ const UpcomingShows = () => {
         setLoading(false);
       }
     };
+
     fetchSpectacles();
   }, []);
 
@@ -66,7 +79,11 @@ const UpcomingShows = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
-          {spectacles.length === 0 && <p className="text-gray-400 col-span-full text-center">Aucun spectacle à venir pour le moment.</p>}
+          {spectacles.length === 0 && (
+            <p className="text-gray-400 col-span-full text-center">
+              Aucun spectacle à venir pour le moment.
+            </p>
+          )}
 
           {spectacles.map((spectacle) => (
             <div
@@ -82,7 +99,7 @@ const UpcomingShows = () => {
                 <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
                   {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
                   <br />
-                  {spectacle.heure_spectacle}
+                  {formatHeure(spectacle.heure_spectacle)}
                 </div>
               </div>
               <div className="p-6">
@@ -92,15 +109,17 @@ const UpcomingShows = () => {
                   <div>
                     <div className="flex items-center">
                       <i className="fa-regular fa-calendar mr-2 text-yellow-400"></i>
-                      <span className="text-gray-300">{format(new Date(spectacle.date_spectacle), "d MMMM yyyy", { locale: fr })}</span>
+                      <span className="text-gray-300">
+                        {format(new Date(spectacle.date_spectacle), "d MMMM yyyy", { locale: fr })}
+                      </span>
                     </div>
                     <div className="flex items-center mt-1">
                       <i className="fa-regular fa-clock mr-2 text-yellow-400"></i>
-                      <span className="text-gray-300">{format(new Date(spectacle.date_spectacle), "HH:mm", { locale: fr })}</span>
+                      <span className="text-gray-300">{formatHeure(spectacle.heure_spectacle)}</span>
                     </div>
                     <div className="mt-1 text-gray-300">
                       <i className="fa-solid fa-location-dot mr-2 text-yellow-400"></i>
-                      <span>{spectacle.lieu}</span>
+                      <span>{spectacle.lieu || "Lieu non précisé"}</span>
                     </div>
                   </div>
                   <span className="text-white font-bold text-lg">{spectacle.prix}€</span>
