@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 export interface Spectacle {
   id: number;
@@ -17,6 +18,7 @@ export interface Spectacle {
 }
 
 const UpcomingShows = () => {
+  const navigate = useNavigate();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +90,8 @@ const UpcomingShows = () => {
           {spectacles.map((spectacle) => (
             <div
               key={spectacle.id}
-              className="w-full max-w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:scale-[1.02] transition duration-300"
+              className="w-full max-w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:scale-[1.02] transition duration-300 cursor-pointer"
+              onClick={() => navigate(`/spectacles/${spectacle.id}`)}
             >
               <div className="relative h-64">
                 <img
@@ -98,8 +101,6 @@ const UpcomingShows = () => {
                 />
                 <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
                   {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
-                  <br />
-                  {formatHeure(spectacle.heure_spectacle)}
                 </div>
               </div>
               <div className="p-6">

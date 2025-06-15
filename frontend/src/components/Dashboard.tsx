@@ -29,7 +29,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured'>('spectacles');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSpectacleModalOpen, setIsSpectacleModalOpen] = useState(false);
@@ -55,6 +55,8 @@ const Dashboard = () => {
     photo: '',
     biographie: ''
   });
+  const [featuredArtist, setFeaturedArtist] = useState<Artist | null>(null);
+  const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +78,13 @@ const Dashboard = () => {
         if (!artistsResponse.ok) throw new Error('Erreur lors de la récupération des artistes');
         const artistsData = await artistsResponse.json();
         setArtists(artistsData);
+
+        // Récupérer l'artiste à l'affiche
+        const featuredResponse = await fetch('http://localhost:5000/api/admin/featured', { headers });
+        if (featuredResponse.ok) {
+          const featuredData = await featuredResponse.json();
+          setFeaturedArtist(featuredData);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -276,6 +285,28 @@ const Dashboard = () => {
     }
   };
 
+  const handleSetFeaturedArtist = async (artist: Artist) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/admin/featured', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ artist_id: artist.id })
+      });
+
+      if (!response.ok) throw new Error('Erreur lors de la mise à jour de l\'artiste à l\'affiche');
+
+      const updatedFeatured = await response.json();
+      setFeaturedArtist(updatedFeatured);
+      toast.success('Artiste à l\'affiche mis à jour avec succès');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 pt-24 pb-12">
@@ -333,83 +364,128 @@ const Dashboard = () => {
             >
               Artistes
             </button>
+            <button
+              onClick={() => setActiveTab('featured')}
+              className={`px-4 py-2 rounded ${
+                activeTab === 'featured'
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              } transition duration-300`}
+            >
+              À l'affiche
+            </button>
           </div>
-          <button
-            onClick={activeTab === 'spectacles' ? handleAddSpectacleClick : handleAddArtistClick}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
-          >
-            <i className="fa-solid fa-plus"></i>
-            <span>Ajouter {activeTab === 'spectacles' ? 'un spectacle' : 'un artiste'}</span>
-          </button>
+          {activeTab !== 'featured' && (
+            <button
+              onClick={activeTab === 'spectacles' ? handleAddSpectacleClick : handleAddArtistClick}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+            >
+              <i className="fa-solid fa-plus"></i>
+              <span>Ajouter {activeTab === 'spectacles' ? 'un spectacle' : 'un artiste'}</span>
+            </button>
+          )}
         </div>
 
         {/* Content */}
-        {activeTab === 'spectacles' ? (
+        {activeTab === 'featured' ? (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Artiste à l'affiche</h2>
+            {featuredArtist ? (
+              <div className="flex items-start space-x-6">
+                <img 
+                  src={featuredArtist.photo} 
+                  alt={featuredArtist.name} 
+                  className="w-48 h-48 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2">{featuredArtist.name}</h3>
+                  <p className="text-gray-400 mb-4">{featuredArtist.biographie}</p>
+                  <button
+                    onClick={() => setIsFeaturedModalOpen(true)}
+                    className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                  >
+                    Changer l'artiste à l'affiche
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">Aucun artiste n'est actuellement à l'affiche</p>
+                <button
+                  onClick={() => setIsFeaturedModalOpen(true)}
+                  className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                >
+                  Définir un artiste à l'affiche
+                </button>
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'spectacles' ? (
           spectacles.length === 0 ? (
             <p className="text-gray-400 text-center">Aucun spectacle</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {spectacles.map((spectacle) => (
-                <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={spectacle.img} alt={spectacle.title} className="w-full h-48 object-cover" />
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
-                    <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
-                    <p className="text-gray-400 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {spectacles.map((spectacle) => (
+              <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
+                <img src={spectacle.img} alt={spectacle.title} className="w-full h-48 object-cover" />
+                <div className="p-4">
+                  <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
+                  <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
+                  <p className="text-gray-400 mb-2">
                       Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
-                    </p>
-                    <p className="text-gray-400 mb-4">Prix: {spectacle.prix}€</p>
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handleEditSpectacleClick(spectacle)}
-                        className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                      >
-                        Modifier
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteClick('spectacle', spectacle.id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
+                  </p>
+                  <p className="text-gray-400 mb-4">Prix: {spectacle.prix}€</p>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleEditSpectacleClick(spectacle)}
+                      className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                    >
+                      Modifier
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteClick('spectacle', spectacle.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                    >
+                      Supprimer
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
           )
         ) : (
           artists.length === 0 ? (
             <p className="text-gray-400 text-center">Aucun artiste</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {artists.map((artist) => (
-                <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={artist.photo} alt={artist.name} className="w-full h-48 object-cover" />
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
-                    <p className="text-gray-400 mb-2">
-                      {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
-                    </p>
-                    <p className="text-gray-400 mb-4 line-clamp-3">{artist.biographie}</p>
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handleEditArtistClick(artist)}
-                        className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                      >
-                        Modifier
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteClick('artist', artist.id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {artists.map((artist) => (
+              <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
+                <img src={artist.photo} alt={artist.name} className="w-full h-48 object-cover" />
+                <div className="p-4">
+                  <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
+                  <p className="text-gray-400 mb-2">
+                    {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
+                  </p>
+                  <p className="text-gray-400 mb-4 line-clamp-3">{artist.biographie}</p>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleEditArtistClick(artist)}
+                      className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                    >
+                      Modifier
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteClick('artist', artist.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                    >
+                      Supprimer
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
           )
         )}
 
@@ -628,6 +704,43 @@ const Dashboard = () => {
                   className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                 >
                   Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de sélection de l'artiste à l'affiche */}
+        {isFeaturedModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+              <h2 className="text-2xl font-bold text-white mb-4">Sélectionner l'artiste à l'affiche</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
+                {artists.map((artist) => (
+                  <div
+                    key={artist.id}
+                    className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition duration-300"
+                    onClick={() => {
+                      handleSetFeaturedArtist(artist);
+                      setIsFeaturedModalOpen(false);
+                    }}
+                  >
+                    <img
+                      src={artist.photo}
+                      alt={artist.name}
+                      className="w-full h-32 object-cover rounded-lg mb-3"
+                    />
+                    <h3 className="text-lg font-bold text-white">{artist.name}</h3>
+                    <p className="text-gray-400 text-sm line-clamp-2">{artist.biographie}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setIsFeaturedModalOpen(false)}
+                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300"
+                >
+                  Annuler
                 </button>
               </div>
             </div>

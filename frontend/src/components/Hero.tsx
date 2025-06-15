@@ -1,31 +1,132 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+interface FeaturedArtist {
+  id: number;
+  name: string;
+  photo: string;
+  biographie: string;
+  next_show?: {
+    id: number;
+    date: string;
+    time: string;
+    title: string;
+  };
+}
 
 const Hero = () => {
+  const [featuredArtist, setFeaturedArtist] = useState<FeaturedArtist | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const formatTime = (time: string) => {
+    return time.split(':').slice(0, 2).join(':');
+  };
+
+  useEffect(() => {
+    const fetchFeaturedArtist = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch('http://localhost:5000/api/artistes/featured');
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erreur lors du chargement de l\'artiste à l\'affiche');
+        }
+
+        const data = await response.json();
+        console.log('Données reçues:', data);
+        setFeaturedArtist(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'artiste à l\'affiche:', error);
+        setError(error instanceof Error ? error.message : 'Une erreur est survenue');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedArtist();
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="hero" className="bg-black pt-24 pb-16">
+        <div className="container mx-auto px-6">
+          <div className="relative overflow-hidden rounded-lg h-[500px] mb-12 bg-gray-800 animate-pulse"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="hero" className="bg-black pt-24 pb-16">
+        <div className="container mx-auto px-6">
+          <div className="relative overflow-hidden rounded-lg h-[500px] mb-12 bg-gray-800 flex items-center justify-center">
+            <p className="text-red-500 text-center">{error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredArtist) {
+    return (
+      <section id="hero" className="bg-black pt-24 pb-16">
+        <div className="container mx-auto px-6">
+          <div className="relative overflow-hidden rounded-lg h-[500px] mb-12 bg-gray-800 flex items-center justify-center">
+            <p className="text-gray-400 text-center">Aucun artiste à l'affiche pour le moment</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="hero" className="bg-black pt-24 pb-16">
       <div className="container mx-auto px-6">
         <div className="relative overflow-hidden rounded-lg h-[500px] mb-12">
           <img 
             className="absolute inset-0 w-full h-full object-cover" 
-            src="https://storage.googleapis.com/uxpilot-auth.appspot.com/b5c2ee300c-9f1e29bf1f9341ba67b1.png" 
-            alt="comedian performing on stage with spotlights, dark background, dramatic lighting" 
+            src={featuredArtist.photo} 
+            alt={`${featuredArtist.name} performing on stage`} 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           <div className="absolute bottom-0 left-0 p-8 w-full md:w-2/3">
             <div className="flex items-center mb-4">
               <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold uppercase">À l'affiche</span>
-              <span className="ml-3 text-white text-sm">Vendredi 16 mai 2025 · 20h30</span>
+              {featuredArtist.next_show && (
+                <span className="ml-3 text-white text-sm">
+                  {new Date(featuredArtist.next_show.date).toLocaleDateString('fr-FR', { 
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })} · {formatTime(featuredArtist.next_show.time)}
+                </span>
+              )}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">Julien Lacroix: <span className="text-yellow-400">Le Grand Retour</span></h1>
-            <p className="text-gray-300 mb-6 text-lg">Un spectacle déjanté où l'humour noir rencontre l'absurde pour une soirée inoubliable.</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+              {featuredArtist.name}: <span className="text-yellow-400">{featuredArtist.next_show?.title || 'Prochain spectacle'}</span>
+            </h1>
             <div className="flex flex-wrap gap-4">
-              <span className="bg-yellow-400 text-black px-6 py-3 rounded hover:bg-yellow-300 transition duration-300 flex items-center cursor-pointer">
-                <i className="fa-solid fa-ticket-alt mr-2"></i>
-                Réserver maintenant
-              </span>
-              <span className="border border-yellow-400 text-yellow-400 px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300 flex items-center cursor-pointer">
+              {featuredArtist.next_show && (
+                <Link 
+                  to={`/spectacles/${featuredArtist.next_show.id}`}
+                  className="bg-yellow-400 text-black px-6 py-3 rounded hover:bg-yellow-300 transition duration-300 flex items-center"
+                >
+                  <i className="fa-solid fa-ticket-alt mr-2"></i>
+                  Réserver maintenant
+                </Link>
+              )}
+              <Link 
+                to={`/artistes/${featuredArtist.id}`}
+                className="border border-yellow-400 text-yellow-400 px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300 flex items-center"
+              >
                 <i className="fa-solid fa-circle-info mr-2"></i>
                 Plus d'infos
-              </span>
+              </Link>
             </div>
           </div>
         </div>

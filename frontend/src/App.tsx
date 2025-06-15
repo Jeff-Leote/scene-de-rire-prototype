@@ -17,6 +17,7 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import MyAccount from "./pages/MyAccount";
 import Dashboard from "./components/Dashboard";
+import SpectacleDetail from "./pages/SpectacleDetail";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/spectacles" element={<Shows />} />
+            <Route path="/spectacles/:id" element={<SpectacleDetail />} />
             <Route path="/le-lieu" element={<Venue />} />
             <Route path="/reservation" element={<Reservation />} />
             <Route 

@@ -7,7 +7,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center mb-4">
               <i className="fa-solid fa-microphone-lines text-yellow-400 text-2xl mr-2"></i>
-              <span className="text-2xl font-bold">Humor Prototype</span>
+              <span className="text-2xl font-bold">L'espace Comedie</span>
             </div>
             <p className="text-gray-400 mb-4">La référence pour découvrir et réserver les meilleurs spectacles d'humour.</p>
             <div className="flex space-x-4">

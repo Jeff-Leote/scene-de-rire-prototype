@@ -21,7 +21,7 @@ CREATE TABLE spectacle (
   date_spectacle date NOT NULL,
   heure_spectacle time NOT NULL,
   prix int NOT NULL,
-  lieu varchar(255) COMMENT "L'espace comédie",
+  lieu varchar(255) COMMENT "L'espace comédie" NOT NULL,
   artiste_id int NOT NULL
 );
 
@@ -39,6 +39,7 @@ CREATE TABLE artiste (
   biographie text NOT NULL,
   photo varchar(255) NOT NULL,
   created_at timestamp DEFAULT CURRENT_TIMESTAMP
+  is_featured boolean DEFAULT false;
 );
 
 CREATE TABLE reservation (
