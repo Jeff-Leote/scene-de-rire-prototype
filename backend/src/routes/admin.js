@@ -314,15 +314,20 @@ router.post('/featured', async (req, res) => {
     await db.query('UPDATE artiste SET is_featured = false');
     
     // Ensuite, définir le nouvel artiste à l'affiche
-    const [result] = await db.query(
-      'UPDATE artiste SET is_featured = true WHERE id = ?',
-      [artist_id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Artiste non trouvé' });
-    }
-
+await db.query('START TRANSACTION');
+try {
+   await db.query('UPDATE artiste SET is_featured = false');
+   const [result] = await db.query(
+     'UPDATE artiste SET is_featured = true WHERE id = ?',
+     [artist_id]
+   );
+  if (result.affectedRows === 0) throw new Error('NOT_FOUND');
+  await db.query('COMMIT');
+} catch (e) {
+  await db.query('ROLLBACK');
+  if (e.message === 'NOT_FOUND') return res.status(404).json({ error: 'Artiste non trouvé' });
+  throw e;
+}
     // Récupérer l'artiste mis à jour avec ses informations
     const [artistes] = await db.query(`
       SELECT a.*, 

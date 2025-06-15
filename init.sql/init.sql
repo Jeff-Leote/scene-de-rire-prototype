@@ -39,7 +39,7 @@ CREATE TABLE artiste (
   biographie text NOT NULL,
   photo varchar(255) NOT NULL,
   created_at timestamp DEFAULT CURRENT_TIMESTAMP
-  is_featured boolean DEFAULT false;
+  is_featured boolean DEFAULT FALSE;
 );
 
 CREATE TABLE reservation (
