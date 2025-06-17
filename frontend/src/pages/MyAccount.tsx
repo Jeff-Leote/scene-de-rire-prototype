@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { toast } from "@/components/ui/sonner";
+import { Link } from 'react-router-dom';
 
 const MyAccount = () => {
   const { user, token, login, logout } = useAuth();
@@ -90,159 +91,198 @@ const MyAccount = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-24 pb-12">
-      <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-950 pt-24 pb-12">
+      <div className="container mx-auto px-6">
+        <div className="max-w-4xl mx-auto">
           {/* En-tête de la page */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Mon Compte</h1>
-            <p className="text-gray-400">Gérez vos informations personnelles</p>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Mon Compte</h1>
+              <p className="text-gray-400">Gérez vos informations personnelles</p>
+            </div>
+            <Link 
+              to="/" 
+              className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 flex items-center space-x-2"
+            >
+              <i className="fa-solid fa-arrow-left"></i>
+              <span>Retour à l'accueil</span>
+            </Link>
           </div>
 
           {/* Carte principale */}
-          <div className="bg-gray-900 rounded-lg shadow-xl p-8 border border-yellow-400">
-            {!isEditing ? (
-              // Affichage des informations
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-semibold text-yellow-400">Informations Personnelles</h2>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                  >
-                    Modifier
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-gray-400 mb-1">Civilité</p>
-                    <p className="text-lg">{user?.civility}</p>
+          <div className="bg-gray-900 rounded-lg overflow-hidden mb-8">
+            <div className="relative h-48 bg-gradient-to-r from-yellow-400 to-yellow-600">
+              <div className="absolute bottom-0 left-0 p-8">
+                <div className="flex items-center space-x-4">
+                  <div className="w-24 h-24 rounded-full bg-gray-900 border-4 border-white overflow-hidden">
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=random`}
+                      alt={`${user?.firstName} ${user?.lastName}`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div>
-                    <p className="text-gray-400 mb-1">Email</p>
-                    <p className="text-lg">{user?.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 mb-1">Prénom</p>
-                    <p className="text-lg">{user?.firstName}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 mb-1">Nom</p>
-                    <p className="text-lg">{user?.lastName}</p>
+                    <h2 className="text-2xl font-bold text-white">{user?.firstName} {user?.lastName}</h2>
+                    <p className="text-gray-200">{user?.email}</p>
                   </div>
                 </div>
               </div>
-            ) : (
-              // Formulaire d'édition
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-semibold text-yellow-400">Modifier mes informations</h2>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(false)}
-                    className="text-gray-400 hover:text-white transition duration-300"
-                    disabled={isLoading}
-                  >
-                    Annuler
-                  </button>
-                </div>
+            </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-gray-400 mb-1">Civilité</label>
-                    <select
-                      name="civility"
-                      value={formData.civility}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:border-yellow-400"
+            <div className="p-8">
+              {!isEditing ? (
+                // Affichage des informations
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-white">Informations Personnelles</h3>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                    >
+                      Modifier
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <p className="text-gray-400 mb-1">Civilité</p>
+                      <p className="text-lg text-white">{user?.civility}</p>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <p className="text-gray-400 mb-1">Email</p>
+                      <p className="text-lg text-white">{user?.email}</p>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <p className="text-gray-400 mb-1">Prénom</p>
+                      <p className="text-lg text-white">{user?.firstName}</p>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <p className="text-gray-400 mb-1">Nom</p>
+                      <p className="text-lg text-white">{user?.lastName}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Formulaire d'édition
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-white">Modifier mes informations</h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="text-gray-400 hover:text-white transition duration-300"
                       disabled={isLoading}
                     >
-                      <option value="M.">M.</option>
-                      <option value="Mme">Mme</option>
-                      <option value="Autre">Autre</option>
-                    </select>
+                      Annuler
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-gray-400 mb-1">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:border-yellow-400"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-400 mb-1">Prénom</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:border-yellow-400"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-400 mb-1">Nom</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:border-yellow-400"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
 
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="bg-yellow-400 text-black px-6 py-2 rounded hover:bg-yellow-300 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Enregistrement...' : 'Enregistrer'}
-                  </button>
-                </div>
-              </form>
-            )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <label className="block text-gray-400 mb-2">Civilité</label>
+                      <select
+                        name="civility"
+                        value={formData.civility}
+                        onChange={handleChange}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        disabled={isLoading}
+                      >
+                        <option value="M.">M.</option>
+                        <option value="Mme">Mme</option>
+                        <option value="Autre">Autre</option>
+                      </select>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <label className="block text-gray-400 mb-2">Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <label className="block text-gray-400 mb-2">Prénom</label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <label className="block text-gray-400 mb-2">Nom</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="bg-yellow-400 text-black px-6 py-2 rounded hover:bg-yellow-300 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Enregistrement...' : 'Enregistrer'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
 
           {/* Section des réservations */}
-          <div className="mt-12 bg-gray-900 rounded-lg shadow-xl p-8 border border-yellow-400">
-            <h2 className="text-2xl font-semibold text-yellow-400 mb-6">Mes Réservations</h2>
-            <div className="text-center text-gray-400">
-              <p>Vous n'avez pas encore de réservations</p>
-              <button className="mt-4 bg-yellow-400 text-black px-6 py-2 rounded hover:bg-yellow-300 transition duration-300">
-                Réserver un spectacle
-              </button>
+          <div className="bg-gray-900 rounded-lg overflow-hidden mb-8">
+            <div className="p-8">
+              <h3 className="text-xl font-semibold text-white mb-6">Mes Réservations</h3>
+              <div className="text-center py-8">
+                <div className="bg-gray-800 rounded-lg p-8">
+                  <i className="fa-regular fa-calendar text-4xl text-gray-600 mb-4"></i>
+                  <p className="text-gray-400 mb-4">Vous n'avez pas encore de réservations</p>
+                  <Link 
+                    to="/spectacles"
+                    className="inline-block bg-yellow-400 text-black px-6 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                  >
+                    Découvrir les spectacles
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Section de suppression du compte */}
-          <div className="mt-12 bg-gray-900 rounded-lg shadow-xl p-8 border border-red-600">
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold text-red-600 mb-4">Supprimer mon compte</h2>
-              <p className="text-gray-400 mb-6">
-                La suppression de votre compte est une action irréversible. Toutes vos données seront définitivement supprimées.
-              </p>
-              <button
-                onClick={() => setShowDeleteConfirmation(true)}
-                className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition duration-300"
-              >
-                Supprimer mon compte
-              </button>
+          <div className="bg-gray-900 rounded-lg overflow-hidden">
+            <div className="p-8">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-red-500 mb-4">Supprimer mon compte</h3>
+                <p className="text-gray-400 mb-6">
+                  La suppression de votre compte est une action irréversible. Toutes vos données seront définitivement supprimées.
+                </p>
+                <button
+                  onClick={() => setShowDeleteConfirmation(true)}
+                  className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 transition duration-300"
+                >
+                  Supprimer mon compte
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Modal de confirmation de suppression */}
           {showDeleteConfirmation && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-gray-900 p-8 rounded-lg border border-red-600 max-w-md w-full mx-4">
-                <h3 className="text-2xl font-semibold text-red-600 mb-4">Confirmer la suppression</h3>
+              <div className="bg-gray-900 p-8 rounded-lg max-w-md w-full mx-4">
+                <h3 className="text-2xl font-semibold text-red-500 mb-4">Confirmer la suppression</h3>
                 <p className="text-gray-300 mb-6">
                   Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et toutes vos données seront définitivement supprimées.
                 </p>
@@ -256,7 +296,7 @@ const MyAccount = () => {
                   </button>
                   <button
                     onClick={handleDeleteAccount}
-                    className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isDeleting}
                   >
                     {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}

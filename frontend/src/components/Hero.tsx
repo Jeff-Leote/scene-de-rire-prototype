@@ -116,8 +116,8 @@ const Hero = () => {
                   to={`/spectacles/${featuredArtist.next_show.id}`}
                   className="bg-yellow-400 text-black px-6 py-3 rounded hover:bg-yellow-300 transition duration-300 flex items-center"
                 >
-                  <i className="fa-solid fa-ticket-alt mr-2"></i>
-                  Réserver maintenant
+                <i className="fa-solid fa-ticket-alt mr-2"></i>
+                Réserver maintenant
                 </Link>
               )}
               <Link 

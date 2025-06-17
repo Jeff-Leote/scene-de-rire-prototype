@@ -27,28 +27,38 @@ router.get('/spectacles', async (req, res) => {
 
 // Ajouter un nouveau spectacle
 router.post('/spectacles', async (req, res) => {
-  console.log('Admin - Ajout d\'un nouveau spectacle - Corps de la requête:', req.body);
-  const { title, img, description, date_spectacle, heure_spectacle, prix, artiste_id } = req.body;
+  try {
+    console.log('Admin - Ajout d\'un nouveau spectacle - Headers:', req.headers);
+    console.log('Admin - Ajout d\'un nouveau spectacle - Corps de la requête:', req.body);
+    console.log('Admin - Ajout d\'un nouveau spectacle - Type de corps:', typeof req.body);
+    
+    if (!req.body) {
+      console.error('Admin - Corps de la requête manquant');
+      return res.status(400).json({ error: 'Corps de la requête manquant' });
+    }
 
-  console.log('Admin - Champs extraits:', {
-    title: !!title,
-    img: !!img,
-    description: !!description,
-    date_spectacle: !!date_spectacle,
-    heure_spectacle: !!heure_spectacle,
-    prix: !!prix,
-    artiste_id: !!artiste_id
-  });
+    const { title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, lieu } = req.body;
 
-  if (!title || !img || !description || !date_spectacle || !heure_spectacle || !prix || !artiste_id) {
+    console.log('Admin - Champs extraits:', {
+      title: !!title,
+      img: !!img,
+      description: !!description,
+      date_spectacle: !!date_spectacle,
+      heure_spectacle: !!heure_spectacle,
+      prix: !!prix,
+      artiste_id: !!artiste_id,
+      lieu: !!lieu
+    });
+
+    if (!title || !img || !description || !date_spectacle || !heure_spectacle || !prix || !artiste_id || !lieu) {
     console.log('Admin - Données manquantes pour l\'ajout du spectacle');
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
     const [result] = await db.query(
-      'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, prix, artiste_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [title, img, description, date_spectacle, heure_spectacle, prix, artiste_id]
+        'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, lieu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, lieu]
     );
     
     const [newSpectacle] = await db.query(
@@ -60,7 +70,19 @@ router.post('/spectacles', async (req, res) => {
     res.status(201).json(newSpectacle[0]);
   } catch (error) {
     console.error('Erreur lors de l\'ajout du spectacle:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+      res.status(500).json({ 
+        message: 'Erreur serveur',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
+  } catch (error) {
+    console.error('Erreur générale:', error);
+    res.status(500).json({ 
+      message: 'Erreur serveur',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

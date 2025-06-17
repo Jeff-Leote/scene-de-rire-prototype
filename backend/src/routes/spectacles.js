@@ -113,4 +113,36 @@ router.get("/all", async (req, res) => {
   }
 });
 
+// Route pour récupérer un spectacle spécifique
+router.get("/:id", async (req, res) => {
+  try {
+    const [spectacles] = await pool.query(`
+      SELECT 
+        spectacle.id,
+        spectacle.title,
+        spectacle.img,
+        spectacle.description,
+        spectacle.date_spectacle,
+        spectacle.heure_spectacle,
+        spectacle.prix,
+        spectacle.lieu,
+        spectacle.artiste_id,
+        artiste.name AS artiste_name,
+        artiste.photo AS artiste_photo
+      FROM spectacle
+      JOIN artiste ON spectacle.artiste_id = artiste.id
+      WHERE spectacle.id = ?
+    `, [req.params.id]);
+
+    if (spectacles.length === 0) {
+      return res.status(404).json({ error: "Spectacle non trouvé" });
+    }
+
+    res.json(spectacles[0]);
+  } catch (err) {
+    console.error("Erreur lors de la récupération du spectacle :", err);
+    res.status(500).json({ error: "Erreur serveur lors de la récupération du spectacle" });
+  }
+});
+
 module.exports = router;

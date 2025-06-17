@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import MyAccount from "./pages/MyAccount";
 import Dashboard from "./components/Dashboard";
 import SpectacleDetail from "./pages/SpectacleDetail";
+import Artists from "./pages/Artists";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/spectacles/:id" element={<SpectacleDetail />} />
             <Route path="/le-lieu" element={<Venue />} />
             <Route path="/reservation" element={<Reservation />} />
+            <Route path="/artistes" element={<Artists />} />
             <Route 
               path="/connexion" 
               element={

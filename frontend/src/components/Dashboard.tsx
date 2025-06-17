@@ -178,7 +178,15 @@ const Dashboard = () => {
         artiste_id: parseInt(spectacleFormData.artiste_id)
       };
 
-      console.log('Données envoyées au backend:', requestBody);
+      console.log('Données envoyées au backend:', {
+        url,
+        method: isAddingSpectacle ? 'POST' : 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
       
       const response = await fetch(url, {
         method: isAddingSpectacle ? 'POST' : 'PUT',
@@ -372,7 +380,7 @@ const Dashboard = () => {
                   : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
-              À l'affiche
+              L'affiche
             </button>
           </div>
           {activeTab !== 'featured' && (
@@ -567,14 +575,16 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <label className="block text-white mb-2">Lieu</label>
-                  <input
-                    type="text"
+                  <select
                     name="lieu"
                     value={spectacleFormData.lieu}
                     onChange={handleSpectacleInputChange}
                     className="w-full bg-gray-700 text-white rounded px-4 py-2"
                     required
-                  />
+                  >
+                    <option value="">Sélectionner un lieu</option>
+                    <option value="L'espace comédie">L'espace comédie</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-white mb-2">Artiste</label>

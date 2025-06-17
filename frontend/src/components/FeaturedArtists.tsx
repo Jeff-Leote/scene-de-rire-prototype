@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface Artist {
   id: number;
@@ -59,7 +60,10 @@ const FeaturedArtists = () => {
         <h2 className="text-3xl font-bold text-white mb-8">Artistes déjà venu</h2>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {artists.map((artist) => (
+          {artists
+            .sort((a, b) => b.upcoming_shows - a.upcoming_shows)
+            .slice(0, 4)
+            .map((artist) => (
             <div key={artist.id} className="group">
               <div className="relative overflow-hidden rounded-full aspect-square mb-4">
                 <img 
@@ -78,9 +82,12 @@ const FeaturedArtists = () => {
         </div>
         
         <div className="text-center mt-10">
-          <span className="inline-block bg-transparent border-2 border-yellow-400 text-yellow-400 px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300 cursor-pointer">
+          <Link 
+            to="/artistes"
+            className="inline-block bg-transparent border-2 border-yellow-400 text-yellow-400 px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300"
+          >
             Découvrir tous les artistes
-          </span>
+          </Link>
         </div>
       </div>
     </section>
