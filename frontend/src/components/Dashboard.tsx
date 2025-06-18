@@ -583,7 +583,7 @@ console.debug('Spectacle request:', {
             {featuredArtist ? (
               <div className="flex items-start space-x-6">
                 <img 
-                  src={featuredArtist.photo} 
+                  src={featuredArtist.photo ? `/src/assets/img/photo_artiste/${featuredArtist.photo}` : ''} 
                   alt={featuredArtist.name} 
                   className="w-48 h-48 object-cover rounded-lg"
                 />
@@ -617,7 +617,7 @@ console.debug('Spectacle request:', {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {spectacles.map((spectacle) => (
               <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                <img src={spectacle.img} alt={spectacle.title} className="w-full h-48 object-cover" />
+                <img src={spectacle.img ? `/src/assets/img/spectacles/${spectacle.img}` : ''} alt={spectacle.title} className="w-full h-48 object-cover" />
                 <div className="p-4">
                   <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
                   <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
@@ -651,7 +651,7 @@ console.debug('Spectacle request:', {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {artists.map((artist) => (
               <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                <img src={artist.photo} alt={artist.name} className="w-full h-48 object-cover" />
+                <img src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''} alt={artist.name} className="w-full h-48 object-cover" />
                 <div className="p-4">
                   <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
                   <p className="text-gray-400 mb-2">
@@ -936,7 +936,7 @@ console.debug('Spectacle request:', {
                     }}
                   >
                     <img
-                      src={artist.photo}
+                      src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''}
                       alt={artist.name}
                       className="w-full h-32 object-cover rounded-lg mb-3"
                     />

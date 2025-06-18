@@ -76,7 +76,7 @@ const SpectacleDetail = () => {
           {/* Hero Section */}
           <div className="relative h-[400px] rounded-lg overflow-hidden mb-8">
             <img
-              src={spectacle.img || spectacle.artiste_photo || "/placeholder.jpg"}
+              src={spectacle.img ? `/src/assets/img/spectacles/${spectacle.img}` : "/placeholder.jpg"}
               alt={spectacle.title}
               className="w-full h-full object-cover"
             />

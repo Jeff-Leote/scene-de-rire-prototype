@@ -68,7 +68,7 @@ const FeaturedArtists = () => {
               <div className="relative overflow-hidden rounded-full aspect-square mb-4">
                 <img 
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
-                  src={artist.photo} 
+                  src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''} 
                   alt={`Portrait de ${artist.name}`}
                 />
                 <div className="absolute inset-0 bg-yellow-400 bg-opacity-0 group-hover:bg-opacity-20 transition duration-300"></div>

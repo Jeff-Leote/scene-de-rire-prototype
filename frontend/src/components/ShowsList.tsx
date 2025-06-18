@@ -113,7 +113,7 @@ const ShowsList = () => {
                 >
                   <div className="relative h-64">
                     <img
-                      src={spectacle.img || spectacle.artiste_photo || "/placeholder.jpg"}
+                      src={spectacle.img ? `/src/assets/img/spectacles/${spectacle.img}` : "/placeholder.jpg"}
                       alt={spectacle.title}
                       className="object-cover w-full h-full"
                     />
