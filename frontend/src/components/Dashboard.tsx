@@ -29,8 +29,8 @@ interface Artist {
 interface ArtistFormData {
   name: string;
   biographie: string;
-  photo: File | null;
-  photo_featured: File | null;
+  photo: string;
+  photo_featured: string;
 }
 
 const Dashboard = () => {
@@ -69,8 +69,8 @@ const Dashboard = () => {
   const [newArtist, setNewArtist] = useState<ArtistFormData>({
     name: '',
     biographie: '',
-    photo: null,
-    photo_featured: null
+    photo: '',
+    photo_featured: ''
   });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -238,9 +238,20 @@ console.debug('Spectacle request:', {
 
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      // S'assurer que photo_featured a une valeur
+      const artistData = {
+        ...artistFormData,
+        photo_featured: artistFormData.photo_featured || artistFormData.photo
+      };
+
       const url = isAddingArtist 
-        ? 'http://localhost:5000/api/admin/artistes'
-        : `http://localhost:5000/api/admin/artistes/${selectedArtist?.id}`;
+        ? 'http://localhost:5000/api/admin/artiste'
+        : `http://localhost:5000/api/admin/artiste/${selectedArtist?.id}`;
       
       const response = await fetch(url, {
         method: isAddingArtist ? 'POST' : 'PUT',
@@ -248,10 +259,17 @@ console.debug('Spectacle request:', {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(artistFormData)
+        body: JSON.stringify(artistData)
       });
 
-      if (!response.ok) throw new Error(isAddingArtist ? 'Erreur lors de l\'ajout de l\'artiste' : 'Erreur lors de la modification de l\'artiste');
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || (isAddingArtist ? 'Erreur lors de l\'ajout de l\'artiste' : 'Erreur lors de la modification de l\'artiste'));
+      }
 
       const updatedArtist = await response.json();
       if (isAddingArtist) {
@@ -358,30 +376,37 @@ console.debug('Spectacle request:', {
         return;
       }
 
+      // Utiliser la même photo pour photo_featured si non spécifiée
+      const artistData = {
+        ...newArtist,
+        photo_featured: newArtist.photo_featured || newArtist.photo
+      };
+
       const response = await fetch('http://localhost:5000/api/admin/artiste', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(newArtist)
+        body: JSON.stringify(artistData)
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
         if (response.status === 401) {
           toast.error('Session expirée. Veuillez vous reconnecter.');
           return;
         }
-        throw new Error(data.error || 'Erreur lors de l\'ajout de l\'artiste');
+        throw new Error(data.error || data.details || 'Erreur lors de l\'ajout de l\'artiste');
       }
 
-      const data = await response.json();
       setArtists([...artists, data]);
-      setNewArtist({ name: '', biographie: '', photo: null, photo_featured: null });
+      setNewArtist({ name: '', biographie: '', photo: '', photo_featured: '' });
       setIsAddModalOpen(false);
       toast.success('Artiste ajouté avec succès');
     } catch (err) {
+      console.error('Erreur complète:', err);
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     }
   };
@@ -810,7 +835,8 @@ console.debug('Spectacle request:', {
                     value={artistFormData.photo}
                     onChange={handleArtistInputChange}
                     className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
-                    placeholder="URL de la photo de profil"
+                    placeholder="Nom du fichier (ex: tamere.jpg)"
+                    required
                   />
                 </div>
                 <div className="mb-4">
@@ -821,9 +847,9 @@ console.debug('Spectacle request:', {
                     value={artistFormData.photo_featured}
                     onChange={handleArtistInputChange}
                     className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
-                    placeholder="URL de la photo à l'affiche"
+                    placeholder="Nom du fichier (ex: tamere.jpg)"
                   />
-                  <p className="text-sm text-gray-500 mt-1">Cette photo sera utilisée lorsque l'artiste est mis en avant sur la page d'accueil</p>
+                  <p className="text-sm text-gray-500 mt-1">Cette photo sera utilisée lorsque l'artiste est mis en avant sur la page d'accueil. Si non spécifiée, la photo de profil sera utilisée.</p>
                 </div>
                 <div>
                   <label className="block text-white mb-2">Biographie</label>
