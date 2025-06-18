@@ -60,10 +60,10 @@ const FeaturedArtists = () => {
         <h2 className="text-3xl font-bold text-white mb-8">Artistes déjà venu</h2>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {artists
-            .sort((a, b) => b.upcoming_shows - a.upcoming_shows)
-            .slice(0, 4)
-            .map((artist) => (
+{[...artists]                               // clone first
+  .sort((a, b) => b.upcoming_shows - a.upcoming_shows)
+  .slice(0, 4)
+  .map((artist) => (
             <div key={artist.id} className="group">
               <div className="relative overflow-hidden rounded-full aspect-square mb-4">
                 <img 

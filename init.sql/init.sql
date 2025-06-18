@@ -40,6 +40,7 @@ CREATE TABLE artiste (
   photo varchar(255) NOT NULL,
   created_at timestamp DEFAULT CURRENT_TIMESTAMP
   is_featured boolean DEFAULT FALSE;
+  photo_featured varchar(255) NOT NULL;
 );
 
 CREATE TABLE reservation (

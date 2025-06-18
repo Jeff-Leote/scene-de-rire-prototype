@@ -4,8 +4,7 @@ const db = require('../db');
 const { auth, isAdmin } = require('./auth');
 
 // Middleware pour protéger toutes les routes admin
-router.use(auth);
-router.use(isAdmin);
+router.use(auth, isAdmin);
 
 // Récupérer tous les spectacles (pour l'admin)
 router.get('/spectacles', async (req, res) => {
@@ -232,21 +231,29 @@ router.delete('/artistes/:id', async (req, res) => {
 });
 
 // Ajouter un nouvel artiste
-router.post('/artistes', async (req, res) => {
-  console.log('Admin - Ajout d\'un nouvel artiste:', req.body);
-  const { name, photo, biographie } = req.body;
+router.post('/artiste', async (req, res) => {
+  console.log('Admin - Ajout d\'un nouvel artiste - Headers:', req.headers);
+  console.log('Admin - Ajout d\'un nouvel artiste - Body:', req.body);
+  const { name, photo, photo_featured, biographie } = req.body;
 
-  if (!name || !photo || !biographie) {
-    console.log('Admin - Données manquantes pour l\'ajout de l\'artiste');
+  if (!name || !photo || !photo_featured || !biographie) {
+    console.log('Admin - Données manquantes pour l\'ajout de l\'artiste:', {
+      name: !!name,
+      photo: !!photo,
+      photo_featured: !!photo_featured,
+      biographie: !!biographie
+    });
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
+    console.log('Admin - Tentative d\'insertion dans la base de données');
     const [result] = await db.query(
-      'INSERT INTO artiste (name, photo, biographie) VALUES (?, ?, ?)',
-      [name, photo, biographie]
+      'INSERT INTO artiste (name, photo, photo_featured, biographie) VALUES (?, ?, ?, ?)',
+      [name, photo, photo_featured, biographie]
     );
-    
+    console.log('Admin - Insertion réussie, ID:', result.insertId);
+
     const [newArtist] = await db.query(
       `SELECT a.*, COUNT(s.id) as upcoming_shows
        FROM artiste a
@@ -260,8 +267,8 @@ router.post('/artistes', async (req, res) => {
     console.log('Admin - Artiste ajouté avec succès:', newArtist[0]);
     res.status(201).json(newArtist[0]);
   } catch (error) {
-    console.error('Erreur lors de l\'ajout de l\'artiste:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    console.error('Erreur détaillée lors de l\'ajout de l\'artiste:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 });
 
@@ -305,6 +312,7 @@ router.get('/featured', async (req, res) => {
       id: artiste.id,
       name: artiste.name,
       photo: artiste.photo,
+      photo_featured: artiste.photo_featured,
       biographie: artiste.biographie,
       next_show: artiste.next_show_id ? {
         id: artiste.next_show_id,
@@ -332,70 +340,50 @@ router.post('/featured', async (req, res) => {
   }
 
   try {
+    // Vérifier si l'artiste a des spectacles à venir
+    const [upcomingShows] = await db.query(`
+      SELECT COUNT(*) as count 
+      FROM spectacle 
+      WHERE artiste_id = ? 
+      AND CONCAT(date_spectacle, ' ', heure_spectacle) > NOW()
+    `, [artist_id]);
+
+    if (upcomingShows[0].count === 0) {
+      return res.status(400).json({ 
+        error: 'Cet artiste n\'a pas de spectacles à venir. Impossible de le mettre en avant.' 
+      });
+    }
+
     // D'abord, réinitialiser tous les artistes
-    await db.query('UPDATE artiste SET is_featured = false');
-    
-    // Ensuite, définir le nouvel artiste à l'affiche
-await db.query('START TRANSACTION');
-try {
-   await db.query('UPDATE artiste SET is_featured = false');
-   const [result] = await db.query(
-     'UPDATE artiste SET is_featured = true WHERE id = ?',
-     [artist_id]
-   );
-  if (result.affectedRows === 0) throw new Error('NOT_FOUND');
-  await db.query('COMMIT');
-} catch (e) {
-  await db.query('ROLLBACK');
-  if (e.message === 'NOT_FOUND') return res.status(404).json({ error: 'Artiste non trouvé' });
-  throw e;
-}
-    // Récupérer l'artiste mis à jour avec ses informations
+    await db.query('START TRANSACTION');
+    try {
+      await db.query('UPDATE artiste SET is_featured = false');
+      const [result] = await db.query(
+        'UPDATE artiste SET is_featured = true WHERE id = ?',
+        [artist_id]
+      );
+      if (result.affectedRows === 0) throw new Error('NOT_FOUND');
+      await db.query('COMMIT');
+    } catch (e) {
+      await db.query('ROLLBACK');
+      if (e.message === 'NOT_FOUND') return res.status(404).json({ error: 'Artiste non trouvé' });
+      throw e;
+    }
+
+    // Récupérer l'artiste mis à jour avec ses spectacles à venir
     const [artistes] = await db.query(`
       SELECT a.*, 
-        (SELECT s.id FROM spectacle s 
+        (SELECT COUNT(*) FROM spectacle s 
          WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_id,
-        (SELECT s.title FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_title,
-        (SELECT s.date_spectacle FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_date,
-        (SELECT s.heure_spectacle FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_time
+         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()) as upcoming_shows
       FROM artiste a 
       WHERE a.id = ?
     `, [artist_id]);
 
-    const artiste = artistes[0];
-    const response = {
-      id: artiste.id,
-      name: artiste.name,
-      photo: artiste.photo,
-      biographie: artiste.biographie,
-      next_show: artiste.next_show_id ? {
-        id: artiste.next_show_id,
-        title: artiste.next_show_title,
-        date: artiste.next_show_date,
-        time: artiste.next_show_time
-      } : null
-    };
-
-    console.log('Admin - Artiste à l\'affiche mis à jour:', response);
-    res.json(response);
+    res.json(artistes[0]);
   } catch (error) {
     console.error('Erreur lors de la mise à jour de l\'artiste à l\'affiche:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

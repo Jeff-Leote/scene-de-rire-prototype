@@ -21,8 +21,16 @@ interface Artist {
   id: number;
   name: string;
   photo: string;
+  photo_featured: string;
   biographie: string;
   upcoming_shows: number;
+}
+
+interface ArtistFormData {
+  name: string;
+  biographie: string;
+  photo: File | null;
+  photo_featured: File | null;
 }
 
 const Dashboard = () => {
@@ -53,10 +61,19 @@ const Dashboard = () => {
   const [artistFormData, setArtistFormData] = useState({
     name: '',
     photo: '',
+    photo_featured: '',
     biographie: ''
   });
   const [featuredArtist, setFeaturedArtist] = useState<Artist | null>(null);
   const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
+  const [newArtist, setNewArtist] = useState<ArtistFormData>({
+    name: '',
+    biographie: '',
+    photo: null,
+    photo_featured: null
+  });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,6 +132,7 @@ const Dashboard = () => {
     setArtistFormData({
       name: artist.name,
       photo: artist.photo,
+      photo_featured: artist.photo_featured,
       biographie: artist.biographie
     });
     setIsArtistModalOpen(true);
@@ -158,6 +176,7 @@ const Dashboard = () => {
     setArtistFormData({
       name: '',
       photo: '',
+      photo_featured: '',
       biographie: ''
     });
     setIsArtistModalOpen(true);
@@ -178,15 +197,12 @@ const Dashboard = () => {
         artiste_id: parseInt(spectacleFormData.artiste_id)
       };
 
-      console.log('Données envoyées au backend:', {
-        url,
-        method: isAddingSpectacle ? 'POST' : 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
+// Avoid logging credentials in plain text.
+console.debug('Spectacle request:', {
+  url,
+  method: isAddingSpectacle ? 'POST' : 'PUT',
+  body: requestBody   // header & token intentionally omitted
+});
       
       const response = await fetch(url, {
         method: isAddingSpectacle ? 'POST' : 'PUT',
@@ -296,6 +312,11 @@ const Dashboard = () => {
   const handleSetFeaturedArtist = async (artist: Artist) => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
       const response = await fetch('http://localhost:5000/api/admin/featured', {
         method: 'POST',
         headers: {
@@ -305,11 +326,147 @@ const Dashboard = () => {
         body: JSON.stringify({ artist_id: artist.id })
       });
 
-      if (!response.ok) throw new Error('Erreur lors de la mise à jour de l\'artiste à l\'affiche');
+      const data = await response.json();
 
-      const updatedFeatured = await response.json();
-      setFeaturedArtist(updatedFeatured);
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de la mise à jour de l\'artiste à l\'affiche');
+      }
+
+      setFeaturedArtist(data);
       toast.success('Artiste à l\'affiche mis à jour avec succès');
+      setIsFeaturedModalOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const handleAddArtist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newArtist.name || !newArtist.biographie || !newArtist.photo) {
+      toast.error('Tous les champs sont requis');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/admin/artiste', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newArtist)
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de l\'ajout de l\'artiste');
+      }
+
+      const data = await response.json();
+      setArtists([...artists, data]);
+      setNewArtist({ name: '', biographie: '', photo: null, photo_featured: null });
+      setIsAddModalOpen(false);
+      toast.success('Artiste ajouté avec succès');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const handleEditArtist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedArtist) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('name', selectedArtist.name);
+      formData.append('biographie', selectedArtist.biographie);
+      
+      // Gestion des photos
+      const photoInput = document.querySelector('input[name="photo"]') as HTMLInputElement;
+      const photoFeaturedInput = document.querySelector('input[name="photo_featured"]') as HTMLInputElement;
+      
+      if (photoInput?.files?.[0]) {
+        formData.append('photo', photoInput.files[0]);
+      }
+      if (photoFeaturedInput?.files?.[0]) {
+        formData.append('photo_featured', photoFeaturedInput.files[0]);
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/admin/artiste/${selectedArtist.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de la modification de l\'artiste');
+      }
+
+      const data = await response.json();
+      setArtists(artists.map(a => a.id === selectedArtist.id ? data : a));
+      setSelectedArtist(null);
+      setIsEditModalOpen(false);
+      toast.success('Artiste modifié avec succès');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const handleDeleteArtist = async (id: number) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet artiste ?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/admin/artiste/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de la suppression de l\'artiste');
+      }
+
+      setArtists(artists.filter(a => a.id !== id));
+      toast.success('Artiste supprimé avec succès');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     }
@@ -645,16 +802,28 @@ const Dashboard = () => {
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-white mb-2">Photo URL</label>
+                <div className="mb-4">
+                  <label className="block text-gray-400 mb-2">Photo de profil</label>
                   <input
                     type="text"
                     name="photo"
                     value={artistFormData.photo}
                     onChange={handleArtistInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                    placeholder="URL de la photo de profil"
                   />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-400 mb-2">Photo à l'affiche</label>
+                  <input
+                    type="text"
+                    name="photo_featured"
+                    value={artistFormData.photo_featured}
+                    onChange={handleArtistInputChange}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                    placeholder="URL de la photo à l'affiche"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Cette photo sera utilisée lorsque l'artiste est mis en avant sur la page d'accueil</p>
                 </div>
                 <div>
                   <label className="block text-white mb-2">Biographie</label>
@@ -729,10 +898,15 @@ const Dashboard = () => {
                 {artists.map((artist) => (
                   <div
                     key={artist.id}
-                    className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition duration-300"
+                    className={`bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition duration-300 ${
+                      artist.upcoming_shows === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                     onClick={() => {
-                      handleSetFeaturedArtist(artist);
-                      setIsFeaturedModalOpen(false);
+                      if (artist.upcoming_shows > 0) {
+                        handleSetFeaturedArtist(artist);
+                      } else {
+                        toast.error('Cet artiste n\'a pas de spectacles à venir');
+                      }
                     }}
                   >
                     <img
@@ -742,6 +916,11 @@ const Dashboard = () => {
                     />
                     <h3 className="text-lg font-bold text-white">{artist.name}</h3>
                     <p className="text-gray-400 text-sm line-clamp-2">{artist.biographie}</p>
+                    <div className="mt-2 text-sm">
+                      <span className={`${artist.upcoming_shows > 0 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

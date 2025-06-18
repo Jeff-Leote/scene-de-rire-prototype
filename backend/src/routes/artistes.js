@@ -60,6 +60,7 @@ router.get('/featured', async (req, res) => {
       id: artiste.id,
       name: artiste.name,
       photo: artiste.photo,
+      photo_featured: artiste.photo_featured,
       biographie: artiste.biographie,
       next_show: artiste.next_show_id ? {
         id: artiste.next_show_id,

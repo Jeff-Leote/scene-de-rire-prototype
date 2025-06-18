@@ -5,6 +5,7 @@ interface FeaturedArtist {
   id: number;
   name: string;
   photo: string;
+  photo_featured: string;
   biographie: string;
   next_show?: {
     id: number;
@@ -89,7 +90,7 @@ const Hero = () => {
         <div className="relative overflow-hidden rounded-lg h-[500px] mb-12">
           <img 
             className="absolute inset-0 w-full h-full object-cover" 
-            src={featuredArtist.photo} 
+            src={featuredArtist.photo_featured || featuredArtist.photo} 
             alt={`${featuredArtist.name} performing on stage`} 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
