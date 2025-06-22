@@ -19,6 +19,8 @@ import MyAccount from "./pages/MyAccount";
 import Dashboard from "./components/Dashboard";
 import SpectacleDetail from "./pages/SpectacleDetail";
 import Artists from "./pages/Artists";
+import ReservationInformations from "./pages/ReservationInformations";
+import ReservationPaiement from "./pages/ReservationPaiement";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/spectacles/:id" element={<SpectacleDetail />} />
             <Route path="/le-lieu" element={<Venue />} />
             <Route path="/reservation" element={<Reservation />} />
+            <Route path="/reservation/informations" element={<ReservationInformations />} />
+            <Route path="/reservation/paiement" element={<ReservationPaiement />} />
             <Route path="/artistes" element={<Artists />} />
             <Route 
               path="/connexion" 

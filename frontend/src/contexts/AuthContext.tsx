@@ -80,3 +80,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
+
+// Panier (Cart) Context
+interface CartItem {
+  id: number;
+  title: string;
+  date_spectacle: string;
+  heure_spectacle: string;
+  prix: number;
+  img: string;
+  lieu: string;
+}
+
+interface CartContextType {
+  cart: CartItem[];
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (id: number) => void;
+  clearCart: () => void;
+}
+
+const CartContext = createContext<CartContextType>({
+  cart: [],
+  addToCart: () => {},
+  removeFromCart: () => {},
+  clearCart: () => {},
+});
+
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const stored = localStorage.getItem('cart');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
+
+  const addToCart = (item: CartItem) => {
+    setCart((prev) => {
+      if (prev.find((i) => i.id === item.id)) return prev;
+      return [...prev, item];
+    });
+  };
+  const removeFromCart = (id: number) => setCart((prev) => prev.filter((i) => i.id !== id));
+  const clearCart = () => setCart([]);
+
+  return (
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
+export const useCart = () => useContext(CartContext);

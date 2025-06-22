@@ -53,6 +53,7 @@ const Login = () => {
       
       toast.success("Connexion réussie !");
       navigate('/'); // Rediriger vers la page d'accueil
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.message || "Erreur inconnue");
     } finally {

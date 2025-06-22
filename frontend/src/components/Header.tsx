@@ -1,7 +1,7 @@
 //src/components/Header.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useCart } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   activeItem?: string;
@@ -11,6 +11,7 @@ const Header = ({ activeItem }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const { cart } = useCart();
   
   return (
     <>
@@ -33,8 +34,13 @@ const Header = ({ activeItem }: HeaderProps) => {
             <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
               Le lieu
             </Link>
-            <Link to="/reservation" className={`${activeItem === 'Réservation' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+            <Link to="/reservation" className={`${activeItem === 'Réservation' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer relative`}>
               Réservation
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-4 bg-yellow-400 text-black text-xs font-bold rounded-full px-2 py-0.5">
+                  {cart.length}
+                </span>
+              )}
             </Link>
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
               Contact

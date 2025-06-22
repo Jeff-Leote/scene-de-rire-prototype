@@ -1,8 +1,87 @@
-
+import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { fetchSpectacles, fetchSpectacleById } from "../services/spectacles";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
+import ProtectedRoute from "../components/ProtectedRoute";
+import { useCart } from "../contexts/AuthContext";
 
 const Reservation = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [spectacles, setSpectacles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedSpectacle, setSelectedSpectacle] = useState<any | null>(null);
+  const [nbBillets, setNbBillets] = useState<{ [id: number]: number }>({});
+  const location = useLocation();
+  const params = useParams();
+  const { addToCart, removeFromCart, cart } = useCart();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+    const stateSpectacle = location.state?.spectacle;
+    const urlSpectacleId = params.id;
+    if (stateSpectacle) {
+      setSelectedSpectacle(stateSpectacle);
+      setLoading(false);
+      setSpectacles([stateSpectacle]);
+    } else if (urlSpectacleId) {
+      fetchSpectacleById(Number(urlSpectacleId))
+        .then((sp) => {
+          if (isMounted) {
+            setSelectedSpectacle(sp);
+            setSpectacles([sp]);
+            setLoading(false);
+          }
+        })
+        .catch(() => setError("Erreur lors du chargement du spectacle"));
+    } else {
+      fetchSpectacles()
+        .then((spList) => {
+          setSpectacles(spList);
+          if (!selectedSpectacle && cart.length > 0) {
+            const cartSpectacle = spList.find(s => s.id === cart[0].id);
+            if (cartSpectacle) setSelectedSpectacle(cartSpectacle);
+          }
+        })
+        .catch(() => setError("Erreur lors du chargement des spectacles"))
+        .finally(() => setLoading(false));
+    }
+    return () => { isMounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, params.id, cart]);
+
+  // Ajouter au panier à chaque sélection de spectacle (évite les doublons)
+  useEffect(() => {
+    if (selectedSpectacle) {
+      addToCart({
+        id: selectedSpectacle.id,
+        title: selectedSpectacle.title,
+        date_spectacle: selectedSpectacle.date_spectacle,
+        heure_spectacle: selectedSpectacle.heure_spectacle,
+        prix: selectedSpectacle.prix,
+        img: selectedSpectacle.img,
+        lieu: selectedSpectacle.lieu,
+      });
+      // Initialiser le nombre de billets à 1 si pas déjà défini
+      setNbBillets((prev) => ({ ...prev, [selectedSpectacle.id]: prev[selectedSpectacle.id] || 1 }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSpectacle]);
+
+  if (loading)
+    return (
+      <section id="upcoming-shows" className="bg-black py-12">
+        <div className="container mx-auto px-6 text-white text-center">Chargement...</div>
+      </section>
+    );
+  if (error) return <div>{error}</div>;
+
+  // Calcul du total général du panier
+  const totalPanier = cart.reduce((sum, item) => sum + (item.prix * (nbBillets[item.id] || 1)), 0);
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Header activeItem="Réservation" />
@@ -46,287 +125,126 @@ const Reservation = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Left Column (2/3 width) */}
             <div id="booking-main-content" className="md:col-span-2">
-              {/* Spectacle Info */}
-              <div id="spectacle-info" className="bg-gray-900 rounded-lg p-4 mb-6 flex items-center">
-                <div className="mr-4 w-24 h-32 overflow-hidden rounded-md">
-                  <img className="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c63886b888-26d16bbc43c9935ea9a3.png" alt="comedy show performer on stage with microphone, dramatic lighting, professional photography" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-yellow-400">Gad Elmaleh - D'ailleurs</h1>
-                  <p className="text-gray-300">One-man show • 1h30 • Tout public</p>
-                  <div className="flex items-center mt-2">
-                    <i className="fa-solid fa-star text-yellow-400"></i>
-                    <i className="fa-solid fa-star text-yellow-400"></i>
-                    <i className="fa-solid fa-star text-yellow-400"></i>
-                    <i className="fa-solid fa-star text-yellow-400"></i>
-                    <i className="fa-solid fa-star-half-alt text-yellow-400"></i>
-                    <span className="ml-2 text-sm text-gray-300">(128 avis)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 1: Choose Date & Time */}
-              <div id="step1-date-selection" className="mb-8">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <i className="fa-solid fa-calendar-days mr-2 text-yellow-400"></i>
-                  Choisissez une date
-                </h2>
-                
-                {/* Month Navigation */}
-                <div className="flex justify-between items-center mb-4">
-                  <button className="text-gray-400 hover:text-white">
-                    <i className="fa-solid fa-chevron-left mr-1"></i>
-                    Avril
-                  </button>
-                  <h3 className="text-lg font-medium">Mai 2025</h3>
-                  <button className="text-gray-400 hover:text-white">
-                    Juin
-                    <i className="fa-solid fa-chevron-right ml-1"></i>
-                  </button>
-                </div>
-                
-                {/* Dates Grid */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-6">
-                  <button className="bg-gray-800 hover:bg-gray-700 rounded-md p-3 text-center">
-                    <div className="text-sm text-gray-400">Mer</div>
-                    <div className="text-lg font-bold">7</div>
-                    <div className="text-xs text-gray-400">20h00</div>
-                  </button>
-                  <button className="bg-gray-800 hover:bg-gray-700 rounded-md p-3 text-center">
-                    <div className="text-sm text-gray-400">Jeu</div>
-                    <div className="text-lg font-bold">8</div>
-                    <div className="text-xs text-gray-400">20h00</div>
-                  </button>
-                  <button className="bg-gray-800 hover:bg-gray-700 rounded-md p-3 text-center">
-                    <div className="text-sm text-gray-400">Ven</div>
-                    <div className="text-lg font-bold">9</div>
-                    <div className="text-xs text-gray-400">20h30</div>
-                  </button>
-                  <button className="bg-gray-800 hover:bg-gray-700 rounded-md p-3 text-center">
-                    <div className="text-sm text-gray-400">Sam</div>
-                    <div className="text-lg font-bold">10</div>
-                    <div className="text-xs text-gray-400">20h30</div>
-                  </button>
-                  <button className="bg-gray-800 hover:bg-gray-700 rounded-md p-3 text-center">
-                    <div className="text-sm text-gray-400">Dim</div>
-                    <div className="text-lg font-bold">11</div>
-                    <div className="text-xs text-gray-400">18h00</div>
-                  </button>
-                  <button className="bg-yellow-400 text-black rounded-md p-3 text-center relative">
-                    <div className="text-sm">Mer</div>
-                    <div className="text-lg font-bold">14</div>
-                    <div className="text-xs">20h00</div>
-                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-                      Promo
-                    </div>
-                  </button>
-                  <button className="bg-gray-800 hover:bg-gray-700 rounded-md p-3 text-center">
-                    <div className="text-sm text-gray-400">Jeu</div>
-                    <div className="text-lg font-bold">15</div>
-                    <div className="text-xs text-gray-400">20h00</div>
-                  </button>
-                  <button className="bg-gray-800 hover:bg-gray-700 rounded-md p-3 text-center">
-                    <div className="text-sm text-gray-400">Ven</div>
-                    <div className="text-lg font-bold">16</div>
-                    <div className="text-xs text-gray-400">20h30</div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Step 2: Ticket Quantity */}
-              <div id="step2-ticket-selection" className="mb-8">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <i className="fa-solid fa-ticket mr-2 text-yellow-400"></i>
-                  Sélectionnez vos billets
-                </h2>
-                
-                <div className="bg-gray-900 rounded-lg p-6">
-                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
-                    <div>
-                      <div className="font-medium">Tarif plein</div>
-                      <div className="text-sm text-gray-400">Adulte (18 ans et +)</div>
-                    </div>
+              {/* Affichage de la liste des spectacles du panier */}
+              <div className="flex flex-col gap-4 my-6">
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`bg-gray-900 rounded-lg p-4 cursor-pointer border-2 ${selectedSpectacle?.id === item.id ? 'border-yellow-400' : 'border-transparent'} transition flex items-center justify-between`}
+                    onClick={() => setSelectedSpectacle(item)}
+                  >
                     <div className="flex items-center">
-                      <div className="text-xl font-bold mr-4">25 €</div>
-                      <div className="flex items-center">
-                        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                          <i className="fa-solid fa-minus"></i>
-                        </button>
-                        <span className="mx-4 w-6 text-center">2</span>
-                        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                          <i className="fa-solid fa-plus"></i>
-                        </button>
+                      <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
+                        <img className="w-full h-full object-cover" src={item.img} alt={item.title} />
+                      </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-yellow-400">{item.title}</h2>
+                        <div className="text-gray-300 text-sm mb-1">{item.date_spectacle} à {item.heure_spectacle}</div>
+                        <div className="text-gray-400 text-sm mb-1">Lieu : {item.lieu}</div>
+                        <div className="text-lg font-bold text-yellow-400">{item.prix} €</div>
                       </div>
                     </div>
+                    <button
+                      className="ml-4 text-red-500 hover:text-red-700 p-2 rounded-full z-10"
+                      onClick={e => { e.stopPropagation(); removeFromCart(item.id); if(selectedSpectacle?.id === item.id) setSelectedSpectacle(null); }}
+                      title="Supprimer ce spectacle"
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                ))}
                   </div>
                   
-                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
+              {/* Section Tarif/Prix unitaire/Nombre de billets/Total pour le spectacle sélectionné */}
+              {selectedSpectacle && (
+                <>
+                  <div className="bg-gray-900 rounded-lg p-6 my-6 max-w-md mx-auto">
+                    <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="font-medium">Tarif réduit</div>
-                      <div className="text-sm text-gray-400">Étudiant, -25 ans, chômeur</div>
+                        <div className="font-medium text-white">Tarif</div>
+                        <div className="text-sm text-gray-400">Prix unitaire</div>
+                      </div>
+                      <div className="text-xl font-bold text-yellow-400">{selectedSpectacle.prix} €</div>
                     </div>
-                    <div className="flex items-center">
-                      <div className="text-xl font-bold mr-4">18 €</div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="font-medium text-white">Nombre de billets</div>
                       <div className="flex items-center">
-                        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                          <i className="fa-solid fa-minus"></i>
+                        <button
+                          className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                          onClick={() => setNbBillets(n => ({ ...n, [selectedSpectacle.id]: Math.max(1, (n[selectedSpectacle.id] || 1) - 1) }))}
+                        >
+                          -
                         </button>
-                        <span className="mx-4 w-6 text-center">0</span>
-                        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                          <i className="fa-solid fa-plus"></i>
+                        <span className="mx-4 w-6 text-center">{nbBillets[selectedSpectacle.id] || 1}</span>
+                        <button
+                          className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                          onClick={() => setNbBillets(n => ({ ...n, [selectedSpectacle.id]: (n[selectedSpectacle.id] || 1) + 1 }))}
+                        >
+                          +
                         </button>
                       </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-6">
+                      <div className="font-bold text-lg text-white">Total</div>
+                      <div className="text-2xl font-bold text-yellow-400">{selectedSpectacle.prix * (nbBillets[selectedSpectacle.id] || 1)} €</div>
                     </div>
                   </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">Tarif groupe</div>
-                      <div className="text-sm text-gray-400">À partir de 10 personnes</div>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="text-xl font-bold mr-4">15 €</div>
-                      <div className="flex items-center">
-                        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                          <i className="fa-solid fa-minus"></i>
-                        </button>
-                        <span className="mx-4 w-6 text-center">0</span>
-                        <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                          <i className="fa-solid fa-plus"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Seat Selection (Optional) */}
-              <div id="seat-selection" className="mb-8">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <i className="fa-solid fa-couch mr-2 text-yellow-400"></i>
-                  Choisissez vos places (optionnel)
-                </h2>
-                
-                <div className="bg-gray-900 rounded-lg p-6 text-center">
-                  <div className="w-full mx-auto mb-6 relative">
-                    <div className="w-3/4 h-8 bg-yellow-400 mx-auto rounded-t-3xl flex items-center justify-center text-black font-medium">
-                      SCÈNE
-                    </div>
-                    
-                    <div className="mt-8 grid grid-cols-12 gap-1 max-w-md mx-auto">
-                      {/* Row 1 */}
-                      <div className="col-span-12 text-xs text-gray-500 mb-1">Rangée A</div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-yellow-400 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-yellow-400 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-red-500 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-red-500 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-red-500 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      
-                      {/* Row 2 */}
-                      <div className="col-span-12 text-xs text-gray-500 my-1">Rangée B</div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-red-500 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-red-500 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                      <div className="w-5 h-5 bg-gray-800 rounded-sm"></div>
-                    </div>
-                    
-                    <div className="flex justify-center mt-6 space-x-6 text-sm">
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 bg-gray-800 rounded-sm mr-2"></div>
-                        <span>Disponible</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 bg-yellow-400 rounded-sm mr-2"></div>
-                        <span>Sélectionné</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 bg-red-500 rounded-sm mr-2"></div>
-                        <span>Occupé</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button className="mt-4 text-gray-400 hover:text-white text-sm flex items-center mx-auto">
-                    <i className="fa-solid fa-expand mr-1"></i>
-                    Agrandir le plan de salle
-                  </button>
-                </div>
-              </div>
-              
-              {/* Continue Button */}
-              <div className="text-center mt-8">
-                <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition">
+                  {/* Bouton Continuer en dehors du cadre */}
+                  <div className="text-center mt-4 mb-8">
+                    <button
+                      className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition"
+                      onClick={() => {
+                        if (selectedSpectacle) {
+                          navigate("/reservation/informations", {
+                            state: {
+                              spectacle: selectedSpectacle,
+                              nbBillets: nbBillets[selectedSpectacle.id] || 1,
+                            },
+                          });
+                        }
+                      }}
+                    >
                   Continuer
                   <i className="fa-solid fa-arrow-right ml-2"></i>
                 </button>
               </div>
+                </>
+              )}
             </div>
 
             {/* Right Column (1/3 width) - Order Summary */}
             <div id="order-summary" className="md:col-span-1">
-              <div className="bg-gray-900 rounded-lg p-6 sticky top-24">
+              {/* Résumé de la commande pour tout le panier */}
+              {cart.length > 0 && (
+                <div className="bg-gray-900 rounded-lg p-6 sticky top-24 mt-8 md:mt-0 md:col-span-1">
                 <h2 className="text-xl font-semibold mb-4 flex items-center">
                   <i className="fa-solid fa-receipt mr-2 text-yellow-400"></i>
                   Résumé de votre commande
                 </h2>
-                
-                <div className="mb-4 pb-4 border-b border-gray-700">
+                  {cart.map((item) => (
+                    <div key={item.id} className="mb-4 pb-4 border-b border-gray-700">
                   <div className="flex justify-between mb-2">
                     <div className="text-gray-300">Spectacle</div>
-                    <div>Gad Elmaleh - D'ailleurs</div>
+                        <div>{item.title}</div>
                   </div>
                   <div className="flex justify-between mb-2">
                     <div className="text-gray-300">Date</div>
-                    <div>Mercredi 14 mai 2025</div>
+                        <div>{item.date_spectacle}</div>
                   </div>
-                  <div className="flex justify-between">
+                      <div className="flex justify-between mb-2">
                     <div className="text-gray-300">Heure</div>
-                    <div>20h00</div>
-                  </div>
-                </div>
-                
-                <div className="mb-4 pb-4 border-b border-gray-700">
-                  <div className="flex justify-between mb-2">
-                    <div>Tarif plein × 2</div>
-                    <div>50,00 €</div>
+                        <div>{item.heure_spectacle}</div>
                   </div>
                   <div className="flex justify-between mb-2">
-                    <div>Tarif réduit × 0</div>
-                    <div>0,00 €</div>
-                  </div>
-                  <div className="flex justify-between">
-                    <div>Tarif groupe × 0</div>
-                    <div>0,00 €</div>
+                        <div>Billet × {nbBillets[item.id] || 1}</div>
+                        <div>{item.prix * (nbBillets[item.id] || 1)} €</div>
                   </div>
                 </div>
-                
-                <div className="mb-4 pb-4 border-b border-gray-700">
-                  <div className="flex justify-between">
-                    <div className="text-gray-300">Frais de service</div>
-                    <div>2,00 €</div>
+                  ))}
+                  <div className="flex justify-between items-center font-bold text-lg mb-4">
+                    <div>Total</div>
+                    <div className="text-yellow-400">{totalPanier} €</div>
                   </div>
-                </div>
-                
-                <div className="flex justify-between items-center font-bold text-lg">
-                  <div>Total</div>
-                  <div className="text-yellow-400">52,00 €</div>
-                </div>
-                
                 <div className="mt-6 text-sm text-gray-400">
                   <div className="flex items-center mb-2">
                     <i className="fa-solid fa-shield-halved mr-2"></i>
@@ -341,7 +259,6 @@ const Reservation = () => {
                     Présentation sur mobile acceptée
                   </div>
                 </div>
-                
                 <div className="mt-6 flex items-center">
                   <input type="text" placeholder="Code promo" className="bg-gray-800 border border-gray-700 rounded-l-md py-2 px-3 focus:outline-none focus:border-yellow-400 flex-grow" />
                   <button className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-r-md">
@@ -349,6 +266,7 @@ const Reservation = () => {
                   </button>
                 </div>
               </div>
+              )}
             </div>
           </div>
           
@@ -380,4 +298,10 @@ const Reservation = () => {
   );
 };
 
-export default Reservation;
+export default function ReservationProtected() {
+  return (
+    <ProtectedRoute requireAuth>
+      <Reservation />
+    </ProtectedRoute>
+  );
+}

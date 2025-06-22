@@ -1,0 +1,176 @@
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { useAuth } from "../contexts/AuthContext";
+
+const ReservationInformations = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { spectacle, nbBillets } = location.state || {};
+  const { user } = useAuth();
+
+  const [prenom, setPrenom] = useState(user?.firstName || "");
+  const [nom, setNom] = useState(user?.lastName || "");
+  const [useAccountEmail, setUseAccountEmail] = useState(true);
+  const [email, setEmail] = useState(user?.email || "");
+  const [manualEmail, setManualEmail] = useState("");
+  const [touched, setTouched] = useState(false);
+
+  if (!spectacle) {
+    // Si on accède à la page sans données, retour à la réservation
+    navigate("/reservation");
+    return null;
+  }
+
+  const emailToUse = useAccountEmail ? email : manualEmail;
+  const isFormValid = prenom.trim() && nom.trim() && emailToUse.trim() && (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailToUse));
+
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      <Header activeItem="Réservation" />
+      <main className="flex-1">
+        <div className="container mx-auto px-4 pt-24 pb-16">
+          {/* Barre d'étapes */}
+          <div id="progress-bar" className="mb-8">
+            <div className="flex justify-between">
+              <div className="w-1/3 text-center">
+                <div className="relative">
+                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center">
+                    <i className="fa-solid fa-calendar-days"></i>
+                  </div>
+                  <div className="text-xs mt-2">Sélection</div>
+                </div>
+              </div>
+              <div className="w-1/3 text-center">
+                <div className="relative">
+                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center">
+                    <i className="fa-solid fa-user"></i>
+                  </div>
+                  <div className="text-xs mt-2">Informations</div>
+                </div>
+              </div>
+              <div className="w-1/3 text-center">
+                <div className="relative">
+                  <div className="w-10 h-10 mx-auto bg-gray-700 rounded-full text-white flex items-center justify-center">
+                    <i className="fa-solid fa-credit-card"></i>
+                  </div>
+                  <div className="text-xs mt-2 text-gray-400">Paiement</div>
+                </div>
+              </div>
+            </div>
+            <div className="relative mt-4">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gray-700"></div>
+              <div className="absolute top-0 left-0 w-2/3 h-1 bg-yellow-400"></div>
+            </div>
+          </div>
+
+          {/* Contenu principal */}
+          <div className="max-w-full mx-auto">
+            <div className="bg-gray-900 rounded-lg p-8 w-full relative" style={{ paddingTop: '3.5rem' }}>
+              {/* Flèche retour intégrée dans la card */}
+              <button
+                className="absolute top-4 left-4 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full text-lg transition flex items-center z-10"
+                onClick={() => navigate('/reservation')}
+              >
+                <i className="fa-solid fa-arrow-left"></i>
+              </button>
+              {/* Récap du spectacle */}
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-yellow-400 mb-2 pl-10">Récapitulatif</h2>
+                <div className="flex items-center">
+                  <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
+                    <img className="w-full h-full object-cover" src={spectacle.img} alt={spectacle.title} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg">{spectacle.title}</div>
+                    <div className="text-gray-300 text-sm mb-1">{spectacle.date_spectacle} à {spectacle.heure_spectacle}</div>
+                    <div className="text-gray-400 text-sm mb-1">Lieu : {spectacle.lieu}</div>
+                    <div className="text-yellow-400 font-bold text-lg">{spectacle.prix} € × {nbBillets} billets</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Formulaire infos */}
+              <form className="space-y-6" onSubmit={e => {
+                e.preventDefault();
+                setTouched(true);
+                if (!isFormValid) return;
+                navigate("/reservation/paiement", {
+                  state: {
+                    spectacle,
+                    nbBillets,
+                    prenom,
+                    nom,
+                    email: emailToUse,
+                  },
+                });
+              }}>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Prénom</label>
+                  <input
+                    type="text"
+                    className="w-1/2 rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
+                    value={prenom}
+                    onChange={e => setPrenom(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nom</label>
+                  <input
+                    type="text"
+                    className="w-1/2 rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
+                    value={nom}
+                    onChange={e => setNom(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Email</label>
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id="use-account-email"
+                      checked={useAccountEmail}
+                      onChange={e => setUseAccountEmail(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label htmlFor="use-account-email" className="text-sm select-none cursor-pointer">
+                      Utiliser l'email de mon compte
+                    </label>
+                  </div>
+                  {!useAccountEmail && (
+                    <input
+                      type="email"
+                      className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
+                      value={manualEmail}
+                      onChange={e => setManualEmail(e.target.value)}
+                      required
+                    />
+                  )}
+                </div>
+                {touched && !isFormValid && (
+                  <div className="text-red-500 text-sm">Veuillez remplir tous les champs correctement.</div>
+                )}
+                <div className="text-center mt-8">
+                  <button
+                    type="submit"
+                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition"
+                    disabled={!isFormValid}
+                  >
+                    Continuer
+                    <i className="fa-solid fa-arrow-right ml-2"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default ReservationInformations; 
