@@ -142,6 +142,23 @@ const Reservation = () => {
                         <div className="text-gray-300 text-sm mb-1">{item.date_spectacle} à {item.heure_spectacle}</div>
                         <div className="text-gray-400 text-sm mb-1">Lieu : {item.lieu}</div>
                         <div className="text-lg font-bold text-yellow-400">{item.prix} €</div>
+                        {/* Contrôle du nombre de billets pour chaque spectacle */}
+                        <div className="flex items-center mt-2">
+                          <span className="text-white mr-2">Billets :</span>
+                          <button
+                            className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                            onClick={e => { e.stopPropagation(); setNbBillets(n => ({ ...n, [item.id]: Math.max(1, (n[item.id] || 1) - 1) })); }}
+                          >
+                            -
+                        </button>
+                          <span className="mx-2 w-6 text-center">{nbBillets[item.id] || 1}</span>
+                          <button
+                            className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                            onClick={e => { e.stopPropagation(); setNbBillets(n => ({ ...n, [item.id]: (n[item.id] || 1) + 1 })); }}
+                          >
+                            +
+                        </button>
+                        </div>
                       </div>
                     </div>
                     <button
@@ -155,73 +172,75 @@ const Reservation = () => {
                 ))}
                   </div>
                   
-              {/* Section Tarif/Prix unitaire/Nombre de billets/Total pour le spectacle sélectionné */}
-              {selectedSpectacle && (
-                <>
-                  <div className="bg-gray-900 rounded-lg p-6 my-6 max-w-md mx-auto">
-                    <div className="flex items-center justify-between mb-4">
+            {/* Section Tarif/Prix unitaire/Nombre de billets/Total pour le spectacle sélectionné */}
+            {selectedSpectacle && (
+              <>
+                <div className="bg-gray-900 rounded-lg p-6 my-6 max-w-md mx-auto">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                        <div className="font-medium text-white">Tarif</div>
-                        <div className="text-sm text-gray-400">Prix unitaire</div>
-                      </div>
-                      <div className="text-xl font-bold text-yellow-400">{selectedSpectacle.prix} €</div>
+                      <div className="font-medium text-white">Tarif</div>
+                      <div className="text-sm text-gray-400">Prix unitaire</div>
                     </div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="font-medium text-white">Nombre de billets</div>
-                      <div className="flex items-center">
-                        <button
-                          className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white"
-                          onClick={() => setNbBillets(n => ({ ...n, [selectedSpectacle.id]: Math.max(1, (n[selectedSpectacle.id] || 1) - 1) }))}
-                        >
-                          -
+                    <div className="text-xl font-bold text-yellow-400">{selectedSpectacle.prix} €</div>
+                  </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="font-medium text-white">Nombre de billets</div>
+                    <div className="flex items-center">
+                      <button
+                        className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                        onClick={() => setNbBillets(n => ({ ...n, [selectedSpectacle.id]: Math.max(1, (n[selectedSpectacle.id] || 1) - 1) }))}
+                      >
+                        -
                         </button>
-                        <span className="mx-4 w-6 text-center">{nbBillets[selectedSpectacle.id] || 1}</span>
-                        <button
-                          className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white"
-                          onClick={() => setNbBillets(n => ({ ...n, [selectedSpectacle.id]: (n[selectedSpectacle.id] || 1) + 1 }))}
-                        >
-                          +
+                      <span className="mx-4 w-6 text-center">{nbBillets[selectedSpectacle.id] || 1}</span>
+                      <button
+                        className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                        onClick={() => setNbBillets(n => ({ ...n, [selectedSpectacle.id]: (n[selectedSpectacle.id] || 1) + 1 }))}
+                      >
+                        +
                         </button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-6">
-                      <div className="font-bold text-lg text-white">Total</div>
-                      <div className="text-2xl font-bold text-yellow-400">{selectedSpectacle.prix * (nbBillets[selectedSpectacle.id] || 1)} €</div>
                     </div>
                   </div>
-                  {/* Bouton Continuer en dehors du cadre */}
-                  <div className="text-center mt-4 mb-8">
-                    <button
-                      className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition"
-                      onClick={() => {
-                        if (selectedSpectacle) {
-                          navigate("/reservation/informations", {
-                            state: {
-                              spectacle: selectedSpectacle,
-                              nbBillets: nbBillets[selectedSpectacle.id] || 1,
-                            },
-                          });
-                        }
-                      }}
-                    >
+                  <div className="flex items-center justify-between mt-6">
+                    <div className="font-bold text-lg text-white">Total</div>
+                    <div className="text-2xl font-bold text-yellow-400">{selectedSpectacle.prix * (nbBillets[selectedSpectacle.id] || 1)} €</div>
+                  </div>
+                </div>
+                {/* Bouton Continuer en dehors du cadre */}
+                <div className="text-center mt-4 mb-8">
+                  <button
+                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition"
+                    onClick={() => {
+                      if (selectedSpectacle) {
+                        navigate("/reservation/informations", {
+                          state: {
+                            cart,
+                            nbBillets,
+                          },
+                        });
+                      }
+                    }}
+                  >
                   Continuer
                   <i className="fa-solid fa-arrow-right ml-2"></i>
                 </button>
               </div>
-                </>
-              )}
+              </>
+            )}
             </div>
 
             {/* Right Column (1/3 width) - Order Summary */}
             <div id="order-summary" className="md:col-span-1">
-              {/* Résumé de la commande pour tout le panier */}
-              {cart.length > 0 && (
-                <div className="bg-gray-900 rounded-lg p-6 sticky top-24 mt-8 md:mt-0 md:col-span-1">
+            {/* Résumé de la commande pour tout le panier */}
+            {cart.length > 0 && (
+              <div className="bg-gray-900 rounded-lg p-6 sticky top-24 mt-8 md:mt-0 md:col-span-1">
                 <h2 className="text-xl font-semibold mb-4 flex items-center">
                   <i className="fa-solid fa-receipt mr-2 text-yellow-400"></i>
                   Résumé de votre commande
                 </h2>
-                  {cart.map((item) => (
+                {cart.map((item) => {
+                  const totalSpectacle = item.prix * (nbBillets[item.id] || 1);
+                  return (
                     <div key={item.id} className="mb-4 pb-4 border-b border-gray-700">
                   <div className="flex justify-between mb-2">
                     <div className="text-gray-300">Spectacle</div>
@@ -237,14 +256,15 @@ const Reservation = () => {
                   </div>
                   <div className="flex justify-between mb-2">
                         <div>Billet × {nbBillets[item.id] || 1}</div>
-                        <div>{item.prix * (nbBillets[item.id] || 1)} €</div>
+                        <div>{totalSpectacle} €</div>
                   </div>
                 </div>
-                  ))}
-                  <div className="flex justify-between items-center font-bold text-lg mb-4">
-                    <div>Total</div>
-                    <div className="text-yellow-400">{totalPanier} €</div>
-                  </div>
+                  );
+                })}
+                <div className="flex justify-between items-center font-bold text-lg mb-4">
+                  <div>Total</div>
+                  <div className="text-yellow-400">{totalPanier} €</div>
+                </div>
                 <div className="mt-6 text-sm text-gray-400">
                   <div className="flex items-center mb-2">
                     <i className="fa-solid fa-shield-halved mr-2"></i>
@@ -266,7 +286,7 @@ const Reservation = () => {
                   </button>
                 </div>
               </div>
-              )}
+            )}
             </div>
           </div>
           

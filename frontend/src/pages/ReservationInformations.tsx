@@ -7,7 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 const ReservationInformations = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { spectacle, nbBillets } = location.state || {};
+  const { cart = [], nbBillets = {} } = location.state || {};
   const { user } = useAuth();
 
   const [prenom, setPrenom] = useState(user?.firstName || "");
@@ -17,7 +17,7 @@ const ReservationInformations = () => {
   const [manualEmail, setManualEmail] = useState("");
   const [touched, setTouched] = useState(false);
 
-  if (!spectacle) {
+  if (!cart.length) {
     // Si on accède à la page sans données, retour à la réservation
     navigate("/reservation");
     return null;
@@ -25,6 +25,7 @@ const ReservationInformations = () => {
 
   const emailToUse = useAccountEmail ? email : manualEmail;
   const isFormValid = prenom.trim() && nom.trim() && emailToUse.trim() && (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailToUse));
+  const totalPanier = cart.reduce((sum, item) => sum + (item.prix * (nbBillets[item.id] || 1)), 0);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -75,20 +76,23 @@ const ReservationInformations = () => {
               >
                 <i className="fa-solid fa-arrow-left"></i>
               </button>
-              {/* Récap du spectacle */}
+              {/* Récap du panier */}
               <div className="mb-8">
                 <h2 className="text-xl font-bold text-yellow-400 mb-2 pl-10">Récapitulatif</h2>
-                <div className="flex items-center">
-                  <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
-                    <img className="w-full h-full object-cover" src={spectacle.img} alt={spectacle.title} />
+                {cart.map((item) => (
+                  <div key={item.id} className="flex items-center mb-4">
+                    <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
+                      <img className="w-full h-full object-cover" src={item.img} alt={item.title} />
+                    </div>
+                    <div>
+                      <div className="font-bold text-lg">{item.title}</div>
+                      <div className="text-gray-300 text-sm mb-1">{item.date_spectacle} à {item.heure_spectacle}</div>
+                      <div className="text-gray-400 text-sm mb-1">Lieu : {item.lieu}</div>
+                      <div className="text-yellow-400 font-bold text-lg">{item.prix} € × {nbBillets[item.id] || 1} billets = {item.prix * (nbBillets[item.id] || 1)} €</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-lg">{spectacle.title}</div>
-                    <div className="text-gray-300 text-sm mb-1">{spectacle.date_spectacle} à {spectacle.heure_spectacle}</div>
-                    <div className="text-gray-400 text-sm mb-1">Lieu : {spectacle.lieu}</div>
-                    <div className="text-yellow-400 font-bold text-lg">{spectacle.prix} € × {nbBillets} billets</div>
-                  </div>
-                </div>
+                ))}
+                <div className="text-right font-bold text-xl text-yellow-400 mt-4">Total : {totalPanier} €</div>
               </div>
 
               {/* Formulaire infos */}
@@ -98,7 +102,7 @@ const ReservationInformations = () => {
                 if (!isFormValid) return;
                 navigate("/reservation/paiement", {
                   state: {
-                    spectacle,
+                    cart,
                     nbBillets,
                     prenom,
                     nom,
@@ -110,7 +114,7 @@ const ReservationInformations = () => {
                   <label className="block text-sm font-medium mb-1">Prénom</label>
                   <input
                     type="text"
-                    className="w-1/2 rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
+                    className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
                     value={prenom}
                     onChange={e => setPrenom(e.target.value)}
                     required
@@ -120,7 +124,7 @@ const ReservationInformations = () => {
                   <label className="block text-sm font-medium mb-1">Nom</label>
                   <input
                     type="text"
-                    className="w-1/2 rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
+                    className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
                     value={nom}
                     onChange={e => setNom(e.target.value)}
                     required

@@ -1,8 +1,8 @@
 export async function createReservationCheckout(data: {
-  spectacleId: number;
-  date: string;
-  time: string;
-  billets: number;
+  spectacles: {
+    id: number;
+    billets: number;
+  }[];
   prenom?: string;
   nom?: string;
   email?: string;

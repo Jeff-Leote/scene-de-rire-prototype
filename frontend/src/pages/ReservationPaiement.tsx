@@ -7,11 +7,11 @@ import { createReservationCheckout } from "../services/reservation";
 const ReservationPaiement = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { spectacle, nbBillets, prenom, nom, email } = location.state || {};
+  const { cart = [], nbBillets = {}, prenom, nom, email } = location.state || {};
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (!spectacle) {
+  if (!cart.length) {
     navigate("/reservation");
     return null;
   }
@@ -21,10 +21,10 @@ const ReservationPaiement = () => {
     setError("");
     try {
       const res = await createReservationCheckout({
-        spectacleId: spectacle.id,
-        date: spectacle.date_spectacle,
-        time: spectacle.heure_spectacle,
-        billets: nbBillets,
+        spectacles: cart.map(item => ({
+          id: item.id,
+          billets: nbBillets[item.id] || 1,
+        })),
         prenom,
         nom,
         email,
@@ -40,6 +40,8 @@ const ReservationPaiement = () => {
       setLoading(false);
     }
   };
+
+  const totalPanier = cart.reduce((sum, item) => sum + (item.prix * (nbBillets[item.id] || 1)), 0);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -86,23 +88,25 @@ const ReservationPaiement = () => {
               {/* Flèche retour intégrée dans la card */}
               <button
                 className="absolute top-4 left-4 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full text-lg transition flex items-center z-10"
-                onClick={() => navigate('/reservation/informations', { state: { spectacle, nbBillets, prenom, nom, email } })}
+                onClick={() => navigate('/reservation/informations', { state: { cart, nbBillets, prenom, nom, email } })}
               >
                 <i className="fa-solid fa-arrow-left"></i>
               </button>
               <h2 className="text-xl font-bold text-yellow-400 mb-2 pl-10">Récapitulatif</h2>
-              <div className="flex items-center">
-                <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
-                  <img className="w-full h-full object-cover" src={spectacle.img} alt={spectacle.title} />
+              {cart.map(item => (
+                <div key={item.id} className="flex items-center mb-4">
+                  <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
+                    <img className="w-full h-full object-cover" src={item.img} alt={item.title} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg">{item.title}</div>
+                    <div className="text-gray-300 text-sm mb-1">{item.date_spectacle} à {item.heure_spectacle}</div>
+                    <div className="text-gray-400 text-sm mb-1">Lieu : {item.lieu}</div>
+                    <div className="text-yellow-400 font-bold text-lg">{item.prix} € × {nbBillets[item.id] || 1} billets = {item.prix * (nbBillets[item.id] || 1)} €</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-bold text-lg">{spectacle.title}</div>
-                  <div className="text-gray-300 text-sm mb-1">{spectacle.date_spectacle} à {spectacle.heure_spectacle}</div>
-                  <div className="text-gray-400 text-sm mb-1">Lieu : {spectacle.lieu}</div>
-                  <div className="text-yellow-400 font-bold text-lg">{spectacle.prix} € × {nbBillets} billets</div>
-                  <div className="text-white font-bold text-lg mt-2">Total : {spectacle.prix * nbBillets} €</div>
-                </div>
-              </div>
+              ))}
+              <div className="text-right font-bold text-xl text-yellow-400 mt-4">Total : {totalPanier} €</div>
             </div>
           </div>
 
