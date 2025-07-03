@@ -99,18 +99,29 @@ router.post("/confirm", async (req, res) => {
       );
       reservationIds.push(result.insertId);
     }
-    for (const reservation_id of reservationIds) {
+
+    // Calculate individual amounts for each spectacle
+    const totalSpectacles = spectacles.reduce((sum, item) => sum + item.billets, 0);
+    const amountPerTicket = montant / totalSpectacles;
+    
+    for (let i = 0; i < reservationIds.length; i++) {
+      const reservation_id = reservationIds[i];
+      const spectacleAmount = Math.round(amountPerTicket * spectacles[i].billets);
       await conn.query(
         "INSERT INTO paiement (reservation_id, montant, statut) VALUES (?, ?, ?)",
-        [reservation_id, montant, true]
+        [reservation_id, spectacleAmount, true]
       );
     }
+
     await conn.commit();
     res.status(201).json({ success: true, reservationIds });
   } catch (err) {
     await conn.rollback();
     console.error("Erreur lors de la confirmation de la réservation:", err);
-    res.status(500).json({ error: "Erreur lors de la confirmation de la réservation", details: err.message });
+    res.status(500).json({ 
+      error: "Erreur lors de la confirmation de la réservation", 
+      details: err.message 
+    });
   } finally {
     conn.release();
   }
