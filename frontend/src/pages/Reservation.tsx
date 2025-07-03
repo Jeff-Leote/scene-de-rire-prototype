@@ -55,7 +55,7 @@ const Reservation = () => {
 
   // Ajouter au panier à chaque sélection de spectacle (évite les doublons)
   useEffect(() => {
-    if (selectedSpectacle) {
+    if (selectedSpectacle && !cart.find(i => i.id === selectedSpectacle.id)) {
       addToCart({
         id: selectedSpectacle.id,
         title: selectedSpectacle.title,
@@ -65,7 +65,6 @@ const Reservation = () => {
         img: selectedSpectacle.img,
         lieu: selectedSpectacle.lieu,
       });
-      // Initialiser le nombre de billets à 1 si pas déjà défini
       setNbBillets((prev) => ({ ...prev, [selectedSpectacle.id]: prev[selectedSpectacle.id] || 1 }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,7 +162,27 @@ const Reservation = () => {
                     </div>
                     <button
                       className="ml-4 text-red-500 hover:text-red-700 p-2 rounded-full z-10"
-                      onClick={e => { e.stopPropagation(); removeFromCart(item.id); if(selectedSpectacle?.id === item.id) setSelectedSpectacle(null); }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        removeFromCart(item.id);
+                        setNbBillets((prev) => {
+                          const newBillets = { ...prev };
+                          delete newBillets[item.id];
+                          return newBillets;
+                        });
+                        // Si on supprime le spectacle sélectionné
+                        if (selectedSpectacle?.id === item.id) {
+                          // On attend la mise à jour du panier (cart) au prochain render
+                          setTimeout(() => {
+                            if (cart.length === 1) {
+                              setSelectedSpectacle(null);
+                            } else {
+                              const next = cart.find(s => s.id !== item.id);
+                              setSelectedSpectacle(next || null);
+                            }
+                          }, 0);
+                        }
+                      }}
                       title="Supprimer ce spectacle"
                     >
                       <i className="fa-solid fa-trash"></i>

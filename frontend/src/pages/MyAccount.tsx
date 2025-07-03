@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/sonner";
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const MyAccount = () => {
   const { user, token, login, logout } = useAuth();
@@ -15,6 +15,50 @@ const MyAccount = () => {
     lastName: user?.lastName || '',
     email: user?.email || '',
   });
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const payment = params.get('payment');
+    const session_id = params.get('session_id');
+    if (payment === 'success' && session_id && user) {
+      // Récupérer le panier depuis le localStorage (clé à adapter selon ton contexte)
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const nbBillets = JSON.parse(localStorage.getItem('nbBillets') || '{}');
+      // Calcul du montant total
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const montant = cart.reduce((sum: number, item: any) => sum + (item.prix * (nbBillets[item.id] || 1)), 0);
+      // Construction du payload
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const spectacles = cart.map((item: any) => ({ id: item.id, billets: nbBillets[item.id] || 1 }));
+      fetch('http://localhost:5000/api/reservations/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          spectacles,
+          session_id,
+          montant
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            toast.success('Réservation enregistrée avec succès !');
+            // Optionnel : vider le panier
+            localStorage.removeItem('cart');
+            localStorage.removeItem('nbBillets');
+          } else {
+            toast.error('Erreur lors de l\'enregistrement de la réservation.');
+          }
+        })
+        .catch(() => toast.error('Erreur lors de l\'enregistrement de la réservation.'));
+    } else if (payment === 'success') {
+      toast.success('Paiement réussi ! Merci pour votre réservation.');
+    } else if (payment === 'cancel') {
+      toast.error('Paiement annulé. Votre réservation n\'a pas été finalisée.');
+    }
+  }, [location.search, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

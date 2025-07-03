@@ -44,8 +44,8 @@ router.post("/checkout", async (req, res) => {
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL}/reservation/succes?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/reservation`,
+      success_url: `${process.env.FRONTEND_URL}/mon-compte?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/mon-compte?payment=cancel`,
       customer_email: email,
       metadata: {
         prenom,
@@ -77,6 +77,42 @@ router.post("/", async (req, res) => {
     res.status(201).json({ reservation_id: result.insertId });
   } catch (err) {
     res.status(500).json({ error: "Erreur lors de la création de la réservation" });
+  }
+});
+
+// Confirmation de réservation et paiement après succès Stripe
+router.post("/confirm", async (req, res) => {
+  const { user_id, spectacles, session_id, montant } = req.body;
+  // spectacles: [{ id, billets }]
+  // montant: total payé
+  if (!user_id || !spectacles || !Array.isArray(spectacles) || !session_id) {
+    return res.status(400).json({ error: "Champs manquants" });
+  }
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const reservationIds = [];
+    for (const item of spectacles) {
+      const [result] = await conn.query(
+        "INSERT INTO reservation (user_id, spectacle_id, nb_places) VALUES (?, ?, ?)",
+        [user_id, item.id, item.billets]
+      );
+      reservationIds.push(result.insertId);
+    }
+    for (const reservation_id of reservationIds) {
+      await conn.query(
+        "INSERT INTO paiement (reservation_id, montant, statut) VALUES (?, ?, ?)",
+        [reservation_id, montant, true]
+      );
+    }
+    await conn.commit();
+    res.status(201).json({ success: true, reservationIds });
+  } catch (err) {
+    await conn.rollback();
+    console.error("Erreur lors de la confirmation de la réservation:", err);
+    res.status(500).json({ error: "Erreur lors de la confirmation de la réservation", details: err.message });
+  } finally {
+    conn.release();
   }
 });
 

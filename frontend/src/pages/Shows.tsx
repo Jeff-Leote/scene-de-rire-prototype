@@ -11,10 +11,7 @@ const Shows = () => {
     <div className="min-h-screen bg-black text-white">
       <Header activeItem="Spectacles" />
       <main className="pt-24">
-        <ShowsList/>
-        <FeaturedArtists />
-        <ShowsCalendar />
-        <CTA />
+        <ShowsList/> 
       </main>
       <Footer />
     </div>
