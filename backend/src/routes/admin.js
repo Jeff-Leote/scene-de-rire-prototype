@@ -161,6 +161,71 @@ router.get('/artistes', async (req, res) => {
   }
 });
 
+// Récupérer toutes les réservations (pour l'admin)
+router.get('/reservations', async (req, res) => {
+  console.log('Admin - Récupération des réservations');
+  try {
+    const [reservations] = await db.query(`
+      SELECT 
+        r.id as reservation_id,
+        r.nb_places,
+        r.date as reservation_date,
+        s.id as spectacle_id,
+        s.title as spectacle_title,
+        s.date_spectacle,
+        s.heure_spectacle,
+        s.prix,
+        s.lieu,
+        a.name as artiste_name,
+        u.id as user_id,
+        u.civility,
+        u.prenom as user_firstname,
+        u.nom as user_lastname,
+        u.email as user_email,
+        p.montant as montant_paye,
+        p.statut as paiement_statut,
+        p.date as date_paiement
+      FROM reservation r
+      JOIN spectacle s ON r.spectacle_id = s.id
+      JOIN artiste a ON s.artiste_id = a.id
+      JOIN user u ON r.user_id = u.id
+      LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
+      LEFT JOIN paiement p ON pr.paiement_id = p.id
+      ORDER BY r.date DESC
+    `);
+    console.log('Admin - Nombre de réservations trouvées:', reservations.length);
+    res.json(reservations);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des réservations:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Supprimer une réservation (pour l'admin)
+router.delete('/reservations/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log('Admin - Suppression de la réservation:', id);
+
+  try {
+    // Supprimer d'abord les liens paiement-réservation
+    await db.query('DELETE FROM paiement_reservation WHERE reservation_id = ?', [id]);
+    
+    // Supprimer la réservation
+    const [result] = await db.query('DELETE FROM reservation WHERE id = ?', [id]);
+    
+    if (result.affectedRows === 0) {
+      console.log('Admin - Réservation non trouvée pour suppression:', id);
+      return res.status(404).json({ error: 'Réservation non trouvée' });
+    }
+
+    console.log('Admin - Réservation supprimée avec succès:', id);
+    res.json({ message: 'Réservation supprimée avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la réservation:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
 // Modifier un artiste
 router.put('/artistes/:id', async (req, res) => {
   const { id } = req.params;

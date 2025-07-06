@@ -2,42 +2,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
-
-interface Spectacle {
-  id: number;
-  title: string;
-  img: string;
-  description: string;
-  date_spectacle: string;
-  heure_spectacle: string;
-  prix: number;
-  lieu: string;
-  artiste_name: string;
-  artiste_photo: string;
-  artiste_id: number;
-}
-
-interface Artist {
-  id: number;
-  name: string;
-  photo: string;
-  photo_featured: string;
-  biographie: string;
-  upcoming_shows: number;
-}
-
-interface ArtistFormData {
-  name: string;
-  biographie: string;
-  photo: string;
-  photo_featured: string;
-}
+import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData } from '../services/types';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured'>('spectacles');
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations'>('spectacles');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSpectacleModalOpen, setIsSpectacleModalOpen] = useState(false);
@@ -102,6 +74,12 @@ const Dashboard = () => {
           const featuredData = await featuredResponse.json();
           setFeaturedArtist(featuredData);
         }
+
+        // Récupérer les réservations
+        const reservationsResponse = await fetch('http://localhost:5000/api/admin/reservations', { headers });
+        if (!reservationsResponse.ok) throw new Error('Erreur lors de la récupération des réservations');
+        const reservationsData = await reservationsResponse.json();
+        setReservations(reservationsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -497,6 +475,91 @@ console.debug('Spectacle request:', {
     }
   };
 
+  const handleDeleteReservation = async (id: number) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/admin/reservations/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de la suppression de la réservation');
+      }
+
+      setReservations(reservations.filter(r => r.reservation_id !== id));
+      toast.success('Réservation supprimée avec succès');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (timeString: string) => {
+    return timeString.substring(0, 5); // Retourne HH:MM
+  };
+
+  const getStatusBadge = (paiementStatut: boolean, montantPaye: number) => {
+    // Si le paiement est marqué comme réussi et qu'il y a un montant payé
+    if (paiementStatut && montantPaye > 0) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-500 text-white shadow-sm">
+          <span className="mr-1">✓</span>
+          Payé
+        </span>
+      );
+    }
+    // Si le paiement est marqué comme échoué ou montant = 0
+    else if (!paiementStatut && montantPaye > 0) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-500 text-white shadow-sm">
+          <span className="mr-1">✗</span>
+          Annulé
+        </span>
+      );
+    }
+    // Si pas de paiement associé (réservation sans paiement)
+    else if (montantPaye === 0 || montantPaye === null) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-500 text-white shadow-sm">
+          <span className="mr-1">?</span>
+          Sans paiement
+        </span>
+      );
+    }
+    // Sinon, en attente
+    else {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-orange-500 text-white shadow-sm">
+          <span className="mr-1">⏱</span>
+          En attente
+        </span>
+      );
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 pt-24 pb-12">
@@ -564,8 +627,18 @@ console.debug('Spectacle request:', {
             >
               L'affiche
             </button>
+            <button
+              onClick={() => setActiveTab('reservations')}
+              className={`px-4 py-2 rounded ${
+                activeTab === 'reservations'
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              } transition duration-300`}
+            >
+              Réservations
+            </button>
           </div>
-          {activeTab !== 'featured' && (
+          {activeTab !== 'featured' && activeTab !== 'reservations' && (
             <button
               onClick={activeTab === 'spectacles' ? handleAddSpectacleClick : handleAddArtistClick}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
@@ -577,7 +650,7 @@ console.debug('Spectacle request:', {
         </div>
 
         {/* Content */}
-        {activeTab === 'featured' ? (
+        {activeTab === 'featured' && (
           <div className="bg-gray-800 rounded-lg p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Artiste à l'affiche</h2>
             {featuredArtist ? (
@@ -610,72 +683,143 @@ console.debug('Spectacle request:', {
               </div>
             )}
           </div>
-        ) : activeTab === 'spectacles' ? (
+        )}
+
+        {activeTab === 'spectacles' && (
           spectacles.length === 0 ? (
             <p className="text-gray-400 text-center">Aucun spectacle</p>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {spectacles.map((spectacle) => (
-              <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                <img src={spectacle.img ? `/src/assets/img/spectacles/${spectacle.img}` : ''} alt={spectacle.title} className="w-full h-48 object-cover" />
-                <div className="p-4">
-                  <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
-                  <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
-                  <p className="text-gray-400 mb-2">
-                      Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
-                  </p>
-                  <p className="text-gray-400 mb-4">Prix: {spectacle.prix}€</p>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handleEditSpectacleClick(spectacle)}
-                      className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                    >
-                      Modifier
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteClick('spectacle', spectacle.id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                    >
-                      Supprimer
-                    </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {spectacles.map((spectacle) => (
+                <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
+                  <img src={spectacle.img ? `/src/assets/img/spectacles/${spectacle.img}` : ''} alt={spectacle.title} className="w-full h-48 object-cover" />
+                  <div className="p-4">
+                    <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
+                    <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
+                    <p className="text-gray-400 mb-2">
+                        Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
+                    </p>
+                    <p className="text-gray-400 mb-4">Prix: {spectacle.prix}€</p>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => handleEditSpectacleClick(spectacle)}
+                        className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                      >
+                        Modifier
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteClick('spectacle', spectacle.id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           )
-        ) : (
+        )}
+
+        {activeTab === 'artists' && (
           artists.length === 0 ? (
             <p className="text-gray-400 text-center">Aucun artiste</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {artists.map((artist) => (
-              <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                <img src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''} alt={artist.name} className="w-full h-48 object-cover" />
-                <div className="p-4">
-                  <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
-                  <p className="text-gray-400 mb-2">
-                    {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
-                  </p>
-                  <p className="text-gray-400 mb-4 line-clamp-3">{artist.biographie}</p>
-                  <div className="flex space-x-2">
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {artists.map((artist) => (
+                <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
+                  <img src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''} alt={artist.name} className="w-full h-48 object-cover" />
+                  <div className="p-4">
+                    <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
+                    <p className="text-gray-400 mb-2">
+                      {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
+                    </p>
+                    <p className="text-gray-400 mb-4 line-clamp-3">{artist.biographie}</p>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => handleEditArtistClick(artist)}
+                        className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                      >
+                        Modifier
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteClick('artist', artist.id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {activeTab === 'reservations' && (
+          reservations.length === 0 ? (
+            <p className="text-gray-400 text-center">Aucune réservation</p>
+          ) : (
+            <div className="space-y-4">
+              {reservations.map((reservation) => (
+                <div key={reservation.reservation_id} className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2">{reservation.spectacle_title}</h3>
+                      <p className="text-gray-400 mb-1">Artiste: {reservation.artiste_name}</p>
+                      <p className="text-gray-400 mb-1">
+                        Date: {formatDate(reservation.date_spectacle)} à {formatTime(reservation.heure_spectacle)}
+                      </p>
+                      <p className="text-gray-400 mb-1">Lieu: {reservation.lieu}</p>
+                    </div>
+                    <div className="text-right">
+                      {getStatusBadge(reservation.paiement_statut, reservation.montant_paye || 0)}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-gray-700 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Client</p>
+                      <p className="text-white font-semibold">
+                        {reservation.civility} {reservation.user_firstname} {reservation.user_lastname}
+                      </p>
+                      <p className="text-gray-400 text-sm">{reservation.user_email}</p>
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Places réservées</p>
+                      <p className="text-white font-semibold text-lg">{reservation.nb_places}</p>
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Prix unitaire</p>
+                      <p className="text-white font-semibold">{reservation.prix}€</p>
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-3">
+                      <p className="text-gray-400 text-sm">Montant total</p>
+                      <p className={`font-semibold text-lg ${
+                        reservation.paiement_statut ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        {reservation.montant_paye || reservation.prix * reservation.nb_places}€
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-4 border-t border-gray-700">
+                    <div className="text-sm text-gray-400">
+                      <p>Réservé le: {formatDate(reservation.reservation_date)}</p>
+                      {reservation.date_paiement && (
+                        <p>Payé le: {formatDate(reservation.date_paiement)}</p>
+                      )}
+                    </div>
                     <button 
-                      onClick={() => handleEditArtistClick(artist)}
-                      className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                    >
-                      Modifier
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteClick('artist', artist.id)}
+                      onClick={() => handleDeleteReservation(reservation.reservation_id)}
                       className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                     >
                       Supprimer
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           )
         )}
 

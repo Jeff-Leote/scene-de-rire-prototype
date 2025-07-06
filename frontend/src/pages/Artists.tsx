@@ -2,14 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-
-interface Artist {
-  id: number;
-  name: string;
-  photo: string;
-  biographie: string;
-  upcoming_shows: number;
-}
+import { Artist } from '../services/types';
 
 const Artists = () => {
   const [artists, setArtists] = useState<Artist[]>([]);

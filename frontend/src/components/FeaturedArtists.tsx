@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-
-interface Artist {
-  id: number;
-  name: string;
-  photo: string;
-  upcoming_shows: number;
-}
+import { Artist } from '../services/types';
 
 const FeaturedArtists = () => {
   const [artists, setArtists] = useState<Artist[]>([]);

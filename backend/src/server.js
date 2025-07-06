@@ -17,6 +17,7 @@ app.use(cors({
 
 // Configuration du body parser
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 
 // Middleware de logging

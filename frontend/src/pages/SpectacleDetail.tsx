@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Spectacle } from "@/services/spectacles";
+import { Spectacle } from '../services/types';
 
 
 const SpectacleDetail = () => {

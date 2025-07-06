@@ -2,20 +2,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-
-export interface Spectacle {
-  id: number;
-  title: string;
-  img: string;
-  description: string;
-  date_spectacle: string;
-  heure_spectacle: string;
-  prix: number;
-  lieu: string;
-  artiste_id: number;
-  artiste_name: string;
-  artiste_photo: string;
-}
+import { Spectacle } from '../services/types';
 
 const ShowsList = () => {
   const navigate = useNavigate();

@@ -3,10 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { createReservationCheckout } from "../services/reservation";
+import { useAuth } from "../contexts/AuthContext";
 
 const ReservationPaiement = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { token } = useAuth();
   const { cart = [], nbBillets = {}, prenom, nom, email } = location.state || {};
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,13 +30,16 @@ const ReservationPaiement = () => {
         prenom,
         nom,
         email,
-      });
+      }, token);
+      
       if (res && res.url) {
+        // Rediriger vers Stripe
         window.location.href = res.url;
       } else {
         setError("Erreur lors de la création de la session de paiement.");
       }
     } catch (e) {
+      console.error("Erreur checkout:", e);
       setError("Erreur lors de la création de la session de paiement.");
     } finally {
       setLoading(false);

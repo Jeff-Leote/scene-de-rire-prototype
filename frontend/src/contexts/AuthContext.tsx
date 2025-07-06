@@ -1,22 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from "@/components/ui/sonner";
-
-interface User {
-  id: number;
-  email: string;
-  civility: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;
-}
+import { User, AuthContextType, CartItem, CartContextType } from '../services/types';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -82,22 +66,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => useContext(AuthContext);
 
 // Panier (Cart) Context
-interface CartItem {
-  id: number;
-  title: string;
-  date_spectacle: string;
-  heure_spectacle: string;
-  prix: number;
-  img: string;
-  lieu: string;
-}
-
-interface CartContextType {
-  cart: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: number) => void;
-  clearCart: () => void;
-}
 
 const CartContext = createContext<CartContextType>({
   cart: [],

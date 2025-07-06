@@ -5,6 +5,7 @@ import { fetchSpectacles, fetchSpectacleById } from "../services/spectacles";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useCart } from "../contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 const Reservation = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,6 +24,14 @@ const Reservation = () => {
     let isMounted = true;
     const stateSpectacle = location.state?.spectacle;
     const urlSpectacleId = params.id;
+    
+    // Vérifier si l'utilisateur revient d'une annulation de paiement
+    const searchParams = new URLSearchParams(location.search);
+    const payment = searchParams.get('payment');
+    if (payment === 'cancel') {
+      toast.error('Paiement annulé. Votre réservation n\'a pas été finalisée.');
+    }
+    
     if (stateSpectacle) {
       setSelectedSpectacle(stateSpectacle);
       setLoading(false);
