@@ -9,7 +9,7 @@ const Dashboard = () => {
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu'>('spectacles');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSpectacleModalOpen, setIsSpectacleModalOpen] = useState(false);
@@ -46,6 +46,12 @@ const Dashboard = () => {
   });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [lieuImages, setLieuImages] = useState<any[]>([]);
+  const [isLieuModalOpen, setIsLieuModalOpen] = useState(false);
+  const [isAddingLieu, setIsAddingLieu] = useState(false);
+  const [selectedLieu, setSelectedLieu] = useState(null);
+  const [lieuFormData, setLieuFormData] = useState({ image_path: '', image_detail_path: '', is_main: false });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,6 +86,15 @@ const Dashboard = () => {
         if (!reservationsResponse.ok) throw new Error('Erreur lors de la récupération des réservations');
         const reservationsData = await reservationsResponse.json();
         setReservations(reservationsData);
+
+        // Récupérer les images du lieu
+        fetch('http://localhost:5000/api/lieu/images')
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) setLieuImages(data);
+            else setLieuImages([]);
+          })
+          .catch(() => setLieuImages([]));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -508,6 +523,59 @@ console.debug('Spectacle request:', {
     }
   };
 
+  const handleAddLieuClick = () => {
+    setIsAddingLieu(true);
+    setSelectedLieu(null);
+    setLieuFormData({ image_path: '', image_detail_path: '', is_main: false });
+    setIsLieuModalOpen(true);
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleEditLieuClick = (img: any) => {
+    setSelectedLieu(img);
+    setLieuFormData({ image_path: img.image_path, image_detail_path: img.image_detail_path, is_main: img.is_main });
+    setIsLieuModalOpen(true);
+  };
+  const handleLieuInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLieuFormData(prev => ({ ...prev, [name]: value }));
+  };
+  const handleLieuSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const url = isAddingLieu
+        ? 'http://localhost:5000/api/lieu/images'
+        : `http://localhost:5000/api/lieu/images/${selectedLieu?.id}`;
+      const method = isAddingLieu ? 'POST' : 'PUT';
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lieuFormData)
+      });
+      if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
+      const data = await response.json();
+      if (isAddingLieu) setLieuImages(prev => [...prev, data]);
+      else setLieuImages(prev => prev.map(img => img.id === data.id ? data : img));
+      setIsLieuModalOpen(false);
+      setIsAddingLieu(false);
+      toast.success(isAddingLieu ? 'Image ajoutée' : 'Image modifiée');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur');
+    }
+  };
+  const handleDeleteLieu = async (id: number) => {
+    if (!window.confirm('Supprimer cette image ?')) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/lieu/images/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Erreur lors de la suppression');
+      setLieuImages(prev => prev.filter(img => img.id !== id));
+      toast.success('Image supprimée');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -594,7 +662,7 @@ console.debug('Spectacle request:', {
           </Link>
         </div>
         
-        {/* Tabs */}
+        {/* Onglets */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex space-x-4">
             <button
@@ -637,8 +705,15 @@ console.debug('Spectacle request:', {
             >
               Réservations
             </button>
+            <button
+              onClick={() => setActiveTab('lieu')}
+              className={`px-4 py-2 rounded ${activeTab === 'lieu' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
+            >
+              Lieu
+            </button>
           </div>
-          {activeTab !== 'featured' && activeTab !== 'reservations' && (
+          {/* Retirer le bouton d'ajout d'image pour la catégorie lieu */}
+          {activeTab !== 'featured' && activeTab !== 'reservations' && activeTab !== 'lieu' && (
             <button
               onClick={activeTab === 'spectacles' ? handleAddSpectacleClick : handleAddArtistClick}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
@@ -821,6 +896,31 @@ console.debug('Spectacle request:', {
               ))}
             </div>
           )
+        )}
+
+        {activeTab === 'lieu' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Images du lieu</h2>
+            {lieuImages.length === 0 ? (
+              <p className="text-gray-400 text-center">Aucune image</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {lieuImages.map(img => (
+                  <div key={img.id} className="bg-gray-900 rounded-lg overflow-hidden">
+                    <img src={img.image_path} alt="lieu" className="w-full h-48 object-cover" />
+                    <div className="p-4">
+                      <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {img.image_path}</p>
+                      <p className="text-gray-400 mb-2"><b>Type:</b> {img.is_main ? <span className="text-green-400 font-bold">Principale</span> : <span className="text-blue-400">Galerie</span>}</p>
+                      <div className="flex space-x-2 mt-2">
+                        <button onClick={() => handleEditLieuClick(img)} className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
+                        <button onClick={() => handleDeleteLieu(img.id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Supprimer</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Modal de modification/ajout de spectacle */}
@@ -1102,6 +1202,29 @@ console.debug('Spectacle request:', {
                   Annuler
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal ajout/modif image lieu */}
+        {isLieuModalOpen && selectedLieu && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+              <h2 className="text-2xl font-bold text-white mb-4">Modifier l'image</h2>
+              <form onSubmit={handleLieuSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-white mb-2">Chemin image</label>
+                  <input type="text" name="image_path" value={lieuFormData.image_path} onChange={handleLieuInputChange} className="w-full bg-gray-700 text-white rounded px-4 py-2" required />
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input type="checkbox" id="is_main" name="is_main" checked={!!lieuFormData.is_main} onChange={e => setLieuFormData(prev => ({ ...prev, is_main: e.target.checked }))} />
+                  <label htmlFor="is_main" className="text-white">Image principale (affichée sur l'accueil)</label>
+                </div>
+                <div className="flex justify-end space-x-4 mt-6">
+                  <button type="button" onClick={() => { setIsLieuModalOpen(false); setIsAddingLieu(false); }} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300">Annuler</button>
+                  <button type="submit" className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Enregistrer</button>
+                </div>
+              </form>
             </div>
           </div>
         )}

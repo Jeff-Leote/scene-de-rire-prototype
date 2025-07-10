@@ -68,6 +68,16 @@ CREATE TABLE paiement_reservation (
   FOREIGN KEY (reservation_id) REFERENCES reservation(id)
 );
 
+-- Table pour stocker les images de la galerie du lieu (nouvelle logique)
+DROP TABLE IF EXISTS lieu;
+CREATE TABLE lieu (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_path VARCHAR(512) NOT NULL,
+    is_main boolean DEFAULT FALSE
+);
+
+
+
 -- Ajout des clés étrangères
 ALTER TABLE avis ADD FOREIGN KEY (user_id) REFERENCES user (id);
 ALTER TABLE avis ADD FOREIGN KEY (spectacle_id) REFERENCES spectacle (id);

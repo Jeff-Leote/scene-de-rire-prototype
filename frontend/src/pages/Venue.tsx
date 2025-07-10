@@ -2,8 +2,21 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CTA from "../components/CTA";
+import React, { useEffect, useState } from "react";
+import { fetchGalleryLieuImages, LieuImage } from "../services/lieu";
 
 const Venue = () => {
+  const [images, setImages] = useState<LieuImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchGalleryLieuImages()
+      .then(setImages)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Header activeItem="Le lieu" />
@@ -35,7 +48,7 @@ const Venue = () => {
               </p>
               <div className="flex items-center justify-center text-yellow-400 text-xl">
                 <i className="fa-solid fa-location-dot text-3xl mr-3"></i>
-                <p className="text-lg md:text-xl">123 rue de l'Humour, 75000 Paris</p>
+                <p className="text-lg md:text-xl">136 rue Solferino, 59000  Lille </p>
               </div>
             </div>
           </div>
@@ -45,27 +58,19 @@ const Venue = () => {
         <section className="py-12 bg-gray-950">
           <div className="container mx-auto px-4 md:px-8">
             <h2 className="text-3xl font-bold text-yellow-400 mb-10 text-center">Découvrez notre espace</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/be007dea67-2e01f6d407e07032c9e1.png" alt="entrance of a comedy club at night, neon sign, urban setting" />
+            {loading ? (
+              <div className="text-center text-yellow-400">Chargement des images...</div>
+            ) : error ? (
+              <div className="text-center text-red-400">{error}</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {images.map((img) => (
+                  <div key={img.id} className="aspect-square overflow-hidden rounded-lg">
+                    <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src={`/src/assets/img/image_path${img.image_path}`} alt="photo du lieu" />
+                  </div>
+                ))}
               </div>
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/721bdc13c4-a24fa372794dffaf407d.png" alt="interior view of comedy club theater with red seats, stage lighting, intimate atmosphere" />
-              </div>
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/bee416dcc6-04f48b566173114bd144.png" alt="comedy club stage with spotlight, microphone stand, brick wall background" />
-              </div>
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/0e349654aa-6f8455e6169c7c1e3404.png" alt="cozy bar area in comedy club with bottles display, warm lighting, people chatting" />
-              </div>
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/46cb8e9ed3-d167adbd5d5c14775578.png" alt="audience laughing at comedy show, diverse crowd, atmospheric lighting" />
-              </div>
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/e4d0a855a9-40974d9391816a52bdb3.png" alt="comedy show posters and promotional materials on wall, colorful, artistic" />
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
@@ -133,21 +138,33 @@ const Venue = () => {
               <h2 className="text-3xl font-bold text-yellow-400 mb-8 text-center">
                 <i className="fa-solid fa-map-location-dot mr-3"></i>Nous situer
               </h2>
-              
               <div className="rounded-lg overflow-hidden h-[400px] mb-6 relative">
-                <img className="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/41b6942021-dd24234583396c1fd68b.png" alt="stylized map with highlighted location pin at city center, street layout visible" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-yellow-400 text-black font-bold px-4 py-2 rounded-full animate-pulse">
+                <iframe
+                  title="Google Map - L'Espace Comédie"
+                  src="https://www.google.com/maps?q=136+rue+Solferino,+59000+Lille&output=embed"
+                  width="100%"
+                  height="400"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-yellow-400 text-black font-bold px-4 py-2 rounded-full animate-pulse opacity-90">
                     L'Espace Comédie
                   </div>
                 </div>
               </div>
-              
               <div className="flex justify-center">
-                <span className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 px-6 rounded-full flex items-center transition cursor-pointer">
+                <a
+                  href="https://www.google.com/maps/dir/?api=1&destination=136+rue+Solferino,+59000+Lille"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 px-6 rounded-full flex items-center transition cursor-pointer"
+                >
                   <i className="fa-solid fa-directions mr-2"></i>
                   Itinéraire depuis votre position
-                </span>
+                </a>
               </div>
             </div>
           </div>

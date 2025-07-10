@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -66,6 +66,7 @@ const PaymentStatus = () => {
     } else {
       navigate("/");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, navigate]);
 
   const checkStatus = async (sessionId: string) => {

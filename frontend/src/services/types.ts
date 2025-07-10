@@ -103,7 +103,7 @@ export interface SpectacleFormData {
   description: string;
   date_spectacle: string;
   heure_spectacle: string;
-  prix: string;
+  prix: number;
   artiste_id: string;
   lieu: string;
 }

@@ -1,3 +1,5 @@
+import { PaymentStatusResponse } from './types';
+
 export async function createReservationCheckout(data: {
   spectacles: {
     id: number;
@@ -12,7 +14,7 @@ export async function createReservationCheckout(data: {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch("http://localhost:5000/api/reservations/checkout", {
+const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reservations/checkout`, {
     method: "POST",
     headers,
     body: JSON.stringify(data),
@@ -21,10 +23,8 @@ export async function createReservationCheckout(data: {
   return await res.json();
 }
 
-import { PaymentStatusResponse } from './types';
-
 export async function checkPaymentStatus(sessionId: string): Promise<PaymentStatusResponse> {
-  const res = await fetch(`http://localhost:5000/api/reservations/status/${sessionId}`, {
+const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reservations/status/${sessionId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -33,7 +33,7 @@ export async function checkPaymentStatus(sessionId: string): Promise<PaymentStat
 }
 
 export async function getUserReservations(userId: number) {
-  const res = await fetch(`http://localhost:5000/api/reservations/user/${userId}`, {
+const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reservations/user/${userId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });

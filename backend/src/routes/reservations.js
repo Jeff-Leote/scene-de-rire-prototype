@@ -14,7 +14,7 @@ const auth = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const [users] = await pool.query('SELECT * FROM user WHERE id = ?', [decoded.id]);
     if (users.length === 0) {
@@ -183,8 +183,8 @@ router.post("/checkout", auth, async (req, res) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-status?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-status?payment=cancel`,
+      success_url: `${process.env.FRONTEND_URL}/payment-status?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${process.env.FRONTEND_URL}/payment-status?payment=cancel`,
       metadata: {
         user_id: req.user.id.toString(),
         prenom: prenom,
