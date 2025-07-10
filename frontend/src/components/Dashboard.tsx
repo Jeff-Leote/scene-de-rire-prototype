@@ -278,7 +278,19 @@ console.debug('Spectacle request:', {
     }
   };
 
-  const handleDeleteClick = (type: 'spectacle' | 'artist', id: number) => {
+  const handleDeleteClick = (type: 'spectacle' | 'artist' | 'lieu', id: number) => {
+    if (type === 'lieu') {
+      if (!window.confirm('Supprimer cette image ?')) return;
+      fetch(`http://localhost:5000/api/lieu/images/${id}`, { method: 'DELETE' })
+        .then(res => {
+          if (!res.ok) throw new Error('Erreur lors de la suppression');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setLieuImages((prev: any[]) => prev.filter(image => image.id !== id));
+          toast.success('Image supprimée');
+        })
+        .catch(err => toast.error(err.message || 'Erreur'));
+      return;
+    }
     setItemToDelete({ type, id });
     setShowDeleteConfirmation(true);
   };
@@ -457,147 +469,102 @@ console.debug('Spectacle request:', {
     }
   };
 
-  const handleDeleteArtist = async (id: number) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet artiste ?')) return;
+const handleAddLieuClick = () => {
+  setIsAddingLieu(true);
+  setSelectedLieu(null);
+  setLieuFormData({ image_path: '', image_detail_path: '', is_main: false });
+  setIsLieuModalOpen(true);
+};
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const handleEditLieuClick = (img: any) => {
+  setSelectedLieu(img);
+  setLieuFormData({
+    image_path: img.image_path,
+    image_detail_path: img.image_detail_path,
+    is_main: img.is_main,
+  });
+  setIsLieuModalOpen(true);
+};
 
-      const response = await fetch(`http://localhost:5000/api/admin/artiste/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+const handleLieuInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  setLieuFormData(prev => ({ ...prev, [name]: value }));
+};
 
-      if (!response.ok) {
-        const data = await response.json();
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || 'Erreur lors de la suppression de l\'artiste');
-      }
-
-      setArtists(artists.filter(a => a.id !== id));
-      toast.success('Artiste supprimé avec succès');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+const handleLieuSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Session expirée. Veuillez vous reconnecter.');
+      return;
     }
-  };
 
-  const handleDeleteReservation = async (id: number) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?')) return;
+    const url = isAddingLieu
+      ? `${import.meta.env.VITE_API_URL}/api/lieu/images`
+      : `${import.meta.env.VITE_API_URL}/api/lieu/images/${selectedLieu?.id}`;
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
+    const method = isAddingLieu ? 'POST' : 'PUT';
 
-      const response = await fetch(`http://localhost:5000/api/admin/reservations/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(lieuFormData),
+    });
 
-      if (!response.ok) {
-        const data = await response.json();
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || 'Erreur lors de la suppression de la réservation');
-      }
+    if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
+    const data = await response.json();
 
-      setReservations(reservations.filter(r => r.reservation_id !== id));
-      toast.success('Réservation supprimée avec succès');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    if (isAddingLieu) {
+      setLieuImages(prev => [...prev, data]);
+    } else {
+      setLieuImages(prev =>
+        prev.map(img => (img.id === data.id ? data : img))
+      );
     }
-  };
 
-  const handleAddLieuClick = () => {
-    setIsAddingLieu(true);
-    setSelectedLieu(null);
-    setLieuFormData({ image_path: '', image_detail_path: '', is_main: false });
-    setIsLieuModalOpen(true);
-  };
+    setIsLieuModalOpen(false);
+    toast.success('Image enregistrée');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleEditLieuClick = (img: any) => {
-    setSelectedLieu(img);
-    setLieuFormData({ image_path: img.image_path, image_detail_path: img.image_detail_path, is_main: img.is_main });
-    setIsLieuModalOpen(true);
-  };
-  const handleLieuInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setLieuFormData(prev => ({ ...prev, [name]: value }));
-  };
-  const handleLieuSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-      const url = isAddingLieu
-        ? 'http://localhost:5000/api/lieu/images'
-        : `http://localhost:5000/api/lieu/images/${selectedLieu?.id}`;
-      const method = isAddingLieu ? 'POST' : 'PUT';
-      const response = await fetch(url, {
-        method,
+  } catch (err: any) {
+    toast.error(err.message || 'Erreur');
+  }
+};
+
+const handleDeleteLieu = async (id: number) => {
+  if (!window.confirm('Supprimer cette image ?')) return;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Session expirée. Veuillez vous reconnecter.');
+      return;
+    }
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/lieu/images/${id}`,
+      {
+        method: 'DELETE',
         headers: {
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(lieuFormData)
-      });
-      if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
-      const data = await response.json();
-      if (isAddingLieu) setLieuImages(prev => [...prev, data]);
-      else setLieuImages(prev => prev.map(img => img.id === data.id ? data : img));
-  const handleDeleteLieu = async (id: number) => {
-    if (!window.confirm('Supprimer cette image ?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
       }
-      const response = await fetch(
-        `http://localhost:5000/api/lieu/images/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      if (!response.ok) throw new Error('Erreur lors de la suppression');
-      setLieuImages(prev => prev.filter(img => img.id !== id));
-      toast.success('Image supprimée');
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Une erreur est survenue'
-      );
-    }
-  };
-      if (!response.ok) throw new Error('Erreur lors de la suppression');
-      setLieuImages(prev => prev.filter(img => img.id !== id));
-      toast.success('Image supprimée');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur');
-    }
-  };
+    );
+
+    if (!response.ok) throw new Error('Erreur lors de la suppression');
+    setLieuImages(prev => prev.filter(img => img.id !== id));
+    toast.success('Image supprimée');
+  } catch (err) {
+    toast.error(
+      err instanceof Error ? err.message : 'Une erreur est survenue'
+    );
+  }
+};
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -669,6 +636,10 @@ console.debug('Spectacle request:', {
         </div>
       </div>
     );
+  }
+
+  function handleDeleteReservation(reservation_id: number): void {
+    throw new Error('Function not implemented.');
   }
 
   return (
@@ -936,7 +907,7 @@ console.debug('Spectacle request:', {
                       <p className="text-gray-400 mb-2"><b>Type:</b> {img.is_main ? <span className="text-green-400 font-bold">Principale</span> : <span className="text-blue-400">Galerie</span>}</p>
                       <div className="flex space-x-2 mt-2">
                         <button onClick={() => handleEditLieuClick(img)} className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
-                        <button onClick={() => handleDeleteLieu(img.id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Supprimer</button>
+                        <button onClick={() => handleDeleteClick('lieu' as const, img.id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Supprimer</button>
                       </div>
                     </div>
                   </div>

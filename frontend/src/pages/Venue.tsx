@@ -5,16 +5,33 @@ import CTA from "../components/CTA";
 import React, { useEffect, useState } from "react";
 import { fetchGalleryLieuImages, LieuImage } from "../services/lieu";
 
+// Mapping dynamique des images assets
+const images = import.meta.glob('../assets/img/**/*.{jpg,jpeg,png,webp,svg}', { eager: true, import: 'default' });
+function getImageUrl(filename: string): string {
+  const entry = Object.entries(images).find(([key]) => key.endsWith(filename));
+  return (entry ? entry[1] : '') as string;
+}
+
 const Venue = () => {
-  const [images, setImages] = useState<LieuImage[]>([]);
+  const [imagesList, setImages] = useState<LieuImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchGalleryLieuImages()
-      .then(setImages)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    const fetchImages = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/lieu/images/gallery");
+        if (!res.ok) throw new Error("Erreur lors du chargement des images de galerie du lieu");
+        const data: LieuImage[] = await res.json();
+        setImages(data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        setError(err.message || "Erreur inconnue");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImages();
   }, []);
 
   return (
@@ -64,11 +81,11 @@ const Venue = () => {
               <div className="text-center text-red-400">{error}</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {images.map((img) => (
+                {imagesList.map((img) => (
                   <div key={img.id} className="aspect-square overflow-hidden rounded-lg">
                     <img
                       className="w-full h-full object-cover hover:scale-105 transition duration-500"
-                      src={`/src/assets/img/${img.image_path}`}
+                      src={getImageUrl(img.image_path)}
                       alt="photo du lieu"
                     />
                   </div>

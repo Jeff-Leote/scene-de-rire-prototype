@@ -62,7 +62,7 @@ const PaymentStatus = () => {
       // Rediriger vers la page mon compte après 3 secondes
       setTimeout(() => {
         navigate("/mon-compte");
-      }, 3000);
+      }, 5000);
     } else {
       navigate("/");
     }
