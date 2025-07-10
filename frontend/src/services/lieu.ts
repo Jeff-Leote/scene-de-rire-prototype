@@ -5,7 +5,7 @@ export type LieuImage = {
 };
 
 export async function fetchMainLieuImage(): Promise<LieuImage | null> {
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const res = await fetch(`${API_URL}/api/lieu/images/main`);
   if (!res.ok) throw new Error("Erreur lors de la récupération de l'image principale du lieu");
   return await res.json();

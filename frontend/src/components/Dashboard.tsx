@@ -542,31 +542,54 @@ console.debug('Spectacle request:', {
   const handleLieuSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
       const url = isAddingLieu
         ? 'http://localhost:5000/api/lieu/images'
         : `http://localhost:5000/api/lieu/images/${selectedLieu?.id}`;
       const method = isAddingLieu ? 'POST' : 'PUT';
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(lieuFormData)
       });
       if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
       const data = await response.json();
       if (isAddingLieu) setLieuImages(prev => [...prev, data]);
       else setLieuImages(prev => prev.map(img => img.id === data.id ? data : img));
-      setIsLieuModalOpen(false);
-      setIsAddingLieu(false);
-      toast.success(isAddingLieu ? 'Image ajoutée' : 'Image modifiée');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur');
-    }
-  };
   const handleDeleteLieu = async (id: number) => {
     if (!window.confirm('Supprimer cette image ?')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/lieu/images/${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+      const response = await fetch(
+        `http://localhost:5000/api/lieu/images/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) throw new Error('Erreur lors de la suppression');
+      setLieuImages(prev => prev.filter(img => img.id !== id));
+      toast.success('Image supprimée');
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Une erreur est survenue'
+      );
+    }
+  };
       if (!response.ok) throw new Error('Erreur lors de la suppression');
       setLieuImages(prev => prev.filter(img => img.id !== id));
       toast.success('Image supprimée');

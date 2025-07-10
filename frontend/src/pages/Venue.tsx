@@ -66,7 +66,11 @@ const Venue = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {images.map((img) => (
                   <div key={img.id} className="aspect-square overflow-hidden rounded-lg">
-                    <img className="w-full h-full object-cover hover:scale-105 transition duration-500" src={`/src/assets/img/image_path${img.image_path}`} alt="photo du lieu" />
+                    <img
+                      className="w-full h-full object-cover hover:scale-105 transition duration-500"
+                      src={`/src/assets/img/${img.image_path}`}
+                      alt="photo du lieu"
+                    />
                   </div>
                 ))}
               </div>
