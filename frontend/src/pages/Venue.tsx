@@ -20,7 +20,7 @@ const Venue = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/lieu/images/gallery");
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/lieu/images/gallery`);
         if (!res.ok) throw new Error("Erreur lors du chargement des images de galerie du lieu");
         const data: LieuImage[] = await res.json();
         setImages(data);

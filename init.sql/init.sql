@@ -19,7 +19,6 @@ CREATE TABLE artiste (
   biographie text NOT NULL,
   photo varchar(255) NOT NULL,
   created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-  is_featured boolean DEFAULT FALSE,
   photo_featured varchar(255) NOT NULL
 );
 
@@ -93,8 +92,8 @@ INSERT INTO user (id, civility, nom, prenom, email, password, dateNaissance, rol
 (1, 'M.', 'Test', 'Jean', 'jean.test@example.com', '$2a$10$k.M7bXp9jJ8G5Qz.cO9dZ.D9uWwYqO/PzM4jG1xRn2qO7m.m.z0qC', '1990-01-01', 'utilisateur');
 
 -- 2. Création d'un artiste de test
-INSERT INTO artiste (id, name, biographie, photo, is_featured, photo_featured) VALUES
-(1, 'Gad Elmaleh', 'Un humoriste célèbre.', 'pikach_artiste.webp', TRUE, 'pikach_feature.webp');
+INSERT INTO artiste (id, name, biographie, photo, photo_featured) VALUES
+(1, 'Gad Elmaleh', 'Un humoriste célèbre.', 'pikach_artiste.webp', 'pikach_feature.webp');
 
 -- 3. Création de spectacles de test (dépendent de artiste)
 INSERT INTO spectacle (id, title, img, description, date_spectacle, heure_spectacle, prix, lieu, artiste_id) VALUES

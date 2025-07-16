@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
-import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData } from '../services/types';
+import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData, FeaturedArtist } from '../services/types';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -36,7 +36,7 @@ const Dashboard = () => {
     photo_featured: '',
     biographie: ''
   });
-  const [featuredArtist, setFeaturedArtist] = useState<Artist | null>(null);
+  const [featuredArtist, setFeaturedArtist] = useState<FeaturedArtist | null>(null);
   const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
   const [newArtist, setNewArtist] = useState<ArtistFormData>({
     name: '',
@@ -721,7 +721,7 @@ const handleDeleteLieu = async (id: number) => {
         {/* Content */}
         {activeTab === 'featured' && (
           <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Artiste à l'affiche</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Artiste à l'affiche (automatique)</h2>
             {featuredArtist ? (
               <div className="flex items-start space-x-6">
                 <img 
@@ -732,25 +732,18 @@ const handleDeleteLieu = async (id: number) => {
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-2">{featuredArtist.name}</h3>
                   <p className="text-gray-400 mb-4">{featuredArtist.biographie}</p>
-                  <button
-                    onClick={() => setIsFeaturedModalOpen(true)}
-                    className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                  >
-                    Changer l'artiste à l'affiche
-                  </button>
+                  {featuredArtist.next_show && (
+                    <div className="mt-2 text-sm text-yellow-400">
+                      Prochain spectacle : {featuredArtist.next_show.title} le {new Date(featuredArtist.next_show.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {featuredArtist.next_show.time?.slice(0,5)}
+                    </div>
+                  )}
                 </div>
               </div>
-            ) : (
+            ) :
               <div className="text-center py-8">
                 <p className="text-gray-400 mb-4">Aucun artiste n'est actuellement à l'affiche</p>
-                <button
-                  onClick={() => setIsFeaturedModalOpen(true)}
-                  className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                >
-                  Définir un artiste à l'affiche
-                </button>
               </div>
-            )}
+            }
           </div>
         )}
 

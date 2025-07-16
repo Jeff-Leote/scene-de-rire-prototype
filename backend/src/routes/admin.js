@@ -337,118 +337,39 @@ router.post('/artiste', async (req, res) => {
   }
 });
 
-// Récupérer l'artiste à l'affiche (admin)
+// Récupérer l'artiste à l'affiche (automatique)
 router.get('/featured', async (req, res) => {
-  console.log('Admin - Récupération de l\'artiste à l\'affiche');
   try {
-    const [artistes] = await db.query(`
-      SELECT a.*, 
-        (SELECT s.id FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_id,
-        (SELECT s.title FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_title,
-        (SELECT s.date_spectacle FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_date,
-        (SELECT s.heure_spectacle FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-         ORDER BY s.date_spectacle, s.heure_spectacle
-         LIMIT 1) as next_show_time
-      FROM artiste a 
-      WHERE a.is_featured = true
+    // Sélectionner le prochain spectacle à venir et son artiste
+    const [rows] = await db.query(`
+      SELECT a.*, s.id as next_show_id, s.title as next_show_title, s.date_spectacle as next_show_date, s.heure_spectacle as next_show_time
+      FROM spectacle s
+      JOIN artiste a ON s.artiste_id = a.id
+      WHERE TIMESTAMP(s.date_spectacle, s.heure_spectacle) >= CONVERT_TZ(NOW(), 'UTC', 'Europe/Paris')
+      ORDER BY s.date_spectacle ASC, s.heure_spectacle ASC
       LIMIT 1
     `);
-
-    if (artistes.length === 0) {
-      return res.status(404).json({ error: 'Aucun artiste à l\'affiche' });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Aucun spectacle à venir, donc aucun artiste à l'affiche" });
     }
-
-    const artiste = artistes[0];
+    const artiste = rows[0];
     const response = {
       id: artiste.id,
       name: artiste.name,
       photo: artiste.photo,
       photo_featured: artiste.photo_featured,
       biographie: artiste.biographie,
-      next_show: artiste.next_show_id ? {
+      next_show: {
         id: artiste.next_show_id,
         title: artiste.next_show_title,
         date: artiste.next_show_date,
         time: artiste.next_show_time
-      } : null
+      }
     };
-
-    console.log('Admin - Artiste à l\'affiche trouvé:', response);
     res.json(response);
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'artiste à l\'affiche:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-});
-
-// Définir l'artiste à l'affiche
-router.post('/featured', async (req, res) => {
-  const { artist_id } = req.body;
-  console.log('Admin - Définition de l\'artiste à l\'affiche:', artist_id);
-
-  if (!artist_id) {
-    return res.status(400).json({ error: 'ID de l\'artiste requis' });
-  }
-
-  try {
-    // Vérifier si l'artiste a des spectacles à venir
-    const [upcomingShows] = await db.query(`
-      SELECT COUNT(*) as count 
-      FROM spectacle 
-      WHERE artiste_id = ? 
-      AND CONCAT(date_spectacle, ' ', heure_spectacle) > NOW()
-    `, [artist_id]);
-
-    if (upcomingShows[0].count === 0) {
-      return res.status(400).json({ 
-        error: 'Cet artiste n\'a pas de spectacles à venir. Impossible de le mettre en avant.' 
-      });
-    }
-
-    // D'abord, réinitialiser tous les artistes
-    await db.query('START TRANSACTION');
-    try {
-      await db.query('UPDATE artiste SET is_featured = false');
-      const [result] = await db.query(
-        'UPDATE artiste SET is_featured = true WHERE id = ?',
-        [artist_id]
-      );
-      if (result.affectedRows === 0) throw new Error('NOT_FOUND');
-      await db.query('COMMIT');
-    } catch (e) {
-      await db.query('ROLLBACK');
-      if (e.message === 'NOT_FOUND') return res.status(404).json({ error: 'Artiste non trouvé' });
-      throw e;
-    }
-
-    // Récupérer l'artiste mis à jour avec ses spectacles à venir
-    const [artistes] = await db.query(`
-      SELECT a.*, 
-        (SELECT COUNT(*) FROM spectacle s 
-         WHERE s.artiste_id = a.id 
-         AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()) as upcoming_shows
-      FROM artiste a 
-      WHERE a.id = ?
-    `, [artist_id]);
-
-    res.json(artistes[0]);
-  } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'artiste à l\'affiche:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error("Erreur lors de la récupération de l'artiste à l'affiche:", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
