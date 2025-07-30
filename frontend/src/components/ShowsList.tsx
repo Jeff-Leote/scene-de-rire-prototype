@@ -22,7 +22,7 @@ const ShowsList = () => {
     const fetchSpectacles = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`http://localhost:5000/api/spectacles?page=${page}&limit=${limit}`);
+        const res = await fetch(`https://scene-de-rire-prototype.onrender.com/api/spectacles?page=${page}&limit=${limit}`);
         if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
 
         const data = await res.json();

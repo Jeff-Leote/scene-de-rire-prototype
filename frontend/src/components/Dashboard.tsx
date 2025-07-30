@@ -63,32 +63,32 @@ const Dashboard = () => {
         };
 
         // Récupérer les spectacles
-        const spectaclesResponse = await fetch('http://localhost:5000/api/admin/spectacles', { headers });
+        const spectaclesResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/spectacles', { headers });
         if (!spectaclesResponse.ok) throw new Error('Erreur lors de la récupération des spectacles');
         const spectaclesData = await spectaclesResponse.json();
         setSpectacles(spectaclesData);
 
         // Récupérer les artistes
-        const artistsResponse = await fetch('http://localhost:5000/api/admin/artistes', { headers });
+        const artistsResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/artistes', { headers });
         if (!artistsResponse.ok) throw new Error('Erreur lors de la récupération des artistes');
         const artistsData = await artistsResponse.json();
         setArtists(artistsData);
 
         // Récupérer l'artiste à l'affiche
-        const featuredResponse = await fetch('http://localhost:5000/api/admin/featured', { headers });
+        const featuredResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/featured', { headers });
         if (featuredResponse.ok) {
           const featuredData = await featuredResponse.json();
           setFeaturedArtist(featuredData);
         }
 
         // Récupérer les réservations
-        const reservationsResponse = await fetch('http://localhost:5000/api/admin/reservations', { headers });
+        const reservationsResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/reservations', { headers });
         if (!reservationsResponse.ok) throw new Error('Erreur lors de la récupération des réservations');
         const reservationsData = await reservationsResponse.json();
         setReservations(reservationsData);
 
         // Récupérer les images du lieu
-        fetch('http://localhost:5000/api/lieu/images')
+        fetch('https://scene-de-rire-prototype.onrender.com/api/lieu/images')
           .then(res => res.json())
           .then(data => {
             if (Array.isArray(data)) setLieuImages(data);
@@ -181,8 +181,8 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const url = isAddingSpectacle 
-        ? 'http://localhost:5000/api/admin/spectacles'
-        : `http://localhost:5000/api/admin/spectacles/${selectedSpectacle?.id}`;
+        ? 'https://scene-de-rire-prototype.onrender.com/api/admin/spectacles'
+        : `https://scene-de-rire-prototype.onrender.com/api/admin/spectacles/${selectedSpectacle?.id}`;
       
       const requestBody = {
         ...spectacleFormData,
@@ -243,8 +243,8 @@ console.debug('Spectacle request:', {
       };
 
       const url = isAddingArtist 
-        ? 'http://localhost:5000/api/admin/artiste'
-        : `http://localhost:5000/api/admin/artiste/${selectedArtist?.id}`;
+        ? 'https://scene-de-rire-prototype.onrender.com/api/admin/artiste'
+        : `https://scene-de-rire-prototype.onrender.com/api/admin/artiste/${selectedArtist?.id}`;
       
       const response = await fetch(url, {
         method: isAddingArtist ? 'POST' : 'PUT',
@@ -281,7 +281,7 @@ console.debug('Spectacle request:', {
   const handleDeleteClick = (type: 'spectacle' | 'artist' | 'lieu', id: number) => {
     if (type === 'lieu') {
       if (!window.confirm('Supprimer cette image ?')) return;
-      fetch(`http://localhost:5000/api/lieu/images/${id}`, { method: 'DELETE' })
+      fetch(`https://scene-de-rire-prototype.onrender.com/api/lieu/images/${id}`, { method: 'DELETE' })
         .then(res => {
           if (!res.ok) throw new Error('Erreur lors de la suppression');
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -301,8 +301,8 @@ console.debug('Spectacle request:', {
     try {
       const token = localStorage.getItem('token');
       const url = itemToDelete.type === 'spectacle'
-        ? `http://localhost:5000/api/admin/spectacles/${itemToDelete.id}`
-        : `http://localhost:5000/api/admin/artistes/${itemToDelete.id}`;
+        ? `https://scene-de-rire-prototype.onrender.com/api/admin/spectacles/${itemToDelete.id}`
+        : `https://scene-de-rire-prototype.onrender.com/api/admin/artistes/${itemToDelete.id}`;
 
       const response = await fetch(url, {
         method: 'DELETE',
@@ -340,7 +340,7 @@ console.debug('Spectacle request:', {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/admin/featured', {
+      const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/featured', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -387,7 +387,7 @@ console.debug('Spectacle request:', {
         photo_featured: newArtist.photo_featured || newArtist.photo
       };
 
-      const response = await fetch('http://localhost:5000/api/admin/artiste', {
+      const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/artiste', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -442,7 +442,7 @@ console.debug('Spectacle request:', {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/artiste/${selectedArtist.id}`, {
+      const response = await fetch(`https://scene-de-rire-prototype.onrender.com/api/admin/artiste/${selectedArtist.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`

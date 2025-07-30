@@ -12,7 +12,7 @@ const Artists = () => {
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/artistes');
+        const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/artistes');
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des artistes');
         }

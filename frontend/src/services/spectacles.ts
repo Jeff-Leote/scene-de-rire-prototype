@@ -2,14 +2,14 @@
 import { Spectacle } from './types';
 
 export const getSpectacles = async (): Promise<Spectacle[]> => {
-  const response = await fetch("http://localhost:5000/api/spectacles");
+  const response = await fetch("https://scene-de-rire-prototype.onrender.com/api/spectacles");
   if (!response.ok) {
     throw new Error("Erreur lors de la récupération des spectacles");
   }
   return response.json();
 };
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://scene-de-rire-prototype.onrender.com/api";
 
 export async function fetchSpectacles() {
   const res = await fetch(`${API_URL}/spectacles/all`);

@@ -16,7 +16,7 @@ const Hero = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:5000/api/artistes/featured');
+        const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/artistes/featured');
         
         if (!response.ok) {
           const errorData = await response.json();

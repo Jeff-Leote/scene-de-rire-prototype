@@ -36,7 +36,7 @@ const SpectacleDetail = () => {
   useEffect(() => {
     const fetchSpectacle = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/spectacles/${id}`);
+        const res = await fetch(`https://scene-de-rire-prototype.onrender.com/api/spectacles/${id}`);
         if (!res.ok) throw new Error("Erreur lors du chargement du spectacle");
         const data = await res.json();
         setSpectacle(data);

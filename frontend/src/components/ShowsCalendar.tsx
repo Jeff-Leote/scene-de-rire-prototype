@@ -31,7 +31,7 @@ const ShowsCalendar = () => {
   useEffect(() => {
     const fetchSpectacles = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/spectacles/all");
+        const res = await fetch("https://scene-de-rire-prototype.onrender.com/api/spectacles/all");
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }

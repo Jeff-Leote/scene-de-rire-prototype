@@ -116,7 +116,7 @@ const MyAccount = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/update-profile", {
+      const response = await fetch("https://scene-de-rire-prototype.onrender.com/api/auth/update-profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -158,7 +158,7 @@ const MyAccount = () => {
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/delete-account", {
+      const response = await fetch("https://scene-de-rire-prototype.onrender.com/api/auth/delete-account", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
