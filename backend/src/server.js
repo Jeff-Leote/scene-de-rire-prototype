@@ -5,16 +5,29 @@ const cors = require("cors");
 const routes = require("./routes");
 
 const app = express();
-const PORT = process.env.DB_PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware de base
+const allowedOrigins = [
+  "https://scene-de-rire-prototype.onrender.com",
+  "https://scene-de-rire-prototype-1.onrender.com"
+];
+
 app.use(cors({
-  origin: "https://scene-de-rire-prototype.onrender.com",
+  origin: function(origin, callback){
+    console.log("Requête CORS venant de :", origin);
+    // autoriser requêtes sans origin (ex: Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 
 // Configuration du body parser
 app.use(express.json());  
