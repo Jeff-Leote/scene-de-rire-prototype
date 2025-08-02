@@ -5,18 +5,19 @@ const cors = require("cors");
 const routes = require("./routes");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.DB_PORT || 5000;
 
 // Middleware de base
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://scene-de-rire-prototype.onrender.com",
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+
 // Configuration du body parser
-app.use(express.json());
+app.use(express.json());  
 
 app.use(express.urlencoded({ extended: true }));
 
