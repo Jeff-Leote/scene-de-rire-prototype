@@ -7,10 +7,11 @@ const routes = require("./routes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware de base
 const allowedOrigins = [
   "https://scene-de-rire-prototype.onrender.com",
-  "https://scene-de-rire-prototype-1.onrender.com"
+  "https://scene-de-rire-prototype-1.onrender.com",
+  "https://espacecomedie.fr",
+  "https://www.espacecomedie.fr" // si tu utilises aussi le www
 ];
 
 app.use(cors({
