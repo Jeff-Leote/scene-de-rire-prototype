@@ -9,7 +9,8 @@ import { PaymentStatusResponse } from "../services/types";
 // Fonction pour enregistrer une réservation annulée
 const registerCancelledReservation = async (sessionId: string) => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reservations/cancel`, {
+    const API_URL = import.meta.env.VITE_API_URL;
+    const response = await fetch(`${API_URL}/api/reservations/cancel`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -18,7 +18,8 @@ const Venue = () => {
   useEffect(() => {
     const fetchMainImage = async () => {
       try {
-        const res = await fetch("https://scene-de-rire-prototype.onrender.com/api/lieu/images/main");
+        const API_URL = import.meta.env.VITE_API_URL;
+        const res = await fetch(`${API_URL}/api/lieu/images/main`);
         if (!res.ok) throw new Error("Erreur lors du chargement de l'image principale du lieu");
         const data: LieuImage | null = await res.json();
         setMainImage(data);

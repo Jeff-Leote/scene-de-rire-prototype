@@ -12,7 +12,8 @@ const Artists = () => {
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/artistes');
+        const API_URL = import.meta.env.VITE_API_URL;
+        const response = await fetch(`${API_URL}/api/artistes`);
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des artistes');
         }

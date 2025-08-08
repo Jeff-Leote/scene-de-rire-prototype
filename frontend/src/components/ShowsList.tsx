@@ -13,6 +13,8 @@ const ShowsList = () => {
   const [error, setError] = useState<string | null>(null);
   const limit = 9;
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const formatHeure = (heure: string) => {
     // Si l'heure est au format HH:mm:ss, on ne garde que HH:mm
     return heure.split(':').slice(0, 2).join(':');
@@ -22,7 +24,7 @@ const ShowsList = () => {
     const fetchSpectacles = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`https://scene-de-rire-prototype.onrender.com/api/spectacles?page=${page}&limit=${limit}`);
+        const res = await fetch(`${API_URL}/api/spectacles?page=${page}&limit=${limit}`);
         if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
 
         const data = await res.json();

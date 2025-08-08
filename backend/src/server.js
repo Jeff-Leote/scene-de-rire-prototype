@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
+  "http://localhost:5173",
   "https://scene-de-rire-prototype.onrender.com",
   "https://scene-de-rire-prototype-1.onrender.com",
   "https://espacecomedie.fr",

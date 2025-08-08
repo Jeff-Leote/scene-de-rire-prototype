@@ -72,7 +72,8 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
   setIsLoading(true);
 
   try {
-    const response = await fetch("https://scene-de-rire-prototype.onrender.com/api/auth/register", {
+    const API_URL = import.meta.env.VITE_API_URL;
+    const response = await fetch(`${API_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

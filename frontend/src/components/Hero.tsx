@@ -16,7 +16,8 @@ const Hero = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/artistes/featured');
+        const API_URL = import.meta.env.VITE_API_URL;
+        const response = await fetch(`${API_URL}/api/artistes/featured`);
         
         if (!response.ok) {
           const errorData = await response.json();

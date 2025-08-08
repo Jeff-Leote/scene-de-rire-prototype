@@ -7,10 +7,12 @@ const FeaturedArtists = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/artistes');
+        const response = await fetch(`${API_URL}/api/artistes`);
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des artistes');
         }

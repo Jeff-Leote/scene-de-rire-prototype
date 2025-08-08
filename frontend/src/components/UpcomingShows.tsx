@@ -18,7 +18,8 @@ const UpcomingShows = () => {
   useEffect(() => {
     const fetchSpectacles = async () => {
       try {
-        const res = await fetch("https://scene-de-rire-prototype.onrender.com/api/spectacles/upcoming");
+        const API_URL = import.meta.env.VITE_API_URL;
+        const res = await fetch(`${API_URL}/api/spectacles/upcoming`);
         if (!res.ok) throw new Error("Erreur lors du chargement des spectacles");
         const data: Spectacle[] = await res.json();
 

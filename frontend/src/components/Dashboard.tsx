@@ -53,6 +53,8 @@ const Dashboard = () => {
   const [selectedLieu, setSelectedLieu] = useState(null);
   const [lieuFormData, setLieuFormData] = useState({ image_path: '', image_detail_path: '', is_main: false });
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -63,32 +65,32 @@ const Dashboard = () => {
         };
 
         // Récupérer les spectacles
-        const spectaclesResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/spectacles', { headers });
+        const spectaclesResponse = await fetch(`${API_URL}/api/admin/spectacles`, { headers });
         if (!spectaclesResponse.ok) throw new Error('Erreur lors de la récupération des spectacles');
         const spectaclesData = await spectaclesResponse.json();
         setSpectacles(spectaclesData);
 
         // Récupérer les artistes
-        const artistsResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/artistes', { headers });
+        const artistsResponse = await fetch(`${API_URL}/api/admin/artistes`, { headers });
         if (!artistsResponse.ok) throw new Error('Erreur lors de la récupération des artistes');
         const artistsData = await artistsResponse.json();
         setArtists(artistsData);
 
         // Récupérer l'artiste à l'affiche
-        const featuredResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/featured', { headers });
+        const featuredResponse = await fetch(`${API_URL}/api/admin/featured`, { headers });
         if (featuredResponse.ok) {
           const featuredData = await featuredResponse.json();
           setFeaturedArtist(featuredData);
         }
 
         // Récupérer les réservations
-        const reservationsResponse = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/reservations', { headers });
+        const reservationsResponse = await fetch(`${API_URL}/api/admin/reservations`, { headers });
         if (!reservationsResponse.ok) throw new Error('Erreur lors de la récupération des réservations');
         const reservationsData = await reservationsResponse.json();
         setReservations(reservationsData);
 
         // Récupérer les images du lieu
-        fetch('https://scene-de-rire-prototype.onrender.com/api/lieu/images')
+        fetch(`${API_URL}/api/lieu/images`)
           .then(res => res.json())
           .then(data => {
             if (Array.isArray(data)) setLieuImages(data);
@@ -181,8 +183,8 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const url = isAddingSpectacle 
-        ? 'https://scene-de-rire-prototype.onrender.com/api/admin/spectacles'
-        : `https://scene-de-rire-prototype.onrender.com/api/admin/spectacles/${selectedSpectacle?.id}`;
+        ? `${API_URL}/api/admin/spectacles`
+        : `${API_URL}/api/admin/spectacles/${selectedSpectacle?.id}`;
       
       const requestBody = {
         ...spectacleFormData,
@@ -243,8 +245,8 @@ console.debug('Spectacle request:', {
       };
 
       const url = isAddingArtist 
-        ? 'https://scene-de-rire-prototype.onrender.com/api/admin/artiste'
-        : `https://scene-de-rire-prototype.onrender.com/api/admin/artiste/${selectedArtist?.id}`;
+        ? `${API_URL}/api/admin/artiste`
+        : `${API_URL}/api/admin/artiste/${selectedArtist?.id}`;
       
       const response = await fetch(url, {
         method: isAddingArtist ? 'POST' : 'PUT',
@@ -281,7 +283,7 @@ console.debug('Spectacle request:', {
   const handleDeleteClick = (type: 'spectacle' | 'artist' | 'lieu', id: number) => {
     if (type === 'lieu') {
       if (!window.confirm('Supprimer cette image ?')) return;
-      fetch(`https://scene-de-rire-prototype.onrender.com/api/lieu/images/${id}`, { method: 'DELETE' })
+      fetch(`${API_URL}/api/lieu/images/${id}`, { method: 'DELETE' })
         .then(res => {
           if (!res.ok) throw new Error('Erreur lors de la suppression');
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -301,8 +303,8 @@ console.debug('Spectacle request:', {
     try {
       const token = localStorage.getItem('token');
       const url = itemToDelete.type === 'spectacle'
-        ? `https://scene-de-rire-prototype.onrender.com/api/admin/spectacles/${itemToDelete.id}`
-        : `https://scene-de-rire-prototype.onrender.com/api/admin/artistes/${itemToDelete.id}`;
+        ? `${API_URL}/api/admin/spectacles/${itemToDelete.id}`
+        : `${API_URL}/api/admin/artistes/${itemToDelete.id}`;
 
       const response = await fetch(url, {
         method: 'DELETE',
@@ -340,7 +342,7 @@ console.debug('Spectacle request:', {
         return;
       }
 
-      const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/featured', {
+      const response = await fetch(`${API_URL}/api/admin/featured`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -387,7 +389,7 @@ console.debug('Spectacle request:', {
         photo_featured: newArtist.photo_featured || newArtist.photo
       };
 
-      const response = await fetch('https://scene-de-rire-prototype.onrender.com/api/admin/artiste', {
+      const response = await fetch(`${API_URL}/api/admin/artiste`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -442,7 +444,7 @@ console.debug('Spectacle request:', {
         return;
       }
 
-      const response = await fetch(`https://scene-de-rire-prototype.onrender.com/api/admin/artiste/${selectedArtist.id}`, {
+      const response = await fetch(`${API_URL}/api/admin/artiste/${selectedArtist.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -502,8 +504,8 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
     }
 
     const url = isAddingLieu
-      ? `${import.meta.env.VITE_API_URL}/api/lieu/images`
-      : `${import.meta.env.VITE_API_URL}/api/lieu/images/${selectedLieu?.id}`;
+      ? `${API_URL}/api/lieu/images`
+      : `${API_URL}/api/lieu/images/${selectedLieu?.id}`;
 
     const method = isAddingLieu ? 'POST' : 'PUT';
 
@@ -545,7 +547,7 @@ const handleDeleteLieu = async (id: number) => {
     }
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/lieu/images/${id}`,
+      `${API_URL}/api/lieu/images/${id}`,
       {
         method: 'DELETE',
         headers: {
