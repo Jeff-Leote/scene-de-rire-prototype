@@ -6,6 +6,12 @@ const QRCode = require("qrcode");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
+
+// Vérification de la configuration Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error("ERREUR: STRIPE_SECRET_KEY n'est pas configurée dans les variables d'environnement");
+}
+
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // Fonction pour générer un QR code unique pour une réservation
@@ -289,13 +295,18 @@ router.post("/checkout", auth, async (req, res) => {
       });
     }
 
+    // Déterminer l'URL du frontend selon l'environnement
+    const frontendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://espacecomedie.fr'
+      : (process.env.FRONTEND_URL || 'http://localhost:5173');
+
     // Créer une session Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL}/payment-status?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.FRONTEND_URL}/payment-status?payment=cancel`,
+      success_url: `${frontendUrl}/mon-compte?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${frontendUrl}/mon-compte?payment=cancel`,
       metadata: {
         user_id: req.user.id.toString(),
         prenom: prenom,
@@ -311,7 +322,27 @@ router.post("/checkout", auth, async (req, res) => {
 
   } catch (error) {
     console.error("Erreur lors de la création de la session Stripe:", error);
-    res.status(500).json({ error: "Erreur serveur lors de la création du paiement." });
+    
+    // Vérifier si c'est un problème de configuration Stripe
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(500).json({ 
+        error: "Erreur de configuration Stripe",
+        details: "La clé secrète Stripe n'est pas configurée"
+      });
+    }
+    
+    // Vérifier si c'est un problème avec l'URL du frontend
+    if (!process.env.FRONTEND_URL) {
+      return res.status(500).json({ 
+        error: "Erreur de configuration",
+        details: "L'URL du frontend n'est pas configurée"
+      });
+    }
+    
+    res.status(500).json({ 
+      error: "Erreur serveur lors de la création du paiement",
+      details: error.message 
+    });
   }
 });
 
@@ -558,7 +589,7 @@ router.get("/user/:userId", async (req, res) => {
         r.id as reservation_id,
         r.nb_places,
         r.date as reservation_date,
-        r.qr_code_path,
+        COALESCE(r.qr_code_path, NULL) as qr_code_path,
         s.id as spectacle_id,
         s.title,
         s.description,
