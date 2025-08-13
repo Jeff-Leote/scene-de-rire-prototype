@@ -34,3 +34,8 @@ docker-compose.override.yml
 *.bak
 *.tmp
 *.swp
+
+# QR codes
+qrcodes/*.png
+qrcodes/*.jpg
+qrcodes/*.jpeg

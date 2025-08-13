@@ -25,7 +25,7 @@ const Hero = () => {
         }
 
         const data = await response.json();
-        console.log('Données reçues:', data);
+    
         setFeaturedArtist(data);
       } catch (error) {
         console.error('Erreur lors du chargement de l\'artiste à l\'affiche:', error);

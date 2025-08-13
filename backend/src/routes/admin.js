@@ -8,7 +8,7 @@ router.use(auth, isAdmin);
 
 // Récupérer tous les spectacles (pour l'admin)
 router.get('/spectacles', async (req, res) => {
-  console.log('Admin - Récupération des spectacles');
+
   try {
     const [spectacles] = await db.query(`
       SELECT s.*, a.name as artiste_name 
@@ -16,7 +16,7 @@ router.get('/spectacles', async (req, res) => {
       JOIN artiste a ON s.artiste_id = a.id 
       ORDER BY s.date_spectacle DESC, s.heure_spectacle DESC
     `);
-    console.log('Admin - Nombre de spectacles trouvés:', spectacles.length);
+
     res.json(spectacles);
   } catch (error) {
     console.error('Erreur lors de la récupération des spectacles:', error);
@@ -27,9 +27,7 @@ router.get('/spectacles', async (req, res) => {
 // Ajouter un nouveau spectacle
 router.post('/spectacles', async (req, res) => {
   try {
-    console.log('Admin - Ajout d\'un nouveau spectacle - Headers:', req.headers);
-    console.log('Admin - Ajout d\'un nouveau spectacle - Corps de la requête:', req.body);
-    console.log('Admin - Ajout d\'un nouveau spectacle - Type de corps:', typeof req.body);
+
     
     if (!req.body) {
       console.error('Admin - Corps de la requête manquant');
@@ -38,19 +36,10 @@ router.post('/spectacles', async (req, res) => {
 
     const { title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, lieu } = req.body;
 
-    console.log('Admin - Champs extraits:', {
-      title: !!title,
-      img: !!img,
-      description: !!description,
-      date_spectacle: !!date_spectacle,
-      heure_spectacle: !!heure_spectacle,
-      prix: !!prix,
-      artiste_id: !!artiste_id,
-      lieu: !!lieu
-    });
+
 
     if (!title || !img || !description || !date_spectacle || !heure_spectacle || !prix || !artiste_id || !lieu) {
-    console.log('Admin - Données manquantes pour l\'ajout du spectacle');
+
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
@@ -65,7 +54,7 @@ router.post('/spectacles', async (req, res) => {
       [result.insertId]
     );
 
-    console.log('Admin - Spectacle ajouté avec succès:', newSpectacle[0]);
+
     res.status(201).json(newSpectacle[0]);
   } catch (error) {
     console.error('Erreur lors de l\'ajout du spectacle:', error);
@@ -88,11 +77,11 @@ router.post('/spectacles', async (req, res) => {
 // Modifier un spectacle
 router.put('/spectacles/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Admin - Modification du spectacle:', id, req.body);
+
   const { title, img, description, date_spectacle, heure_spectacle, prix, artiste_id } = req.body;
 
   if (!title || !img || !description || !date_spectacle || !heure_spectacle || !prix || !artiste_id) {
-    console.log('Admin - Données manquantes pour la modification du spectacle');
+
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
@@ -108,11 +97,11 @@ router.put('/spectacles/:id', async (req, res) => {
     );
 
     if (updatedSpectacle.length === 0) {
-      console.log('Admin - Spectacle non trouvé:', id);
+
       return res.status(404).json({ error: 'Spectacle non trouvé' });
     }
 
-    console.log('Admin - Spectacle modifié avec succès:', updatedSpectacle[0]);
+
     res.json(updatedSpectacle[0]);
   } catch (error) {
     console.error('Erreur lors de la modification du spectacle:', error);
@@ -123,17 +112,17 @@ router.put('/spectacles/:id', async (req, res) => {
 // Supprimer un spectacle
 router.delete('/spectacles/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Admin - Suppression du spectacle:', id);
+
 
   try {
     const [result] = await db.query('DELETE FROM spectacle WHERE id = ?', [id]);
     
     if (result.affectedRows === 0) {
-      console.log('Admin - Spectacle non trouvé pour suppression:', id);
+
       return res.status(404).json({ error: 'Spectacle non trouvé' });
     }
 
-    console.log('Admin - Spectacle supprimé avec succès:', id);
+
     res.json({ message: 'Spectacle supprimé avec succès' });
   } catch (error) {
     console.error('Erreur lors de la suppression du spectacle:', error);
@@ -143,7 +132,6 @@ router.delete('/spectacles/:id', async (req, res) => {
 
 // Récupérer tous les artistes (pour l'admin)
 router.get('/artistes', async (req, res) => {
-  console.log('Admin - Récupération des artistes');
   try {
     const [artistes] = await db.query(`
       SELECT a.*, COUNT(s.id) as upcoming_shows
@@ -153,7 +141,6 @@ router.get('/artistes', async (req, res) => {
       GROUP BY a.id
       ORDER BY a.created_at DESC
     `);
-    console.log('Admin - Nombre d\'artistes trouvés:', artistes.length);
     res.json(artistes);
   } catch (error) {
     console.error('Erreur lors de la récupération des artistes:', error);
@@ -163,7 +150,6 @@ router.get('/artistes', async (req, res) => {
 
 // Récupérer toutes les réservations (pour l'admin)
 router.get('/reservations', async (req, res) => {
-  console.log('Admin - Récupération des réservations');
   try {
     const [reservations] = await db.query(`
       SELECT 
@@ -193,7 +179,6 @@ router.get('/reservations', async (req, res) => {
       LEFT JOIN paiement p ON pr.paiement_id = p.id
       ORDER BY r.date DESC
     `);
-    console.log('Admin - Nombre de réservations trouvées:', reservations.length);
     res.json(reservations);
   } catch (error) {
     console.error('Erreur lors de la récupération des réservations:', error);
@@ -204,8 +189,6 @@ router.get('/reservations', async (req, res) => {
 // Supprimer une réservation (pour l'admin)
 router.delete('/reservations/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Admin - Suppression de la réservation:', id);
-
   try {
     // Supprimer d'abord les liens paiement-réservation
     await db.query('DELETE FROM paiement_reservation WHERE reservation_id = ?', [id]);
@@ -214,11 +197,8 @@ router.delete('/reservations/:id', async (req, res) => {
     const [result] = await db.query('DELETE FROM reservation WHERE id = ?', [id]);
     
     if (result.affectedRows === 0) {
-      console.log('Admin - Réservation non trouvée pour suppression:', id);
       return res.status(404).json({ error: 'Réservation non trouvée' });
     }
-
-    console.log('Admin - Réservation supprimée avec succès:', id);
     res.json({ message: 'Réservation supprimée avec succès' });
   } catch (error) {
     console.error('Erreur lors de la suppression de la réservation:', error);
@@ -229,11 +209,9 @@ router.delete('/reservations/:id', async (req, res) => {
 // Modifier un artiste
 router.put('/artistes/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Admin - Modification de l\'artiste:', id, req.body);
   const { name, photo, biographie } = req.body;
 
   if (!name || !photo || !biographie) {
-    console.log('Admin - Données manquantes pour la modification de l\'artiste');
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
@@ -254,11 +232,8 @@ router.put('/artistes/:id', async (req, res) => {
     );
 
     if (updatedArtist.length === 0) {
-      console.log('Admin - Artiste non trouvé:', id);
       return res.status(404).json({ error: 'Artiste non trouvé' });
     }
-
-    console.log('Admin - Artiste modifié avec succès:', updatedArtist[0]);
     res.json(updatedArtist[0]);
   } catch (error) {
     console.error('Erreur lors de la modification de l\'artiste:', error);
@@ -269,7 +244,7 @@ router.put('/artistes/:id', async (req, res) => {
 // Supprimer un artiste
 router.delete('/artistes/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Admin - Suppression de l\'artiste:', id);
+
 
   try {
     // Vérifier si l'artiste a des spectacles associés
@@ -283,11 +258,8 @@ router.delete('/artistes/:id', async (req, res) => {
     const [result] = await db.query('DELETE FROM artiste WHERE id = ?', [id]);
     
     if (result.affectedRows === 0) {
-      console.log('Admin - Artiste non trouvé pour suppression:', id);
       return res.status(404).json({ error: 'Artiste non trouvé' });
     }
-
-    console.log('Admin - Artiste supprimé avec succès:', id);
     res.json({ message: 'Artiste supprimé avec succès' });
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'artiste:', error);
@@ -297,27 +269,17 @@ router.delete('/artistes/:id', async (req, res) => {
 
 // Ajouter un nouvel artiste
 router.post('/artiste', async (req, res) => {
-  console.log('Admin - Ajout d\'un nouvel artiste - Headers:', req.headers);
-  console.log('Admin - Ajout d\'un nouvel artiste - Body:', req.body);
   const { name, photo, photo_featured, biographie } = req.body;
 
   if (!name || !photo || !photo_featured || !biographie) {
-    console.log('Admin - Données manquantes pour l\'ajout de l\'artiste:', {
-      name: !!name,
-      photo: !!photo,
-      photo_featured: !!photo_featured,
-      biographie: !!biographie
-    });
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
-    console.log('Admin - Tentative d\'insertion dans la base de données');
     const [result] = await db.query(
       'INSERT INTO artiste (name, photo, photo_featured, biographie) VALUES (?, ?, ?, ?)',
       [name, photo, photo_featured, biographie]
     );
-    console.log('Admin - Insertion réussie, ID:', result.insertId);
 
     const [newArtist] = await db.query(
       `SELECT a.*, COUNT(s.id) as upcoming_shows
@@ -329,7 +291,7 @@ router.post('/artiste', async (req, res) => {
       [result.insertId]
     );
 
-    console.log('Admin - Artiste ajouté avec succès:', newArtist[0]);
+
     res.status(201).json(newArtist[0]);
   } catch (error) {
     console.error('Erreur détaillée lors de l\'ajout de l\'artiste:', error);

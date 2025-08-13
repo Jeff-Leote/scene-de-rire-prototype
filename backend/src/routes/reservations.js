@@ -2,8 +2,81 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db"); // Ton fichier de connexion MySQL
 const jwt = require("jsonwebtoken");
+const QRCode = require("qrcode");
+const fs = require("fs");
+const path = require("path");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+// Fonction pour générer un QR code unique pour une réservation
+async function generateQRCode(reservationId, spectacleId, spectacleTitle) {
+  try {
+    // Créer les données de validation du ticket
+    const ticketData = {
+      reservation_id: reservationId,
+      spectacle_id: spectacleId,
+      spectacle_title: spectacleTitle,
+      type: "ticket_validation",
+      timestamp: new Date().toISOString()
+    };
+
+    // Générer le nom du fichier
+    const fileName = `reservation_${reservationId}_${Date.now()}.png`;
+    const qrPath = path.join(__dirname, '../../qrcodes', fileName);
+
+    // Générer le QR code avec les données JSON
+    await QRCode.toFile(qrPath, JSON.stringify(ticketData), {
+      errorCorrectionLevel: 'H',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+
+    return fileName; // Retourner le nom du fichier pour le stocker en base
+  } catch (error) {
+    console.error("Erreur lors de la génération du QR code:", error);
+    throw error;
+  }
+}
+
+// Fonction pour vérifier la disponibilité des places
+async function checkAvailability(spectacleId, nbPlaces) {
+  const conn = await pool.getConnection();
+  try {
+    // Récupérer le nombre de places disponibles pour ce spectacle
+    const [spectacleRows] = await conn.query(
+      "SELECT places_disponibles FROM spectacle WHERE id = ?",
+      [spectacleId]
+    );
+
+    if (spectacleRows.length === 0) {
+      throw new Error("Spectacle non trouvé");
+    }
+
+    const placesDisponibles = spectacleRows[0].places_disponibles;
+
+    // Compter les réservations existantes pour ce spectacle
+    const [reservationsRows] = await conn.query(
+      "SELECT SUM(nb_places) as total_reserve FROM reservation WHERE spectacle_id = ?",
+      [spectacleId]
+    );
+
+    const totalReserve = reservationsRows[0].total_reserve || 0;
+    const placesRestantes = placesDisponibles - totalReserve;
+
+    if (nbPlaces > placesRestantes) {
+      throw new Error(`Il ne reste que ${placesRestantes} place(s) disponible(s) pour ce spectacle`);
+    }
+
+    return placesRestantes;
+  } finally {
+    conn.release();
+  }
+}
 
 // Middleware d'authentification
 const auth = async (req, res, next) => {
@@ -42,23 +115,51 @@ async function handleSuccessfulPayment(session) {
 
     const reservationIds = [];
 
-    // 1. Créer les réservations
+    // 1. Vérifier la disponibilité des places pour tous les spectacles
+    for (const item of spectacles) {
+      await checkAvailability(item.id, item.billets);
+    }
+
+    // 2. Récupérer les détails des spectacles pour les QR codes
+    const spectacleIds = spectacles.map(s => s.id);
+    const [spectacleRows] = await conn.query(
+      "SELECT id, title FROM spectacle WHERE id IN (?)",
+      [spectacleIds]
+    );
+    
+    const spectacleDetails = {};
+    spectacleRows.forEach(row => {
+      spectacleDetails[row.id] = { title: row.title };
+    });
+
+    // 3. Créer les réservations avec QR codes
     for (const item of spectacles) {
       const [result] = await conn.query(
         "INSERT INTO reservation (user_id, spectacle_id, nb_places) VALUES (?, ?, ?)",
         [user_id, item.id, item.billets]
       );
-      reservationIds.push(result.insertId);
+      const reservationId = result.insertId;
+      reservationIds.push(reservationId);
+
+      // Générer le QR code pour cette réservation
+      const spectacleTitle = spectacleDetails[item.id].title;
+      const qrFileName = await generateQRCode(reservationId, item.id, spectacleTitle);
+      
+      // Mettre à jour la réservation avec le chemin du QR code
+      await conn.query(
+        "UPDATE reservation SET qr_code_path = ? WHERE id = ?",
+        [qrFileName, reservationId]
+      );
     }
 
-    // 2. Créer le paiement global avec l'ID de session Stripe
+    // 4. Créer le paiement global avec l'ID de session Stripe
     const [paiementResult] = await conn.query(
       "INSERT INTO paiement (montant, statut, session_id) VALUES (?, ?, ?)",
       [session.amount_total / 100, true, session.id] // Stripe retourne les montants en centimes
     );
     const paiementId = paiementResult.insertId;
 
-    // 3. Répartir le paiement sur les réservations
+    // 5. Répartir le paiement sur les réservations
     const totalBillets = spectacles.reduce((sum, item) => sum + item.billets, 0);
     const amountPerTicket = (session.amount_total / 100) / totalBillets;
 
@@ -72,11 +173,12 @@ async function handleSuccessfulPayment(session) {
     }
 
     await conn.commit();
-    console.log(`Paiement traité avec succès pour la session: ${session.id}`);
+
 
   } catch (err) {
     await conn.rollback();
     console.error("Erreur lors du traitement du paiement:", err);
+    throw err; // Propager l'erreur pour la gérer dans la route
   } finally {
     conn.release();
   }
@@ -124,7 +226,7 @@ async function handleCancelledReservation(session) {
     }
 
     await conn.commit();
-    console.log(`Réservation annulée enregistrée pour la session: ${session.id}`);
+
 
   } catch (err) {
     await conn.rollback();
@@ -143,6 +245,15 @@ router.post("/checkout", auth, async (req, res) => {
   }
 
   try {
+    // Vérifier la disponibilité des places avant de créer la session Stripe
+    for (const item of spectacles) {
+      try {
+        await checkAvailability(item.id, item.billets);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+    }
+
     const spectacleIds = spectacles.map(s => s.id);
     const [rows] = await pool.query(
       "SELECT id, title, prix FROM spectacle WHERE id IN (?)",
@@ -234,23 +345,51 @@ router.post("/confirm", async (req, res) => {
     await conn.beginTransaction();
     const reservationIds = [];
     
-    // 1. Enregistrer chaque réservation
+    // 1. Vérifier la disponibilité des places pour tous les spectacles
+    for (const item of spectacles) {
+      await checkAvailability(item.id, item.billets);
+    }
+
+    // 2. Récupérer les détails des spectacles pour les QR codes
+    const spectacleIds = spectacles.map(s => s.id);
+    const [spectacleRows] = await conn.query(
+      "SELECT id, title FROM spectacle WHERE id IN (?)",
+      [spectacleIds]
+    );
+    
+    const spectacleDetails = {};
+    spectacleRows.forEach(row => {
+      spectacleDetails[row.id] = { title: row.title };
+    });
+    
+    // 3. Enregistrer chaque réservation avec QR codes
     for (const item of spectacles) {
       const [result] = await conn.query(
         "INSERT INTO reservation (user_id, spectacle_id, nb_places) VALUES (?, ?, ?)",
         [user_id, item.id, item.billets]
       );
-      reservationIds.push(result.insertId);
+      const reservationId = result.insertId;
+      reservationIds.push(reservationId);
+
+      // Générer le QR code pour cette réservation
+      const spectacleTitle = spectacleDetails[item.id].title;
+      const qrFileName = await generateQRCode(reservationId, item.id, spectacleTitle);
+      
+      // Mettre à jour la réservation avec le chemin du QR code
+      await conn.query(
+        "UPDATE reservation SET qr_code_path = ? WHERE id = ?",
+        [qrFileName, reservationId]
+      );
     }
 
-    // 2. Créer un paiement global
+    // 4. Créer un paiement global
     const [paiementResult] = await conn.query(
-      "INSERT INTO paiement (montant, statut) VALUES (?, ?)",
-      [montant, true]
+      "INSERT INTO paiement (montant, statut, session_id) VALUES (?, ?, ?)",
+      [montant, true, session_id]
     );
     const paiementId = paiementResult.insertId;
 
-    // 3. Répartir le paiement proportionnellement sur les réservations
+    // 5. Répartir le paiement proportionnellement sur les réservations
     const totalSpectacles = spectacles.reduce((sum, item) => sum + item.billets, 0);
     const amountPerTicket = montant / totalSpectacles;
     
@@ -370,6 +509,45 @@ router.post("/cancel", async (req, res) => {
   }
 });
 
+// Récupérer le QR code d'une réservation
+router.get("/:reservationId/qrcode", auth, async (req, res) => {
+  const { reservationId } = req.params;
+  
+  try {
+    // Vérifier que la réservation appartient à l'utilisateur connecté
+    const [reservations] = await pool.query(`
+      SELECT r.qr_code_path, r.nb_places, s.title, s.date_spectacle, s.heure_spectacle
+      FROM reservation r
+      JOIN spectacle s ON r.spectacle_id = s.id
+      WHERE r.id = ? AND r.user_id = ?
+    `, [reservationId, req.user.id]);
+
+    if (reservations.length === 0) {
+      return res.status(404).json({ error: "Réservation non trouvée ou non autorisée" });
+    }
+
+    const reservation = reservations[0];
+    
+    if (!reservation.qr_code_path) {
+      return res.status(404).json({ error: "QR code non trouvé pour cette réservation" });
+    }
+
+    const qrPath = path.join(__dirname, '../../qrcodes', reservation.qr_code_path);
+    
+    // Vérifier que le fichier existe
+    if (!fs.existsSync(qrPath)) {
+      return res.status(404).json({ error: "Fichier QR code non trouvé" });
+    }
+
+    // Envoyer le fichier QR code
+    res.sendFile(qrPath);
+    
+  } catch (error) {
+    console.error("Erreur lors de la récupération du QR code:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération du QR code" });
+  }
+});
+
 // Récupérer les réservations d'un utilisateur
 router.get("/user/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -380,6 +558,7 @@ router.get("/user/:userId", async (req, res) => {
         r.id as reservation_id,
         r.nb_places,
         r.date as reservation_date,
+        r.qr_code_path,
         s.id as spectacle_id,
         s.title,
         s.description,
@@ -415,5 +594,160 @@ router.get("/user/:userId", async (req, res) => {
     });
   }
 });
+
+
+
+// Vérifier la disponibilité des places d'un spectacle
+router.get("/availability/:spectacleId", async (req, res) => {
+  const { spectacleId } = req.params;
+  
+  try {
+    const [spectacleRows] = await pool.query(
+      "SELECT places_disponibles, title FROM spectacle WHERE id = ?",
+      [spectacleId]
+    );
+
+    if (spectacleRows.length === 0) {
+      return res.status(404).json({ error: "Spectacle non trouvé" });
+    }
+
+    const spectacle = spectacleRows[0];
+
+    // Compter les réservations existantes
+    const [reservationsRows] = await pool.query(
+      "SELECT SUM(nb_places) as total_reserve FROM reservation WHERE spectacle_id = ?",
+      [spectacleId]
+    );
+
+    const totalReserve = reservationsRows[0].total_reserve || 0;
+    const placesRestantes = spectacle.places_disponibles - totalReserve;
+
+    res.json({
+      spectacle_id: parseInt(spectacleId),
+      spectacle_title: spectacle.title,
+      places_total: spectacle.places_disponibles,
+      places_reservees: totalReserve,
+      places_restantes: placesRestantes,
+      disponible: placesRestantes > 0
+    });
+
+  } catch (error) {
+    console.error("Erreur lors de la vérification de la disponibilité:", error);
+    res.status(500).json({ error: "Erreur lors de la vérification de la disponibilité" });
+  }
+});
+
+// Valider un ticket (route publique pour la validation)
+router.get("/validate/:reservationId", async (req, res) => {
+  const { reservationId } = req.params;
+  
+  try {
+    const [reservations] = await pool.query(`
+      SELECT 
+        r.id as reservation_id,
+        r.nb_places,
+        r.date as reservation_date,
+        r.qr_code_path,
+        s.id as spectacle_id,
+        s.title,
+        s.description,
+        s.date_spectacle,
+        s.heure_spectacle,
+        s.prix,
+        s.lieu,
+        s.img,
+        a.name as artiste_name,
+        a.photo as artiste_photo,
+        p.montant as montant_paye,
+        p.statut as paiement_statut,
+        p.date as date_paiement,
+        u.nom as user_nom,
+        u.prenom as user_prenom,
+        u.email as user_email
+      FROM reservation r
+      JOIN spectacle s ON r.spectacle_id = s.id
+      JOIN artiste a ON s.artiste_id = a.id
+      JOIN user u ON r.user_id = u.id
+      LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
+      LEFT JOIN paiement p ON pr.paiement_id = p.id
+      WHERE r.id = ?
+    `, [reservationId]);
+
+    if (reservations.length === 0) {
+      return res.status(404).json({ 
+        valid: false, 
+        error: "Ticket non trouvé" 
+      });
+    }
+
+    const reservation = reservations[0];
+
+    // Vérifier si le paiement a été effectué
+    if (!reservation.paiement_statut || (reservation.paiement_statut !== 'completed' && reservation.paiement_statut !== 1)) {
+      return res.json({
+        valid: false,
+        error: "Paiement non effectué",
+        reservation: {
+          id: reservation.reservation_id,
+          spectacle_title: reservation.title,
+          date_spectacle: reservation.date_spectacle,
+          heure_spectacle: reservation.heure_spectacle,
+          lieu: reservation.lieu,
+          nb_places: reservation.nb_places,
+          user_nom: reservation.user_nom,
+          user_prenom: reservation.user_prenom
+        }
+      });
+    }
+
+    // Vérifier si le spectacle n'est pas déjà passé
+    const spectacleDate = new Date(reservation.date_spectacle + ' ' + reservation.heure_spectacle);
+    const now = new Date();
+    
+    if (spectacleDate < now) {
+      return res.json({
+        valid: false,
+        error: "Ce spectacle a déjà eu lieu",
+        reservation: {
+          id: reservation.reservation_id,
+          spectacle_title: reservation.title,
+          date_spectacle: reservation.date_spectacle,
+          heure_spectacle: reservation.heure_spectacle,
+          lieu: reservation.lieu,
+          nb_places: reservation.nb_places,
+          user_nom: reservation.user_nom,
+          user_prenom: reservation.user_prenom
+        }
+      });
+    }
+
+    res.json({
+      valid: true,
+      message: "Ticket valide",
+      reservation: {
+        id: reservation.reservation_id,
+        spectacle_title: reservation.title,
+        date_spectacle: reservation.date_spectacle,
+        heure_spectacle: reservation.heure_spectacle,
+        lieu: reservation.lieu,
+        nb_places: reservation.nb_places,
+        user_nom: reservation.user_nom,
+        user_prenom: reservation.user_prenom,
+        artiste_name: reservation.artiste_name,
+        prix: reservation.prix,
+        montant_paye: reservation.montant_paye
+      }
+    });
+
+  } catch (error) {
+    console.error("Erreur lors de la validation du ticket:", error);
+    res.status(500).json({ 
+      valid: false,
+      error: "Erreur lors de la validation du ticket" 
+    });
+  }
+});
+
+// (Supprimé) Routes alternatives statiques de debug pour servir les QR codes
 
 module.exports = router;

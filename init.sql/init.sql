@@ -31,7 +31,8 @@ CREATE TABLE spectacle (
   heure_spectacle time NOT NULL,
   prix int NOT NULL,
   lieu varchar(255) COMMENT "L'espace comédie" NOT NULL,
-  artiste_id int NOT NULL
+  artiste_id int NOT NULL,
+  places_disponibles int NOT NULL DEFAULT 100 COMMENT 'Nombre total de places disponibles pour ce spectacle'
 );
 
 CREATE TABLE avis (
@@ -47,7 +48,11 @@ CREATE TABLE reservation (
   user_id int NOT NULL,
   spectacle_id int NOT NULL,
   nb_places int NOT NULL,
-  date timestamp DEFAULT CURRENT_TIMESTAMP
+  date timestamp DEFAULT CURRENT_TIMESTAMP,
+  qr_code_path varchar(255) COMMENT 'Chemin vers le fichier QR code généré',
+  used BOOLEAN DEFAULT FALSE COMMENT 'Indique si le billet a été utilisé',
+  used_at TIMESTAMP NULL COMMENT 'Date et heure d\'utilisation du billet',
+  qr_code_generated BOOLEAN DEFAULT FALSE COMMENT 'Indique si un QR code a été généré pour cette réservation'
 );
 
 CREATE TABLE paiement (
@@ -75,8 +80,6 @@ CREATE TABLE lieu (
     is_main boolean DEFAULT FALSE
 );
 
-
-
 -- Ajout des clés étrangères
 ALTER TABLE avis ADD FOREIGN KEY (user_id) REFERENCES user (id);
 ALTER TABLE avis ADD FOREIGN KEY (spectacle_id) REFERENCES spectacle (id);
@@ -96,9 +99,9 @@ INSERT INTO artiste (id, name, biographie, photo, photo_featured) VALUES
 (1, 'Gad Elmaleh', 'Un humoriste célèbre.', 'pikach_artiste.webp', 'pikach_feature.webp');
 
 -- 3. Création de spectacles de test (dépendent de artiste)
-INSERT INTO spectacle (id, title, img, description, date_spectacle, heure_spectacle, prix, lieu, artiste_id) VALUES
-(1, 'D''ailleurs', 'spectacles_pikach.webp', 'Le nouveau spectacle de Gad Elmaleh.', '2025-12-25', '20:30:00', 45, 'L''espace comedie', 1),
-(2, 'L''autre, c''est moi', 'spectacles_pikach.webp', 'Un classique de Gad Elmaleh.', '2025-11-15', '21:00:00', 40, 'L''espace comedie', 1);
+INSERT INTO spectacle (id, title, img, description, date_spectacle, heure_spectacle, prix, lieu, artiste_id, places_disponibles) VALUES
+(1, 'D''ailleurs', 'spectacles_pikach.webp', 'Le nouveau spectacle de Gad Elmaleh.', '2025-12-25', '20:30:00', 45, 'L''espace comedie', 1, 50),
+(2, 'L''autre, c''est moi', 'spectacles_pikach.webp', 'Un classique de Gad Elmaleh.', '2025-11-15', '21:00:00', 40, 'L''espace comedie', 1, 50);
 
 -- 4. Création d'avis de test (dépendent de user et spectacle)
 INSERT INTO avis (user_id, spectacle_id, message) VALUES
@@ -106,6 +109,7 @@ INSERT INTO avis (user_id, spectacle_id, message) VALUES
 (1, 2, 'Très drôle, je recommande !');
 
 -- 5. Création de réservations de test (dépendent de user et spectacle)
+-- Note: Les réservations de test n'ont pas de QR codes car ils sont générés lors du paiement
 INSERT INTO reservation (user_id, spectacle_id, nb_places) VALUES
 (1, 1, 2),
 (1, 2, 1);
@@ -119,3 +123,8 @@ INSERT INTO paiement (montant, statut) VALUES
 INSERT INTO paiement_reservation (paiement_id, reservation_id, montant) VALUES
 (1, 1, 90),
 (2, 2, 40);
+
+-- Index optimisés pour le système de scan de QR codes
+CREATE INDEX idx_reservation_verification ON reservation(user_id, spectacle_id, used);
+CREATE INDEX idx_reservation_used_at ON reservation(used_at);
+CREATE INDEX idx_reservation_qr_generated ON reservation(qr_code_generated);

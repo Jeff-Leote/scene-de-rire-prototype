@@ -17,7 +17,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback){
-    console.log("Requête CORS venant de :", origin);
     // autoriser requêtes sans origin (ex: Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -36,29 +35,24 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-// Middleware de logging
+// Middleware de logging minimal en production
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  }
   next();
 });
 
 // Routes API
 app.use("/api", routes);
 
-// Route de test
+// Route de base
 app.get("/", (req, res) => {
   res.json({ message: "API is working!" });
 });
 
-app.get("/jwt",(req, res) => {
-  res.send("JWT")
-})
-
 // Gestion des routes non trouvées
 app.use((req, res) => {
-  console.log('Route not found:', req.method, req.url);
   res.status(404).json({ error: 'Route not found' });
 });
 

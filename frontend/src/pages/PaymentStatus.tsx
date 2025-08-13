@@ -53,7 +53,7 @@ const PaymentStatus = () => {
         setSessionId(sessionIdParam);
         registerCancelledReservation(sessionIdParam)
           .then(() => {
-            console.log("Réservation annulée enregistrée");
+        
           })
           .catch((error) => {
             console.error("Erreur lors de l'enregistrement:", error);

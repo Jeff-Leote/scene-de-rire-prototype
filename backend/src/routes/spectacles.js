@@ -54,7 +54,7 @@ router.get("/", async (req, res) => {
 router.get("/upcoming", async (req, res) => {
   try {
     const limit = 4;
-    console.log("Fetching upcoming shows with limit:", limit);
+
 
     const [rows] = await pool.query(`
       SELECT
@@ -76,8 +76,7 @@ router.get("/upcoming", async (req, res) => {
       LIMIT ?
     `, [limit]);
 
-    console.log("Number of shows found:", rows.length);
-    console.log("Shows:", rows);
+
 
     res.json(rows);  // direct tableau, pour UpcomingShows.tsx
   } catch (err) {

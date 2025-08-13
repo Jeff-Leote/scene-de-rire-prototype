@@ -2,10 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, useCart } from '@/contexts/AuthContext';
-
-interface HeaderProps {
-  activeItem?: string;
-}
+import { HeaderProps } from '@/services/types';
 
 const Header = ({ activeItem }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -67,6 +64,7 @@ const Header = ({ activeItem }: HeaderProps) => {
                     >
                       Mon compte
                     </Link>
+
                     {user?.role === 'admin' && (
                       <Link 
                         to="/dashboard" 

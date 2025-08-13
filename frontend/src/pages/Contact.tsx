@@ -32,7 +32,7 @@ const Contact = () => {
 
   const onSubmit = (data: FormData) => {
     // Here you would normally send the form data to your server
-    console.log(data);
+
     
     toast({
       title: "Message envoyé",

@@ -35,7 +35,7 @@ const isAdmin = async (req, res, next) => {
   next();
 };
 
-// Test route
+// Route de test (à supprimer en production)
 router.get('/test', (req, res) => {
   res.json({ message: 'Auth routes are working!' });
 });

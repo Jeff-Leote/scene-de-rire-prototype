@@ -45,25 +45,42 @@ export interface Reservation {
   reservation_id: number;
   nb_places: number;
   reservation_date: string;
+  qr_code_path?: string;
   spectacle_id: number;
-  spectacle_title: string;
-  title?: string; // Pour compatibilité avec MyAccount
-  description?: string; // Pour compatibilité avec MyAccount
-  img?: string; // Pour compatibilité avec MyAccount
+  title: string;
+  description: string;
   date_spectacle: string;
   heure_spectacle: string;
   prix: number;
   lieu: string;
+  img: string;
   artiste_name: string;
-  artiste_photo?: string; // Pour compatibilité avec MyAccount
-  user_id: number;
-  civility: string;
-  user_firstname: string;
-  user_lastname: string;
-  user_email: string;
-  montant_paye: number;
-  paiement_statut: boolean;
-  date_paiement: string;
+  artiste_photo: string;
+  montant_paye?: number;
+  paiement_statut?: boolean;
+  date_paiement?: string;
+}
+
+// Interface pour les props du composant QRCodeDisplay
+export interface QRCodeDisplayProps {
+  reservationId: number;
+  qrCodePath?: string;
+  spectacleTitle: string;
+  dateSpectacle: string;
+  heureSpectacle: string;
+  nbPlaces: number;
+}
+
+// Interface pour les props du composant Header
+export interface HeaderProps {
+  activeItem?: string;
+}
+
+// Interface pour les props du composant ProtectedRoute
+export interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireAuth?: boolean;
+  requireAdmin?: boolean;
 }
 
 // Interfaces pour le panier
@@ -149,7 +166,16 @@ export interface FeaturedArtist {
 
 // Interface pour la réponse du statut de paiement
 export interface PaymentStatusResponse {
-  status: 'paid' | 'failed' | 'pending' | 'cancelled';
+  status: 'paid' | 'failed' | 'pending';
   message: string;
-  sessionId: string;
+  sessionId?: string;
+}
+
+export interface AvailabilityResponse {
+  spectacle_id: number;
+  spectacle_title: string;
+  places_total: number;
+  places_reservees: number;
+  places_restantes: number;
+  disponible: boolean;
 } 

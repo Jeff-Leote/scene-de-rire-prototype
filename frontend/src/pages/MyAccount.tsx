@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/sonner";
 import { Link, useLocation } from 'react-router-dom';
 import { getUserReservations, checkPaymentStatus } from '../services/reservation';
 import { Reservation } from '../services/types';
+import QRCodeDisplay from '../components/QRCodeDisplay';
 
 const MyAccount = () => {
   const { user, token, login, logout } = useAuth();
@@ -13,6 +14,7 @@ const MyAccount = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loadingReservations, setLoadingReservations] = useState(false);
+  const [expandedQRCode, setExpandedQRCode] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     civility: user?.civility || '',
     firstName: user?.firstName || '',
@@ -24,18 +26,16 @@ const MyAccount = () => {
 
   const loadReservations = useCallback(async () => {
     if (!user?.id) {
-      console.log('Aucun utilisateur connecté ou ID manquant');
+  
       return;
     }
     
-    console.log('Chargement des réservations pour l\'utilisateur:', user.id);
+
     setLoadingReservations(true);
     try {
       const data = await getUserReservations(user.id);
-      console.log('Données reçues de l\'API:', data);
       if (data.success) {
         setReservations(data.reservations);
-        console.log('Réservations mises à jour:', data.reservations);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des réservations:', error);
@@ -47,7 +47,7 @@ const MyAccount = () => {
 
   // Charger les réservations de l'utilisateur
   useEffect(() => {
-    console.log('Utilisateur connecté:', user);
+
     if (user?.id) {
       loadReservations();
     }
@@ -371,7 +371,15 @@ const MyAccount = () => {
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="text-lg font-semibold text-white">{reservation.title}</h4>
-                            {getStatusBadge(reservation.paiement_statut)}
+                            <div className="flex items-center space-x-2">
+                              {getStatusBadge(reservation.paiement_statut)}
+                              <button
+                                onClick={() => setExpandedQRCode(expandedQRCode === reservation.reservation_id ? null : reservation.reservation_id)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition duration-300"
+                              >
+                                {expandedQRCode === reservation.reservation_id ? 'Masquer QR' : 'Voir QR'}
+                              </button>
+                            </div>
                           </div>
                           <p className="text-gray-400 text-sm mb-2">{reservation.description}</p>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -404,6 +412,20 @@ const MyAccount = () => {
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Section QR Code */}
+                      {expandedQRCode === reservation.reservation_id && (
+                        <div className="mt-4 pt-4 border-t border-gray-700">
+                          <QRCodeDisplay
+                            reservationId={reservation.reservation_id}
+                            qrCodePath={reservation.qr_code_path}
+                            spectacleTitle={reservation.title}
+                            dateSpectacle={reservation.date_spectacle}
+                            heureSpectacle={reservation.heure_spectacle}
+                            nbPlaces={reservation.nb_places}
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
