@@ -305,8 +305,8 @@ router.post("/checkout", auth, async (req, res) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${frontendUrl}/mon-compte?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${frontendUrl}/mon-compte?payment=cancel`,
+      success_url: `${frontendUrl}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${frontendUrl}/?payment=cancel`,
       metadata: {
         user_id: req.user.id.toString(),
         prenom: prenom,
