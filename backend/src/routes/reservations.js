@@ -451,9 +451,18 @@ router.post("/confirm", async (req, res) => {
 router.get("/status/:sessionId", async (req, res) => {
   const { sessionId } = req.params;
   
+  console.log('🔍 Vérification du statut pour sessionId:', sessionId);
+  console.log('🔑 STRIPE_SECRET_KEY configurée:', !!process.env.STRIPE_SECRET_KEY);
+  
   try {
     // Vérifier la session Stripe
+    console.log('📞 Appel à Stripe pour récupérer la session...');
     const session = await stripe.checkout.sessions.retrieve(sessionId);
+    console.log('✅ Session Stripe récupérée:', {
+      id: session.id,
+      payment_status: session.payment_status,
+      amount_total: session.amount_total
+    });
     
     if (session.payment_status === 'paid') {
       // Vérifier si les réservations ont déjà été créées
@@ -496,8 +505,17 @@ router.get("/status/:sessionId", async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Erreur lors de la vérification du statut:", error);
-    res.status(500).json({ error: "Erreur lors de la vérification du statut" });
+    console.error("❌ Erreur lors de la vérification du statut:", error);
+    console.error("📋 Détails de l'erreur:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      type: error.type
+    });
+    res.status(500).json({ 
+      error: "Erreur lors de la vérification du statut",
+      details: error.message 
+    });
   }
 });
 
