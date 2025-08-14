@@ -23,7 +23,34 @@ const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rir
   return await res.json();
 }
 
-
+export async function checkPaymentStatus(sessionId: string): Promise<PaymentStatusResponse> {
+  console.log('🔍 Vérification du statut de paiement pour session:', sessionId);
+  
+  const url = `${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/status/${sessionId}`;
+  console.log('🌐 URL de l\'API:', url);
+  
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    console.log('📡 Statut de la réponse:', res.status, res.statusText);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('❌ Erreur API:', errorText);
+      throw new Error(`Erreur API: ${res.status} - ${errorText}`);
+    }
+    
+    const data = await res.json();
+    console.log('✅ Données reçues:', data);
+    return data;
+  } catch (error) {
+    console.error('💥 Erreur lors de la vérification:', error);
+    throw error;
+  }
+}
 
 export async function getUserReservations(userId: number) {
 const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/user/${userId}`, {
