@@ -28,7 +28,14 @@ async function generateQRCode(reservationId, spectacleId, spectacleTitle) {
 
     // Générer le nom du fichier
     const fileName = `reservation_${reservationId}_${Date.now()}.png`;
-    const qrPath = path.join(__dirname, '../../qrcodes', fileName);
+    const qrDir = path.join(__dirname, '../../qrcodes');
+    const qrPath = path.join(qrDir, fileName);
+
+    // Créer le dossier qrcodes s'il n'existe pas
+    if (!fs.existsSync(qrDir)) {
+      fs.mkdirSync(qrDir, { recursive: true });
+      console.log('📁 Dossier qrcodes créé:', qrDir);
+    }
 
     // Générer le QR code avec les données JSON
     await QRCode.toFile(qrPath, JSON.stringify(ticketData), {
@@ -42,9 +49,10 @@ async function generateQRCode(reservationId, spectacleId, spectacleTitle) {
       }
     });
 
+    console.log('✅ QR code généré:', fileName);
     return fileName; // Retourner le nom du fichier pour le stocker en base
   } catch (error) {
-    console.error("Erreur lors de la génération du QR code:", error);
+    console.error("❌ Erreur lors de la génération du QR code:", error);
     throw error;
   }
 }
