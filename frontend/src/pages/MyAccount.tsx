@@ -58,26 +58,50 @@ const MyAccount = () => {
     const payment = params.get('payment');
     const session_id = params.get('session_id');
     
-    if (payment === 'success' && session_id) {
-      // Vérifier le statut du paiement via l'API
-      checkPaymentStatus(session_id)
-        .then(result => {
-          if (result.status === 'paid') {
-            toast.success('Réservation confirmée !');
-            // Vider le panier
-            localStorage.removeItem('cart');
-            localStorage.removeItem('nbBillets');
-            // Recharger les réservations
-            loadReservations();
-          } else {
-            toast.error('Paiement en attente ou échoué.');
-          }
-        })
-        .catch(() => {
+    if (payment && session_id) {
+      // Gérer les différents statuts de paiement
+      switch (payment) {
+        case 'paid':
+          toast.success('Réservation confirmée !');
+          // Vider le panier
+          localStorage.removeItem('cart');
+          localStorage.removeItem('nbBillets');
+          // Recharger les réservations
+          loadReservations();
+          break;
+        case 'failed':
+          toast.error('Paiement échoué. Votre réservation n\'a pas été finalisée.');
+          break;
+        case 'pending':
+          toast.info('Paiement en cours de traitement...');
+          // Recharger les réservations
+          loadReservations();
+          break;
+        case 'cancelled':
+          toast.error('Paiement annulé. Votre réservation n\'a pas été finalisée.');
+          break;
+        case 'error':
           toast.error('Erreur lors de la vérification du paiement.');
-        });
-    } else if (payment === 'cancel') {
-      toast.error('Paiement annulé. Votre réservation n\'a pas été finalisée.');
+          break;
+        default:
+          // Cas legacy pour 'success'
+          if (payment === 'success') {
+            checkPaymentStatus(session_id)
+              .then(result => {
+                if (result.status === 'paid') {
+                  toast.success('Réservation confirmée !');
+                  localStorage.removeItem('cart');
+                  localStorage.removeItem('nbBillets');
+                  loadReservations();
+                } else {
+                  toast.error('Paiement en attente ou échoué.');
+                }
+              })
+              .catch(() => {
+                toast.error('Erreur lors de la vérification du paiement.');
+              });
+          }
+      }
     }
   }, [location.search, loadReservations]);
 

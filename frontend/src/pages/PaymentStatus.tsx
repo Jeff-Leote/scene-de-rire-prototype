@@ -60,9 +60,9 @@ const PaymentStatus = () => {
           });
       }
       
-      // Rediriger vers la page mon compte après 3 secondes
+      // Rediriger vers mon-compte après 5 secondes avec les paramètres de statut
       setTimeout(() => {
-        navigate("/mon-compte");
+        navigate(`/mon-compte?payment=cancelled&session_id=${sessionIdParam}`);
       }, 5000);
     } else {
       navigate("/");
@@ -76,35 +76,19 @@ const PaymentStatus = () => {
       setStatus(result.status);
       setMessage(result.message);
       
-      // Afficher les toasts appropriés et rediriger
-      if (result.status === 'paid') {
-        toast.success("Réservation confirmée !");
-        // Rediriger vers les réservations après 3 secondes
-        setTimeout(() => {
-          navigate("/mon-compte");
-        }, 3000);
-      } else if (result.status === 'failed') {
-        toast.error("Échec de la réservation");
-        // Rediriger vers la page de réservation après 3 secondes
-        setTimeout(() => {
-          navigate("/reservation");
-        }, 3000);
-      } else if (result.status === 'pending') {
-        toast.info("Paiement en cours de traitement...");
-        // Rediriger vers les réservations après 3 secondes
-        setTimeout(() => {
-          navigate("/mon-compte");
-        }, 3000);
-      }
+      // Rediriger vers mon-compte après 5 secondes avec les paramètres de statut
+      setTimeout(() => {
+        navigate(`/mon-compte?payment=${result.status}&session_id=${sessionId}`);
+      }, 5000);
     } catch (error) {
       console.error("Erreur lors de la vérification:", error);
       setStatus("error");
       setMessage("Erreur lors de la vérification du paiement");
       toast.error("Erreur lors de la vérification du paiement");
-      // Rediriger vers la page de réservation après 3 secondes
+      // Rediriger vers mon-compte après 5 secondes avec les paramètres de statut
       setTimeout(() => {
-        navigate("/reservation");
-      }, 3000);
+        navigate(`/mon-compte?payment=error&session_id=${sessionId}`);
+      }, 5000);
     }
   };
 
