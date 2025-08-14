@@ -23,9 +23,12 @@ const Index = () => {
     const sessionId = searchParams.get("session_id");
     
     if (payment === 'success' && sessionId) {
+      console.log('🎯 Paiement réussi détecté, sessionId:', sessionId);
+      
       // Vérifier le statut du paiement via l'API
       checkPaymentStatus(sessionId)
         .then(result => {
+          console.log('✅ Résultat de la vérification:', result);
           if (result.status === 'paid') {
             toast.success('Réservation confirmée !');
             // Vider le panier
@@ -36,10 +39,12 @@ const Index = () => {
               navigate("/mon-compte");
             }, 3000);
           } else {
+            console.log('⚠️ Statut de paiement non confirmé:', result.status);
             toast.error('Paiement en attente ou échoué.');
           }
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('💥 Erreur dans le catch:', error);
           toast.error('Erreur lors de la vérification du paiement.');
         });
     } else if (payment === 'cancel') {
