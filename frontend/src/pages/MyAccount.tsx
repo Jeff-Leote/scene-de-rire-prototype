@@ -2,7 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "@/components/ui/sonner";
 import { Link, useLocation } from 'react-router-dom';
-import { getUserReservations, checkPaymentStatus } from '../services/reservation';
+import { getUserReservations } from '../services/reservation';
 import { Reservation } from '../services/types';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 
@@ -83,24 +83,7 @@ const MyAccount = () => {
         case 'error':
           toast.error('Erreur lors de la vérification du paiement.');
           break;
-        default:
-          // Cas legacy pour 'success'
-          if (payment === 'success') {
-            checkPaymentStatus(session_id)
-              .then(result => {
-                if (result.status === 'paid') {
-                  toast.success('Réservation confirmée !');
-                  localStorage.removeItem('cart');
-                  localStorage.removeItem('nbBillets');
-                  loadReservations();
-                } else {
-                  toast.error('Paiement en attente ou échoué.');
-                }
-              })
-              .catch(() => {
-                toast.error('Erreur lors de la vérification du paiement.');
-              });
-          }
+
       }
     }
   }, [location.search, loadReservations]);

@@ -21,7 +21,7 @@ import SpectacleDetail from "./pages/SpectacleDetail";
 import Artists from "./pages/Artists";
 import ReservationInformations from "./pages/ReservationInformations";
 import ReservationPaiement from "./pages/ReservationPaiement";
-import PaymentStatus from "./pages/PaymentStatus";
+
 import ValidateTicket from "./pages/ValidateTicket";
 
 
@@ -43,7 +43,7 @@ const App = () => (
             <Route path="/reservation" element={<Reservation />} />
             <Route path="/reservation/informations" element={<ReservationInformations />} />
             <Route path="/reservation/paiement" element={<ReservationPaiement />} />
-            <Route path="/payment-status" element={<PaymentStatus />} />
+
             <Route path="/validate-ticket/:reservationId" element={<ValidateTicket />} />
 
             <Route path="/artistes" element={<Artists />} />

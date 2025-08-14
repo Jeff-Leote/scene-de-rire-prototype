@@ -164,12 +164,7 @@ export interface FeaturedArtist {
   };
 }
 
-// Interface pour la réponse du statut de paiement
-export interface PaymentStatusResponse {
-  status: 'paid' | 'failed' | 'pending';
-  message: string;
-  sessionId?: string;
-}
+
 
 export interface AvailabilityResponse {
   spectacle_id: number;
