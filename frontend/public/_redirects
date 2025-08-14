@@ -1,0 +1,3 @@
+# Redirects for SPA (Single Page Application)
+# All routes that don't start with /api should be served by index.html
+/*    /index.html   200
