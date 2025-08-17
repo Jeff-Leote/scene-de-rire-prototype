@@ -39,3 +39,6 @@ docker-compose.override.yml
 qrcodes/*.png
 qrcodes/*.jpg
 qrcodes/*.jpeg
+
+# Docker ignore files
+**/.dockerignore

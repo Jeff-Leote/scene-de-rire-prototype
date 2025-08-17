@@ -10,7 +10,9 @@ CREATE TABLE user (
   password varchar(255) NOT NULL,
   dateNaissance date NOT NULL,
   role varchar(20) DEFAULT 'utilisateur' COMMENT 'admin | utilisateur',
-  created_at timestamp DEFAULT CURRENT_TIMESTAMP
+  isActive BOOLEAN DEFAULT TRUE COMMENT 'Indique si le compte utilisateur est actif',
+  created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP NULL COMMENT 'Date et heure de la dernière connexion'
 );
 
 CREATE TABLE artiste (
@@ -91,8 +93,8 @@ ALTER TABLE reservation ADD FOREIGN KEY (spectacle_id) REFERENCES spectacle (id)
 
 -- 1. Création d'un utilisateur de test
 -- Mot de passe: "password123" (le hash correspond à ce mot de passe)
-INSERT INTO user (id, civility, nom, prenom, email, password, dateNaissance, role) VALUES
-(1, 'M.', 'Test', 'Jean', 'jean.test@example.com', '$2a$10$k.M7bXp9jJ8G5Qz.cO9dZ.D9uWwYqO/PzM4jG1xRn2qO7m.m.z0qC', '1990-01-01', 'utilisateur');
+INSERT INTO user (id, civility, nom, prenom, email, password, dateNaissance, role, isActive) VALUES
+(1, 'M.', 'Test', 'Jean', 'jean.test@example.com', '$2a$10$k.M7bXp9jJ8G5Qz.cO9dZ.D9uWwYqO/PzM4jG1xRn2qO7m.m.z0qC', '1990-01-01', 'utilisateur', TRUE);
 
 -- 2. Création d'un artiste de test
 INSERT INTO artiste (id, name, biographie, photo, photo_featured) VALUES

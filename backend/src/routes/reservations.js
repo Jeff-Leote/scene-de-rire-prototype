@@ -12,7 +12,21 @@ if (!process.env.STRIPE_SECRET_KEY) {
   console.error("ERREUR: STRIPE_SECRET_KEY n'est pas configurée dans les variables d'environnement");
 }
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+// Configuration Stripe avec gestion d'erreur
+let stripe;
+try {
+  stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  console.log("✅ Configuration Stripe réussie");
+} catch (error) {
+  console.error("❌ Erreur lors de l'initialisation de Stripe:", error.message);
+  // En mode développement, utiliser une clé de test par défaut
+  if (process.env.NODE_ENV === 'development') {
+    console.warn("⚠️ Mode développement: utilisation d'une clé de test par défaut");
+    stripe = require("stripe")("sk_test_4eC39HqLyjWDarjtT1zdp7dc");
+  } else {
+    throw new Error("Configuration Stripe invalide en production");
+  }
+}
 
 // Fonction pour générer un QR code unique pour une réservation
 async function generateQRCode(reservationId, spectacleId, spectacleTitle) {
@@ -304,9 +318,15 @@ router.post("/checkout", auth, async (req, res) => {
     }
 
     // Déterminer l'URL du frontend selon l'environnement
-    const frontendUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://espacecomedie.fr'
-      : (process.env.FRONTEND_URL || 'http://localhost:5173');
+    let frontendUrl;
+    if (process.env.NODE_ENV === 'production') {
+      frontendUrl = 'https://espacecomedie.fr';
+    } else {
+      frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    }
+    
+    console.log('🌐 URL du frontend configurée:', frontendUrl);
+    console.log('🔧 Mode d\'environnement:', process.env.NODE_ENV);
 
     // Créer une session Stripe
     const session = await stripe.checkout.sessions.create({
@@ -340,10 +360,18 @@ router.post("/checkout", auth, async (req, res) => {
     }
     
     // Vérifier si c'est un problème avec l'URL du frontend
-    if (!process.env.FRONTEND_URL) {
+    if (!process.env.FRONTEND_URL && process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ 
         error: "Erreur de configuration",
         details: "L'URL du frontend n'est pas configurée"
+      });
+    }
+    
+    // Gestion spécifique des erreurs Stripe
+    if (error.type === 'StripeInvalidRequestError') {
+      return res.status(400).json({ 
+        error: "Erreur de configuration Stripe",
+        details: "Vérifiez que votre clé Stripe est valide"
       });
     }
     

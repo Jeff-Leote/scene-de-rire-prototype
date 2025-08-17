@@ -6,6 +6,10 @@ export interface User {
   firstName: string;
   lastName: string;
   role: string;
+  birthDate?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  lastLogin?: string;
 }
 
 // Interfaces pour les spectacles
@@ -138,6 +142,7 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
 }

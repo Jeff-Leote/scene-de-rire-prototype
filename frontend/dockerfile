@@ -2,12 +2,23 @@ FROM node:24-alpine3.20
 
 WORKDIR /app
 
+# Créer un utilisateur non-root
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
+
+# Copier package.json et package-lock.json d'abord pour optimiser le cache
 COPY package*.json ./
 
+# Installer les dépendances avec --legacy-peer-deps pour éviter les conflits
 RUN npm install --legacy-peer-deps
 
-COPY . .
+# Copier les fichiers avec les bonnes permissions
+COPY --chown=nodejs:nodejs . .
+
+# Changer les permissions
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
 
 EXPOSE 5173
-
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

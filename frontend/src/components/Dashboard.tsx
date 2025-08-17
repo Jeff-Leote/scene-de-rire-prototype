@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
-import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData, FeaturedArtist } from '../services/types';
+import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData, FeaturedArtist, User } from '../services/types';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users'>('spectacles');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSpectacleModalOpen, setIsSpectacleModalOpen] = useState(false);
@@ -19,7 +19,7 @@ const Dashboard = () => {
   const [selectedSpectacle, setSelectedSpectacle] = useState<Spectacle | null>(null);
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist', id: number } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user', id: number } | null>(null);
   const [spectacleFormData, setSpectacleFormData] = useState({
     title: '',
     img: '',
@@ -52,6 +52,7 @@ const Dashboard = () => {
   const [isAddingLieu, setIsAddingLieu] = useState(false);
   const [selectedLieu, setSelectedLieu] = useState(null);
   const [lieuFormData, setLieuFormData] = useState({ image_path: '', image_detail_path: '', is_main: false });
+  const [users, setUsers] = useState<User[]>([]);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -97,6 +98,15 @@ const Dashboard = () => {
             else setLieuImages([]);
           })
           .catch(() => setLieuImages([]));
+
+        // Récupérer les utilisateurs
+        const usersResponse = await fetch(`${API_URL}/api/admin/users`, { headers });
+        if (!usersResponse.ok) {
+          console.error('Erreur lors de la récupération des utilisateurs:', usersResponse.status, usersResponse.statusText);
+          throw new Error('Erreur lors de la récupération des utilisateurs');
+        }
+        const usersData = await usersResponse.json();
+        setUsers(usersData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -280,7 +290,7 @@ console.debug('Spectacle request:', {
     }
   };
 
-  const handleDeleteClick = (type: 'spectacle' | 'artist' | 'lieu', id: number) => {
+  const handleDeleteClick = (type: 'spectacle' | 'artist' | 'lieu' | 'user', id: number) => {
     if (type === 'lieu') {
       if (!window.confirm('Supprimer cette image ?')) return;
       fetch(`${API_URL}/api/lieu/images/${id}`, { method: 'DELETE' })
@@ -302,9 +312,21 @@ console.debug('Spectacle request:', {
 
     try {
       const token = localStorage.getItem('token');
-      const url = itemToDelete.type === 'spectacle'
-        ? `${API_URL}/api/admin/spectacles/${itemToDelete.id}`
-        : `${API_URL}/api/admin/artistes/${itemToDelete.id}`;
+      let url = '';
+      
+      switch (itemToDelete.type) {
+        case 'spectacle':
+          url = `${API_URL}/api/admin/spectacles/${itemToDelete.id}`;
+          break;
+        case 'artist':
+          url = `${API_URL}/api/admin/artistes/${itemToDelete.id}`;
+          break;
+        case 'user':
+          url = `${API_URL}/api/admin/users/${itemToDelete.id}`;
+          break;
+        default:
+          throw new Error('Type d\'élément non reconnu');
+      }
 
       const response = await fetch(url, {
         method: 'DELETE',
@@ -319,13 +341,19 @@ console.debug('Spectacle request:', {
         throw new Error(data.error || `Erreur lors de la suppression de l'${itemToDelete.type}`);
       }
 
-      if (itemToDelete.type === 'spectacle') {
-        setSpectacles(prev => prev.filter(s => s.id !== itemToDelete.id));
-      } else {
-        setArtists(prev => prev.filter(a => a.id !== itemToDelete.id));
+      switch (itemToDelete.type) {
+        case 'spectacle':
+          setSpectacles(prev => prev.filter(s => s.id !== itemToDelete.id));
+          break;
+        case 'artist':
+          setArtists(prev => prev.filter(a => a.id !== itemToDelete.id));
+          break;
+        case 'user':
+          setUsers(prev => prev.filter(u => u.id !== itemToDelete.id));
+          break;
       }
 
-      toast.success(`${itemToDelete.type === 'spectacle' ? 'Spectacle' : 'Artiste'} supprimé avec succès`);
+      toast.success(`${itemToDelete.type === 'spectacle' ? 'Spectacle' : itemToDelete.type === 'artist' ? 'Artiste' : 'Utilisateur'} supprimé avec succès`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -537,35 +565,75 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
   }
 };
 
-const handleDeleteLieu = async (id: number) => {
-  if (!window.confirm('Supprimer cette image ?')) return;
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('Session expirée. Veuillez vous reconnecter.');
-      return;
-    }
-
-    const response = await fetch(
-      `${API_URL}/api/lieu/images/${id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+  const handleDeleteLieu = async (id: number) => {
+    if (!window.confirm('Supprimer cette image ?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
       }
-    );
 
-    if (!response.ok) throw new Error('Erreur lors de la suppression');
-    setLieuImages(prev => prev.filter(img => img.id !== id));
-    toast.success('Image supprimée');
-  } catch (err) {
-    toast.error(
-      err instanceof Error ? err.message : 'Une erreur est survenue'
-    );
-  }
-};
+      const response = await fetch(
+        `${API_URL}/api/lieu/images/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error('Erreur lors de la suppression');
+      setLieuImages(prev => prev.filter(img => img.id !== id));
+      toast.success('Image supprimée');
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Une erreur est survenue'
+      );
+    }
+  };
+
+  const handleToggleUserStatus = async (user: User) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const newStatus = user.isActive !== false ? false : true;
+      const action = newStatus ? 'réactiver' : 'suspendre';
+
+      if (!window.confirm(`Êtes-vous sûr de vouloir ${action} cet utilisateur ?`)) {
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/users/${user.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isActive: newStatus })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || `Erreur lors de la ${action} de l'utilisateur`);
+      }
+
+      // Mettre à jour l'utilisateur dans la liste
+      setUsers(prev => prev.map(u => 
+        u.id === user.id ? { ...u, isActive: newStatus } : u
+      ));
+
+      toast.success(`Utilisateur ${action} avec succès`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
 
 
   const formatDate = (dateString: string) => {
@@ -707,9 +775,15 @@ const handleDeleteLieu = async (id: number) => {
             >
               Lieu
             </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-4 py-2 rounded ${activeTab === 'users' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
+            >
+              Utilisateurs
+            </button>
           </div>
           {/* Retirer le bouton d'ajout d'image pour la catégorie lieu */}
-          {activeTab !== 'featured' && activeTab !== 'reservations' && activeTab !== 'lieu' && (
+          {activeTab !== 'featured' && activeTab !== 'reservations' && activeTab !== 'lieu' && activeTab !== 'users' && (
             <button
               onClick={activeTab === 'spectacles' ? handleAddSpectacleClick : handleAddArtistClick}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
@@ -829,7 +903,7 @@ const handleDeleteLieu = async (id: number) => {
                 <div key={reservation.reservation_id} className="bg-gray-800 rounded-lg p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-2">{reservation.spectacle_title}</h3>
+                      <h3 className="text-xl font-bold text-white mb-2">{reservation.title}</h3>
                       <p className="text-gray-400 mb-1">Artiste: {reservation.artiste_name}</p>
                       <p className="text-gray-400 mb-1">
                         Date: {formatDate(reservation.date_spectacle)} à {formatTime(reservation.heure_spectacle)}
@@ -845,9 +919,9 @@ const handleDeleteLieu = async (id: number) => {
                     <div className="bg-gray-700 rounded-lg p-3">
                       <p className="text-gray-400 text-sm">Client</p>
                       <p className="text-white font-semibold">
-                        {reservation.civility} {reservation.user_firstname} {reservation.user_lastname}
+                        Réservation #{reservation.reservation_id}
                       </p>
-                      <p className="text-gray-400 text-sm">{reservation.user_email}</p>
+                      <p className="text-gray-400 text-sm">ID: {reservation.reservation_id}</p>
                     </div>
                     <div className="bg-gray-700 rounded-lg p-3">
                       <p className="text-gray-400 text-sm">Places réservées</p>
@@ -904,6 +978,89 @@ const handleDeleteLieu = async (id: number) => {
                         <button onClick={() => handleEditLieuClick(img)} className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
                         <button onClick={() => handleDeleteClick('lieu' as const, img.id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Supprimer</button>
                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Gestion des utilisateurs</h2>
+            {users.length === 0 ? (
+              <p className="text-gray-400 text-center">Aucun utilisateur</p>
+            ) : (
+              <div className="space-y-4">
+                {users.map((user) => (
+                  <div key={user.id} className="bg-gray-900 rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-2">
+                          {user.civility} {user.firstName} {user.lastName}
+                        </h3>
+                        <p className="text-gray-400 mb-1">Email: {user.email}</p>
+                        <p className="text-gray-400 mb-1">
+                          Rôle: <span className={`font-semibold ${user.role === 'admin' ? 'text-yellow-400' : 'text-blue-400'}`}>
+                            {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
+                          </span>
+                        </p>
+                        <p className="text-gray-400 mb-1">
+                          Statut: <span className={`font-semibold ${user.isActive !== false ? 'text-green-400' : 'text-red-400'}`}>
+                            {user.isActive !== false ? 'Actif' : 'Suspendu'}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleToggleUserStatus(user)}
+                            className={`px-4 py-2 rounded text-sm transition duration-300 ${
+                              user.isActive !== false 
+                                ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                                : 'bg-green-500 text-white hover:bg-green-600'
+                            }`}
+                          >
+                            {user.isActive !== false ? 'Suspendre' : 'Réactiver'}
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteClick('user', user.id)}
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                            disabled={user.role === 'admin'}
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-gray-700 rounded-lg p-3">
+                        <p className="text-gray-400 text-sm">ID Utilisateur</p>
+                        <p className="text-white font-semibold">{user.id}</p>
+                      </div>
+                      <div className="bg-gray-700 rounded-lg p-3">
+                        <p className="text-gray-400 text-sm">Civilité</p>
+                        <p className="text-white font-semibold">{user.civility}</p>
+                      </div>
+                      <div className="bg-gray-700 rounded-lg p-3">
+                        <p className="text-gray-400 text-sm">Date de création</p>
+                        <p className="text-white font-semibold">
+                          {user.createdAt ? formatDate(user.createdAt) : 'Non disponible'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pt-4 border-t border-gray-700">
+                      <div className="text-sm text-gray-400">
+                        <p>Dernière connexion: {user.lastLogin ? formatDate(user.lastLogin) : 'Jamais connecté'}</p>
+                      </div>
+                      {user.role === 'admin' && (
+                        <span className="text-yellow-400 text-sm font-semibold">
+                          ⚠️ Impossible de supprimer un administrateur
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1124,7 +1281,11 @@ const handleDeleteLieu = async (id: number) => {
             <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
               <h3 className="text-xl font-bold mb-4">Confirmation de suppression</h3>
               <p className="text-gray-300 mb-6">
-                Êtes-vous sûr de vouloir supprimer {itemToDelete?.type === 'spectacle' ? 'ce spectacle' : 'cet artiste'} ? 
+                Êtes-vous sûr de vouloir supprimer {
+                  itemToDelete?.type === 'spectacle' ? 'ce spectacle' : 
+                  itemToDelete?.type === 'artist' ? 'cet artiste' : 
+                  'cet utilisateur'
+                } ? 
                 Cette action est irréversible.
               </p>
               <div className="flex justify-end space-x-4">

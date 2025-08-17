@@ -335,4 +335,87 @@ router.get('/featured', async (req, res) => {
   }
 });
 
+// Récupérer tous les utilisateurs (pour l'admin)
+router.get('/users', async (req, res) => {
+  try {
+    const [users] = await db.query(`
+      SELECT 
+        id,
+        email,
+        civility,
+        prenom as firstName,
+        nom as lastName,
+        role,
+        dateNaissance as birthDate,
+        isActive,
+        created_at as createdAt,
+        last_login as lastLogin
+      FROM user 
+      ORDER BY created_at DESC
+    `);
+    res.json(users);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des utilisateurs:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Supprimer un utilisateur (pour l'admin)
+router.delete('/users/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Vérifier que l'utilisateur n'est pas admin
+    const [user] = await db.query('SELECT role FROM user WHERE id = ?', [id]);
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    if (user[0].role === 'admin') {
+      return res.status(403).json({ error: 'Impossible de supprimer un administrateur' });
+    }
+
+    // Vérifier que l'utilisateur n'a pas de réservations
+    const [reservations] = await db.query('SELECT id FROM reservation WHERE user_id = ?', [id]);
+    if (reservations.length > 0) {
+      return res.status(400).json({ 
+        error: 'Impossible de supprimer cet utilisateur car il a des réservations associées' 
+      });
+    }
+
+    const [result] = await db.query('DELETE FROM user WHERE id = ?', [id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    res.json({ message: 'Utilisateur supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// Changer le statut d'un utilisateur (actif/suspendu)
+router.put('/users/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { isActive } = req.body;
+
+  if (typeof isActive !== 'boolean') {
+    return res.status(400).json({ error: 'Le statut doit être un booléen' });
+  }
+
+  try {
+    // Vérifier que l'utilisateur existe
+    const [user] = await db.query('SELECT id FROM user WHERE id = ?', [id]);
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    await db.query('UPDATE user SET isActive = ? WHERE id = ?', [isActive, id]);
+    res.json({ message: `Utilisateur ${isActive ? 'activé' : 'suspendu'} avec succès` });
+  } catch (error) {
+    console.error('Erreur lors du changement de statut de l\'utilisateur:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
 module.exports = router; 

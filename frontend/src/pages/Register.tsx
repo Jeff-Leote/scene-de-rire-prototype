@@ -3,14 +3,12 @@ import { Link } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format } from "date-fns";
-import { CalendarIcon, ArrowLeft, Mic, Lightbulb, Mail } from "lucide-react";
+import { ArrowLeft, Mic, Lightbulb, Mail } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -19,12 +17,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
 
 const formSchema = z.object({
@@ -37,8 +29,14 @@ const formSchema = z.object({
   lastName: z.string().min(2, {
     message: "Le nom doit contenir au moins 2 caractères",
   }),
-  birthDate: z.date({
-    required_error: "Veuillez sélectionner une date de naissance",
+  birthYear: z.string({
+    required_error: "Veuillez sélectionner une année",
+  }),
+  birthMonth: z.string({
+    required_error: "Veuillez sélectionner un mois",
+  }),
+  birthDay: z.string({
+    required_error: "Veuillez sélectionner un jour",
   }),
   email: z.string().email({
     message: "Veuillez entrer une adresse email valide",
@@ -50,6 +48,19 @@ const formSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
   path: ["confirmPassword"],
+}).refine((data) => {
+  const today = new Date();
+  const birthDate = new Date(parseInt(data.birthYear), parseInt(data.birthMonth) - 1, parseInt(data.birthDay));
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    return age - 1 >= 15;
+  }
+  return age >= 15;
+}, {
+  message: "Vous devez avoir au moins 15 ans pour vous inscrire",
+  path: ["birthYear"],
 });
 
 const Register = () => {
@@ -61,7 +72,9 @@ const Register = () => {
       civility: undefined,
       firstName: "",
       lastName: "",
-      birthDate: undefined,
+      birthYear: "",
+      birthMonth: "",
+      birthDay: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -82,7 +95,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
         civility: values.civility,
         firstName: values.firstName,
         lastName: values.lastName,
-        birthDate: values.birthDate,
+        birthDate: new Date(parseInt(values.birthYear), parseInt(values.birthMonth) - 1, parseInt(values.birthDay)),
         email: values.email,
         password: values.password,
       }),
@@ -204,54 +217,108 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                 />
               </div>
               
-              {/* Birth date field */}
-              <FormField
-                control={form.control}
-                name="birthDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-gray-300">Date de naissance</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
+              {/* Birth date fields */}
+              <div className="space-y-2">
+                <FormLabel className="text-gray-300">Date de naissance</FormLabel>
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Day */}
+                  <FormField
+                    control={form.control}
+                    name="birthDay"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full bg-gray-800 border border-gray-700 text-left font-normal",
-                              !field.value && "text-gray-500"
-                            )}
+                          <select
+                            {...field}
+                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-yellow-400"
                           >
-                            {field.value ? (
-                              format(field.value, "dd/MM/yyyy")
-                            ) : (
-                              <span>Sélectionnez une date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
+                            <option value="">Jour</option>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                              <option key={day} value={day.toString().padStart(2, '0')}>
+                                {day}
+                              </option>
+                            ))}
+                          </select>
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-gray-800 border border-gray-700" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                          className="p-3 bg-gray-800 text-white pointer-events-auto"
-                          classNames={{
-                            day_selected: "bg-yellow-400 text-black hover:bg-yellow-400",
-                            day_today: "bg-gray-700 text-white",
-                            day: "hover:bg-gray-700"
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
+                        <FormMessage className="text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Month */}
+                  <FormField
+                    control={form.control}
+                    name="birthMonth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <select
+                            {...field}
+                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-yellow-400"
+                          >
+                            <option value="">Mois</option>
+                            {[
+                              { value: "01", label: "Janvier" },
+                              { value: "02", label: "Février" },
+                              { value: "03", label: "Mars" },
+                              { value: "04", label: "Avril" },
+                              { value: "05", label: "Mai" },
+                              { value: "06", label: "Juin" },
+                              { value: "07", label: "Juillet" },
+                              { value: "08", label: "Août" },
+                              { value: "09", label: "Septembre" },
+                              { value: "10", label: "Octobre" },
+                              { value: "11", label: "Novembre" },
+                              { value: "12", label: "Décembre" }
+                            ].map((month) => (
+                              <option key={month.value} value={month.value}>
+                                {month.label}
+                              </option>
+                            ))}
+                          </select>
+                        </FormControl>
+                        <FormMessage className="text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Year */}
+                  <FormField
+                    control={form.control}
+                    name="birthYear"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <select
+                            {...field}
+                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-yellow-400"
+                          >
+                            <option value="">Année</option>
+                            {(() => {
+                              const currentYear = new Date().getFullYear();
+                              const minYear = currentYear - 100;
+                              const maxYear = currentYear - 15;
+                              const years = [];
+                              for (let year = maxYear; year >= minYear; year--) {
+                                years.push(year);
+                              }
+                              return years.map((year) => (
+                                <option key={year} value={year.toString()}>
+                                  {year}
+                                </option>
+                              ));
+                            })()}
+                          </select>
+                        </FormControl>
+                        <FormMessage className="text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <p className="text-sm text-gray-400">
+                  Vous devez avoir au moins 15 ans pour vous inscrire
+                </p>
+              </div>
               
               {/* Email field */}
               <FormField

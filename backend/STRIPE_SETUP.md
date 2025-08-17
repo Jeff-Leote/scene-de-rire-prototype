@@ -1,49 +1,57 @@
 # Configuration Stripe
 
-## Variables d'environnement nécessaires
+## Variables d'environnement requises
 
-Pour que le système de paiement fonctionne, vous devez configurer les variables d'environnement suivantes :
-
-### Dans docker-compose.yaml
-
-```yaml
-environment:
-  - STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
-  - FRONTEND_URL=http://localhost:5173
+### Backend (.env ou docker-compose.yaml)
+```env
+STRIPE_SECRET_KEY=sk_test_votre_cle_secrete_stripe
+FRONTEND_URL=http://localhost:5173
 ```
 
-### Variables d'environnement
+### Frontend (.env)
+```env
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_votre_cle_publique_stripe
+VITE_API_URL=http://localhost:5000
+```
 
-1. **STRIPE_SECRET_KEY** : Votre clé secrète Stripe (commence par `sk_test_` pour les tests)
-2. **FRONTEND_URL** : L'URL de votre frontend
+## Configuration pour différents environnements
 
-## Configuration Stripe
+### Développement local
+- Utilisez les clés de test Stripe
+- FRONTEND_URL=http://localhost:5173
+- NODE_ENV=development
 
-### 1. Créer un compte Stripe
-- Allez sur [stripe.com](https://stripe.com)
-- Créez un compte développeur
+### Production (Render)
+- Utilisez les clés de production Stripe
+- FRONTEND_URL=https://espacecomedie.fr
+- NODE_ENV=production
 
-### 2. Récupérer les clés API
-- Dans le dashboard Stripe, allez dans "Developers" > "API keys"
-- Copiez la "Publishable key" et la "Secret key"
+## Obtenir vos clés Stripe
 
-### 3. Tester avec des cartes
-- **Succès** : `4242 4242 4242 4242`
-- **Échec** : `4000 0000 0000 0002`
-- **Annulation** : `4000 0000 0000 9995`
+1. Créez un compte sur [stripe.com](https://stripe.com)
+2. Allez dans le Dashboard Stripe
+3. Dans "Developers" > "API keys"
+4. Copiez vos clés publiques et secrètes
 
-## Fonctionnement
+## Test des paiements
 
-1. L'utilisateur sélectionne ses spectacles
-2. Il remplit ses informations
-3. Il clique sur "Payer"
-4. Une session Stripe Checkout est créée
-5. L'utilisateur est redirigé vers Stripe pour saisir sa carte
-6. Après paiement, il est redirigé vers `/payment-status`
-7. Le statut du paiement est vérifié via l'API Stripe
-8. L'utilisateur voit un toast de confirmation et est redirigé vers ses réservations
+### Cartes de test Stripe
+- **Succès** : 4242 4242 4242 4242
+- **Échec** : 4000 0000 0000 0002
+- **Date d'expiration** : N'importe quelle date future
+- **CVC** : N'importe quels 3 chiffres
 
-## Sécurité
+## Dépannage
 
-- Les clés Stripe sont stockées dans les variables d'environnement
-- Les paiements sont traités directement via l'API Stripe 
+### Erreur "Invalid URL"
+- Vérifiez que FRONTEND_URL contient le protocole (http:// ou https://)
+- Assurez-vous que l'URL est accessible
+
+### Erreur de clé API
+- Vérifiez que les clés Stripe sont correctes
+- Assurez-vous d'utiliser les bonnes clés (test vs production)
+
+### Problèmes de redirection
+- Vérifiez que les URLs de succès/annulation sont correctes
+- Testez les URLs dans votre navigateur
+

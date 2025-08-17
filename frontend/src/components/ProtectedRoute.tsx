@@ -1,23 +1,20 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useState } from 'react';
 import { ProtectedRouteProps } from '@/services/types';
 
 const ProtectedRoute = ({ children, requireAuth = false, requireAdmin = false }: ProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, user, isLoading } = useAuth();
 
-  useEffect(() => {
-    // Simuler un petit délai pour éviter le flash
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
+  // Afficher un écran de chargement pendant l'initialisation de l'authentification
   if (isLoading) {
-    return null; // Ne rien afficher pendant le chargement
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+          <p className="text-white">Chargement...</p>
+        </div>
+      </div>
+    );
   }
 
   // Si requireAuth est false (page de connexion/inscription) et l'utilisateur est connecté
