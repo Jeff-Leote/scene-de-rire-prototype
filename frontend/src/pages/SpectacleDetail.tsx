@@ -4,7 +4,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Spectacle } from '../services/types';
+import { Spectacle, AvailabilityResponse } from '../services/types';
+import { toast } from "@/components/ui/sonner";
 
 
 const SpectacleDetail = () => {
@@ -13,6 +14,7 @@ const SpectacleDetail = () => {
   const [spectacle, setSpectacle] = useState<Spectacle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<AvailabilityResponse | null>(null);
 
   const formatHeure = (heure: string) => {
     return heure.split(":").slice(0, 2).join(":");
@@ -50,6 +52,33 @@ const SpectacleDetail = () => {
 
     fetchSpectacle();
   }, [id]);
+
+  // Récupérer la disponibilité du spectacle pour bloquer la réservation si complet
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL;
+        if (!id) return;
+        const r = await fetch(`${API_URL}/api/reservations/availability/${id}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        setAvailability(d);
+      } catch {
+        // silencieux
+      }
+    };
+    fetchAvailability();
+  }, [id]);
+
+  const isSoldOut = availability?.places_restantes !== undefined && availability.places_restantes <= 0;
+
+  const handleReserve = () => {
+    if (isSoldOut) {
+      toast.error("Spectacle complet, malheureusement vous êtes arrivés trop tard");
+      return;
+    }
+    navigate("/reservation", { state: { spectacle } });
+  };
 
   if (loading) {
     return (
@@ -182,11 +211,16 @@ const SpectacleDetail = () => {
                     Ne manquez pas ce spectacle exceptionnel ! Réservez vos places dès maintenant.
                   </p>
                   <button
-                    onClick={() => navigate("/reservation", { state: { spectacle } })}
-                    className="w-full bg-yellow-400 text-black font-bold py-3 px-6 rounded hover:bg-yellow-300 transition duration-300 flex items-center justify-center"
+                    onClick={handleReserve}
+                    disabled={isSoldOut}
+                    className={`w-full font-bold py-3 px-6 rounded transition duration-300 flex items-center justify-center ${
+                      isSoldOut
+                        ? 'bg-red-600 text-white cursor-not-allowed'
+                        : 'bg-yellow-400 text-black hover:bg-yellow-300'
+                    }`}
                   >
                     <i className="fa-solid fa-ticket-alt mr-2"></i>
-                    Réserver maintenant
+                    {isSoldOut ? 'Complet' : 'Réserver maintenant'}
                   </button>
                   <div className="mt-6">
                     <div className="flex items-center justify-between text-gray-300 mb-2">

@@ -25,6 +25,7 @@ export interface Spectacle {
   artiste_name: string;
   artiste_photo: string;
   artiste_id: number;
+  places_disponibles?: number;
 }
 
 // Interfaces pour les artistes
@@ -127,6 +128,7 @@ export interface SpectacleFormData {
   prix: number;
   artiste_id: string;
   lieu: string;
+  places_disponibles?: number;
 }
 
 // Interfaces pour les réponses API

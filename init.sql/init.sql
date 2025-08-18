@@ -53,7 +53,7 @@ CREATE TABLE reservation (
   date timestamp DEFAULT CURRENT_TIMESTAMP,
   qr_code_path varchar(255) COMMENT 'Chemin vers le fichier QR code généré',
   used BOOLEAN DEFAULT FALSE COMMENT 'Indique si le billet a été utilisé',
-  used_at TIMESTAMP NULL COMMENT 'Date et heure d\'utilisation du billet',
+  used_at TIMESTAMP NULL COMMENT 'Date et heure d\'utilisation du billet'',
   qr_code_generated BOOLEAN DEFAULT FALSE COMMENT 'Indique si un QR code a été généré pour cette réservation'
 );
 

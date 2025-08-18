@@ -20,7 +20,7 @@ import {
 import Header from "@/components/Header";
 
 const formSchema = z.object({
-  civility: z.enum(["monsieur", "madame"], {
+  civility: z.enum(["M.", "Mme.","Non-renseigné"], {
     required_error: "Veuillez sélectionner une civilité",
   }),
   firstName: z.string().min(2, {

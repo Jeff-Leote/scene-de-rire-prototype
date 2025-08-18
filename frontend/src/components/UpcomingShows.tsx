@@ -9,6 +9,7 @@ const UpcomingShows = () => {
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<Record<number, { places_restantes: number; places_total: number }>>({});
 
   const formatHeure = (heure: string) => {
     // Si l'heure est au format HH:mm:ss, on ne garde que HH:mm
@@ -32,6 +33,27 @@ const UpcomingShows = () => {
         });
 
         setSpectacles(filtered);
+
+        // Charger la disponibilité de chaque spectacle pour afficher "Complet"
+        try {
+          const entries = await Promise.all(
+            filtered.map(async (s) => {
+              try {
+                const r = await fetch(`${API_URL}/api/reservations/availability/${s.id}`);
+                if (!r.ok) return null;
+                const d = await r.json();
+                return [s.id, { places_restantes: d.places_restantes, places_total: d.places_total }] as const;
+              } catch {
+                return null;
+              }
+            })
+          );
+          const map: Record<number, { places_restantes: number; places_total: number }> = {};
+          entries.forEach((e) => { if (e) map[e[0]] = e[1]; });
+          setAvailability(map);
+        } catch {
+          setAvailability({});
+        }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError(err.message || "Erreur inconnue");
@@ -90,6 +112,11 @@ const UpcomingShows = () => {
                 <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
                   {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
                 </div>
+                {availability[spectacle.id] && availability[spectacle.id].places_restantes <= 0 && (
+                  <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                    Complet
+                  </div>
+                )}
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>

@@ -6,6 +6,7 @@ const Hero = () => {
   const [featuredArtist, setFeaturedArtist] = useState<FeaturedArtist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nextShowAvailability, setNextShowAvailability] = useState<{ places_restantes: number; places_total: number } | null>(null);
 
   const formatTime = (time: string) => {
     return time.split(':').slice(0, 2).join(':');
@@ -37,6 +38,24 @@ const Hero = () => {
 
     fetchFeaturedArtist();
   }, []);
+
+  // Charger la disponibilité du prochain spectacle mis en avant
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL;
+        const id = featuredArtist?.next_show?.id;
+        if (!id) return;
+        const res = await fetch(`${API_URL}/api/reservations/availability/${id}`);
+        if (!res.ok) return;
+        const d = await res.json();
+        setNextShowAvailability({ places_restantes: d.places_restantes, places_total: d.places_total });
+      } catch {
+        // ignore
+      }
+    };
+    fetchAvailability();
+  }, [featuredArtist]);
 
   if (loading) {
     return (
@@ -94,6 +113,9 @@ const Hero = () => {
                     year: 'numeric'
                   })} · {formatTime(featuredArtist.next_show.time)}
                 </span>
+              )}
+              {nextShowAvailability && nextShowAvailability.places_restantes <= 0 && (
+                <span className="ml-3 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">Complet</span>
               )}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">

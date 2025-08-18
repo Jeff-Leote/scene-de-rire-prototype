@@ -28,7 +28,8 @@ const Dashboard = () => {
     heure_spectacle: '',
     prix: '',
     artiste_id: '',
-    lieu: ''
+    lieu: '',
+    places_disponibles: ''
   });
   const [artistFormData, setArtistFormData] = useState({
     name: '',
@@ -53,6 +54,7 @@ const Dashboard = () => {
   const [selectedLieu, setSelectedLieu] = useState(null);
   const [lieuFormData, setLieuFormData] = useState({ image_path: '', image_detail_path: '', is_main: false });
   const [users, setUsers] = useState<User[]>([]);
+  const [availability, setAvailability] = useState<Record<number, { places_total: number; places_reservees: number; places_restantes: number }>>({});
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -70,6 +72,27 @@ const Dashboard = () => {
         if (!spectaclesResponse.ok) throw new Error('Erreur lors de la récupération des spectacles');
         const spectaclesData = await spectaclesResponse.json();
         setSpectacles(spectaclesData);
+
+        // Charger les disponibilités pour chaque spectacle (jauge)
+        try {
+          const entries = await Promise.all(
+            spectaclesData.map(async (s: Spectacle) => {
+              try {
+                const r = await fetch(`${API_URL}/api/reservations/availability/${s.id}`);
+                if (!r.ok) return null;
+                const d = await r.json();
+                return [s.id, { places_total: d.places_total, places_reservees: d.places_reservees, places_restantes: d.places_restantes }] as const;
+              } catch {
+                return null;
+              }
+            })
+          );
+          const map: Record<number, { places_total: number; places_reservees: number; places_restantes: number }> = {};
+          entries.forEach((e) => { if (e) map[e[0]] = e[1]; });
+          setAvailability(map);
+        } catch {
+          setAvailability({});
+        }
 
         // Récupérer les artistes
         const artistsResponse = await fetch(`${API_URL}/api/admin/artistes`, { headers });
@@ -117,6 +140,35 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  // Polling: rafraîchir périodiquement les jauges sur l'onglet Spectacles
+  useEffect(() => {
+    if (activeTab !== 'spectacles' || spectacles.length === 0) return;
+    const ids = spectacles.map(s => s.id);
+
+    const tick = async () => {
+      try {
+        const entries = await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const r = await fetch(`${API_URL}/api/reservations/availability/${id}`);
+              if (!r.ok) return null;
+              const d = await r.json();
+              return [id, { places_total: d.places_total, places_reservees: d.places_reservees, places_restantes: d.places_restantes }] as const;
+            } catch { return null; }
+          })
+        );
+        const map: Record<number, { places_total: number; places_reservees: number; places_restantes: number }> = {};
+        entries.forEach((e) => { if (e) map[e[0]] = e[1]; });
+        setAvailability((prev) => ({ ...prev, ...map }));
+      } catch {}
+    };
+
+    const interval = setInterval(tick, 10000);
+    // Premier tick immédiat
+    tick();
+    return () => clearInterval(interval);
+  }, [activeTab, spectacles, API_URL]);
+
   const handleEditSpectacleClick = (spectacle: Spectacle) => {
     setSelectedSpectacle(spectacle);
     setSpectacleFormData({
@@ -127,7 +179,8 @@ const Dashboard = () => {
       heure_spectacle: spectacle.heure_spectacle,
       prix: spectacle.prix.toString(),
       artiste_id: spectacle.artiste_id.toString(),
-      lieu: spectacle.lieu
+      lieu: spectacle.lieu,
+      places_disponibles: spectacle.places_disponibles != null ? String(spectacle.places_disponibles) : ''
     });
     setIsSpectacleModalOpen(true);
   };
@@ -170,7 +223,8 @@ const Dashboard = () => {
       heure_spectacle: '',
       prix: '',
       artiste_id: '',
-      lieu: ''
+      lieu: '',
+      places_disponibles: ''
     });
     setIsSpectacleModalOpen(true);
   };
@@ -199,7 +253,8 @@ const Dashboard = () => {
       const requestBody = {
         ...spectacleFormData,
         prix: parseFloat(spectacleFormData.prix),
-        artiste_id: parseInt(spectacleFormData.artiste_id)
+        artiste_id: parseInt(spectacleFormData.artiste_id),
+        places_disponibles: spectacleFormData.places_disponibles ? parseInt(spectacleFormData.places_disponibles) : undefined
       };
 
 // Avoid logging credentials in plain text.
@@ -229,6 +284,23 @@ console.debug('Spectacle request:', {
         setSpectacles(prev => [...prev, updatedSpectacle]);
       } else {
         setSpectacles(prev => prev.map(s => s.id === updatedSpectacle.id ? updatedSpectacle : s));
+      }
+      // Rafraîchir la jauge du spectacle créé/modifié
+      if (updatedSpectacle?.id) {
+        try {
+          const r = await fetch(`${API_URL}/api/reservations/availability/${updatedSpectacle.id}`);
+          if (r.ok) {
+            const d = await r.json();
+            setAvailability(prev => ({
+              ...prev,
+              [updatedSpectacle.id]: {
+                places_total: d.places_total,
+                places_reservees: d.places_reservees,
+                places_restantes: d.places_restantes,
+              }
+            }));
+          }
+        } catch {}
       }
       setIsSpectacleModalOpen(false);
       setIsAddingSpectacle(false);
@@ -837,7 +909,27 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                     <p className="text-gray-400 mb-2">
                         Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
                     </p>
-                    <p className="text-gray-400 mb-4">Prix: {spectacle.prix}€</p>
+                    <p className="text-gray-400 mb-2">Prix: {spectacle.prix}€</p>
+                    {/* Jauge de places restantes */}
+                    {availability[spectacle.id] && (
+                      <div className="mb-4">
+                        <div className="flex justify-between text-xs text-gray-400 mb-1">
+                          <span>Places restantes</span>
+                          <span>{availability[spectacle.id].places_restantes}/{availability[spectacle.id].places_total}</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded h-2 overflow-hidden">
+                          <div
+                            className={`h-2 ${availability[spectacle.id].places_restantes > 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                            style={{ width: `${Math.max(0, Math.min(100, (availability[spectacle.id].places_restantes / Math.max(1, availability[spectacle.id].places_total)) * 100))}%` }}
+                          />
+                        </div>
+                        {availability[spectacle.id].places_restantes <= 0 && (
+                          <div className="mt-2">
+                            <span className="inline-block bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full">Complet</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => handleEditSpectacleClick(spectacle)}
@@ -1143,6 +1235,18 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                     min="0"
                     step="0.01"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Places disponibles (capacité)</label>
+                  <input
+                    type="number"
+                    name="places_disponibles"
+                    value={spectacleFormData.places_disponibles}
+                    onChange={handleSpectacleInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    min="0"
+                    step="1"
                   />
                 </div>
                 <div>
