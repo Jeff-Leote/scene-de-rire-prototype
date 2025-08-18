@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { checkPaymentStatus } from "../services/reservation";
@@ -17,13 +17,15 @@ import Footer from "../components/Footer";
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [hasProcessedPayment, setHasProcessedPayment] = useState(false);
 
   useEffect(() => {
     const payment = searchParams.get("payment");
     const sessionId = searchParams.get("session_id");
     
-    if (payment === 'success' && sessionId) {
+    if (payment === 'success' && sessionId && !hasProcessedPayment) {
       console.log('🎯 Paiement réussi détecté, sessionId:', sessionId);
+      setHasProcessedPayment(true);
       
       // Vérifier le statut du paiement via l'API
       checkPaymentStatus(sessionId)
@@ -47,10 +49,11 @@ const Index = () => {
           console.error('💥 Erreur dans le catch:', error);
           toast.error('Erreur lors de la vérification du paiement.');
         });
-    } else if (payment === 'cancel') {
-      toast.error('Paiement annulé. Votre réservation n\'a pas été finalisée.');
+    } else if (payment === 'cancel' && !hasProcessedPayment) {
+      setHasProcessedPayment(true);
+      toast.error("Paiement annulé. Votre réservation n'a pas été finalisée.");
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, hasProcessedPayment]);
 
   return (
     <div className="min-h-screen bg-black text-white">

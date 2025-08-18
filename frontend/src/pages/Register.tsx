@@ -164,12 +164,16 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         className="flex gap-6"
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="monsieur" id="monsieur" className="border-gray-700 text-yellow-400" />
-                          <label htmlFor="monsieur" className="text-white cursor-pointer">Monsieur</label>
+                          <RadioGroupItem value="M." id="monsieur" className="border-gray-700 text-yellow-400" />
+                          <label htmlFor="monsieur" className="text-white cursor-pointer">M.</label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="madame" id="madame" className="border-gray-700 text-yellow-400" />
-                          <label htmlFor="madame" className="text-white cursor-pointer">Madame</label>
+                          <RadioGroupItem value="Mme." id="madame" className="border-gray-700 text-yellow-400" />
+                          <label htmlFor="madame" className="text-white cursor-pointer">Mme.</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="Non-renseigné" id="non-renseigné" className="border-gray-700 text-yellow-400" />
+                          <label htmlFor="non-renseigné" className="text-white cursor-pointer">Non-renseigné</label>
                         </div>
                       </RadioGroup>
                     </FormControl>

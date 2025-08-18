@@ -180,7 +180,16 @@ async function handleSuccessfulPayment(session) {
       );
     }
 
-    // 4. Créer le paiement global avec l'ID de session Stripe
+    // 4. Incrémenter le compteur d'utilisations du code promo si utilisé
+    if (session.metadata.promo_code) {
+      await conn.query(`
+        UPDATE promo_codes 
+        SET current_uses = current_uses + 1 
+        WHERE code = ?
+      `, [session.metadata.promo_code]);
+    }
+
+    // 5. Créer le paiement global avec l'ID de session Stripe
     const [paiementResult] = await conn.query(
       "INSERT INTO paiement (montant, statut, session_id) VALUES (?, ?, ?)",
       [session.amount_total / 100, true, session.id] // Stripe retourne les montants en centimes
@@ -266,7 +275,9 @@ async function handleCancelledReservation(session) {
 
 // Créer une session de paiement (checkout)
 router.post("/checkout", auth, async (req, res) => {
-  const { spectacles, email, prenom, nom } = req.body;
+  const { spectacles, email, prenom, nom, promoCode } = req.body;
+  
+  console.log('🔍 Données reçues pour checkout:', { spectacles, email, prenom, nom, promoCode });
 
   if (!spectacles || !Array.isArray(spectacles) || spectacles.length === 0) {
     return res.status(400).json({ error: "Le panier est vide ou invalide." });
@@ -293,29 +304,93 @@ router.post("/checkout", auth, async (req, res) => {
       spectaclesDetails[row.id] = { title: row.title, prix: row.prix };
     });
 
-    // Calculer le total
+    // Calculer le total et préparer les line items
     let total = 0;
-    const lineItems = [];
+    let lineItems = [];
+    
+    // Calculer d'abord le total original
     for (const item of spectacles) {
       const spectacleDetail = spectaclesDetails[item.id];
       if (!spectacleDetail) {
         throw new Error(`Spectacle avec id ${item.id} non trouvé.`);
       }
       total += spectacleDetail.prix * item.billets;
+    }
+
+    // Appliquer le code promo si fourni
+    let finalTotal = total;
+    let discountAmount = 0;
+    let discountPercentage = 0;
+    
+    console.log('💰 Calcul initial - Total:', total, 'Code promo:', promoCode);
+    
+    if (promoCode) {
+      // Valider le code promo
+      const [promoCodes] = await pool.query(`
+        SELECT * FROM promo_codes 
+        WHERE code = ? AND is_active = TRUE
+      `, [promoCode.code]);
+
+      if (promoCodes.length > 0) {
+        const promo = promoCodes[0];
+        const now = new Date();
+
+        // Vérifier la validité temporelle
+        if ((!promo.valid_from || new Date(promo.valid_from) <= now) &&
+            (!promo.valid_until || new Date(promo.valid_until) >= now) &&
+            (!promo.max_uses || promo.current_uses < promo.max_uses)) {
+          
+          // Calculer la réduction
+          switch (promo.type) {
+            case 'percentage':
+              discountAmount = (total * promo.value) / 100;
+              finalTotal = total - discountAmount;
+              discountPercentage = promo.value;
+              break;
+            case 'fixed':
+              discountAmount = Math.min(promo.value, total);
+              finalTotal = total - discountAmount;
+              discountPercentage = (discountAmount / total) * 100;
+              break;
+            case 'free_ticket':
+              const cheapestTicket = Math.min(...spectacles.map(s => spectaclesDetails[s.id].prix));
+              discountAmount = Math.min(cheapestTicket, total);
+              finalTotal = total - discountAmount;
+              discountPercentage = (discountAmount / total) * 100;
+              break;
+          }
+          
+          console.log('✅ Code promo appliqué - Réduction:', discountAmount, 'Total final:', finalTotal, 'Pourcentage réduction:', discountPercentage);
+        }
+      }
+    }
+    
+    // Créer les line items avec les prix ajustés
+    for (const item of spectacles) {
+      const spectacleDetail = spectaclesDetails[item.id];
+      let adjustedPrice = spectacleDetail.prix;
       
-      // Ajouter l'item pour Stripe
+      // Appliquer la réduction au prix unitaire si un code promo est actif
+      if (discountAmount > 0) {
+        const itemTotal = spectacleDetail.prix * item.billets;
+        const itemDiscount = (itemTotal * discountPercentage) / 100;
+        adjustedPrice = (itemTotal - itemDiscount) / item.billets;
+      }
+      
       lineItems.push({
         price_data: {
           currency: 'eur',
           product_data: {
             name: spectacleDetail.title,
-            description: `${item.billets} billet(s)`,
+            description: `${item.billets} billet(s)${discountAmount > 0 ? ` - Réduction ${promoCode.code} appliquée` : ''}`,
           },
-          unit_amount: spectacleDetail.prix * 100, // Stripe utilise les centimes
+          unit_amount: Math.round(adjustedPrice * 100), // Stripe utilise les centimes
         },
         quantity: item.billets,
       });
     }
+    
+    console.log('📊 Résumé final - Total original:', total, 'Total final:', finalTotal, 'Réduction:', discountAmount);
 
     // Déterminer l'URL du frontend selon l'environnement
     let frontendUrl;
@@ -341,7 +416,10 @@ router.post("/checkout", auth, async (req, res) => {
         nom: nom,
         email: email,
         cart: JSON.stringify(spectacles),
-        total: total.toString()
+        total: finalTotal.toString(),
+        original_total: total.toString(),
+        discount_amount: discountAmount.toString(),
+        promo_code: promoCode ? promoCode.code : null
       },
       customer_email: email,
     });
@@ -830,6 +908,117 @@ router.get("/validate/:reservationId", async (req, res) => {
       valid: false,
       error: "Erreur lors de la validation du ticket" 
     });
+  }
+});
+
+// Endpoint pour valider un code promo
+router.post('/validate-promo-code', async (req, res) => {
+  try {
+    const { code, totalAmount } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({ error: 'Code promo requis' });
+    }
+
+    // Récupérer le code promo
+    const [promoCodes] = await pool.query(`
+      SELECT * FROM promo_codes 
+      WHERE code = ? AND is_active = TRUE
+    `, [code]);
+
+    if (promoCodes.length === 0) {
+      return res.status(404).json({ error: 'Code promo invalide' });
+    }
+
+    const promoCode = promoCodes[0];
+    const now = new Date();
+
+    // Vérifier la validité temporelle
+    if (promoCode.valid_from && new Date(promoCode.valid_from) > now) {
+      return res.status(400).json({ error: 'Code promo pas encore valide' });
+    }
+
+    if (promoCode.valid_until && new Date(promoCode.valid_until) < now) {
+      return res.status(400).json({ error: 'Code promo expiré' });
+    }
+
+    // Vérifier le nombre d'utilisations
+    if (promoCode.max_uses && promoCode.current_uses >= promoCode.max_uses) {
+      return res.status(400).json({ error: 'Code promo épuisé' });
+    }
+
+    // Calculer la réduction
+    let discountAmount = 0;
+    let finalAmount = totalAmount;
+
+    switch (promoCode.type) {
+      case 'percentage':
+        discountAmount = (totalAmount * promoCode.value) / 100;
+        finalAmount = totalAmount - discountAmount;
+        break;
+      case 'fixed':
+        discountAmount = Math.min(promoCode.value, totalAmount);
+        finalAmount = totalAmount - discountAmount;
+        break;
+      case 'free_ticket':
+        // Pour les tickets gratuits, on pourrait implémenter une logique spécifique
+        discountAmount = promoCode.value; // Montant équivalent
+        finalAmount = Math.max(0, totalAmount - discountAmount);
+        break;
+    }
+
+    res.json({
+      valid: true,
+      promoCode: {
+        id: promoCode.id,
+        code: promoCode.code,
+        type: promoCode.type,
+        value: promoCode.value,
+        description: promoCode.description
+      },
+      discountAmount: Math.round(discountAmount * 100) / 100,
+      finalAmount: Math.round(finalAmount * 100) / 100
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la validation du code promo:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Endpoint pour appliquer un code promo lors du checkout
+router.post('/apply-promo-code', async (req, res) => {
+  try {
+    const { code, totalAmount } = req.body;
+    
+    // Valider le code promo
+    const validationResponse = await fetch(`${req.protocol}://${req.get('host')}/api/reservations/validate-promo-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ code, totalAmount })
+    });
+
+    if (!validationResponse.ok) {
+      const errorData = await validationResponse.json();
+      return res.status(validationResponse.status).json(errorData);
+    }
+
+    const validationData = await validationResponse.json();
+
+    // Incrémenter le compteur d'utilisations
+    await pool.query(`
+      UPDATE promo_codes 
+      SET current_uses = current_uses + 1 
+      WHERE id = ?
+    `, [validationData.promoCode.id]);
+
+    res.json(validationData);
+
+  } catch (error) {
+    console.error('Erreur lors de l\'application du code promo:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

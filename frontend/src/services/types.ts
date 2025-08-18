@@ -185,4 +185,31 @@ export interface AvailabilityResponse {
   places_reservees: number;
   places_restantes: number;
   disponible: boolean;
+}
+
+// Interfaces pour les codes promo
+export interface PromoCode {
+  id: number;
+  code: string;
+  type: 'percentage' | 'fixed' | 'free_ticket';
+  value: number; // Pourcentage de réduction, montant fixe, ou nombre de tickets gratuits
+  description: string;
+  is_active: boolean;
+  max_uses?: number;
+  current_uses: number;
+  valid_from?: string;
+  valid_until?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PromoCodeFormData {
+  code: string;
+  type: 'percentage' | 'fixed' | 'free_ticket';
+  value: string;
+  description: string;
+  is_active: boolean;
+  max_uses?: string;
+  valid_from?: string;
+  valid_until?: string;
 } 

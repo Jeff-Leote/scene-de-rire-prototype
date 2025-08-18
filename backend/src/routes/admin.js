@@ -418,4 +418,82 @@ router.put('/users/:id/status', async (req, res) => {
   }
 });
 
+// Routes pour les codes promo
+router.get('/promo-codes', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        id, code, type, value, description, is_active, 
+        max_uses, current_uses, valid_from, valid_until,
+        created_at, updated_at
+      FROM promo_codes 
+      ORDER BY created_at DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des codes promo:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/promo-codes', async (req, res) => {
+  try {
+    const { code, type, value, description, is_active, max_uses, valid_from, valid_until } = req.body;
+    
+    // Vérifier que le code n'existe pas déjà
+    const [existingCodes] = await db.query('SELECT id FROM promo_codes WHERE code = ?', [code]);
+    if (existingCodes.length > 0) {
+      return res.status(400).json({ error: 'Ce code promo existe déjà' });
+    }
+
+    const [result] = await db.query(`
+      INSERT INTO promo_codes (code, type, value, description, is_active, max_uses, valid_from, valid_until, current_uses)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+    `, [code, type, value, description, is_active, max_uses || null, valid_from, valid_until, 0]);
+
+    const [newCode] = await db.query('SELECT * FROM promo_codes WHERE id = ?', [result.insertId]);
+    res.status(201).json(newCode[0]);
+  } catch (error) {
+    console.error('Erreur lors de la création du code promo:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.put('/promo-codes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { code, type, value, description, is_active, max_uses, valid_from, valid_until } = req.body;
+    
+    // Vérifier que le code n'existe pas déjà (sauf pour ce code)
+    const [existingCodes] = await db.query('SELECT id FROM promo_codes WHERE code = ? AND id != ?', [code, id]);
+    if (existingCodes.length > 0) {
+      return res.status(400).json({ error: 'Ce code promo existe déjà' });
+    }
+
+    await db.query(`
+      UPDATE promo_codes 
+      SET code = ?, type = ?, value = ?, description = ?, is_active = ?, 
+          max_uses = ?, valid_from = ?, valid_until = ?, updated_at = NOW()
+      WHERE id = ?
+    `, [code, type, value, description, is_active, max_uses || null, valid_from, valid_until, id]);
+
+    const [updatedCode] = await db.query('SELECT * FROM promo_codes WHERE id = ?', [id]);
+    res.json(updatedCode[0]);
+  } catch (error) {
+    console.error('Erreur lors de la modification du code promo:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.delete('/promo-codes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM promo_codes WHERE id = ?', [id]);
+    res.json({ message: 'Code promo supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du code promo:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router; 

@@ -15,22 +15,22 @@ const Reservation = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedSpectacle, setSelectedSpectacle] = useState<any | null>(null);
   const [nbBillets, setNbBillets] = useState<{ [id: number]: number }>({});
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromoCode, setAppliedPromoCode] = useState<any>(null);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const location = useLocation();
   const params = useParams();
   const { addToCart, removeFromCart, cart } = useCart();
   const navigate = useNavigate();
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     let isMounted = true;
     const stateSpectacle = location.state?.spectacle;
     const urlSpectacleId = params.id;
     
-    // Vérifier si l'utilisateur revient d'une annulation de paiement
-    const searchParams = new URLSearchParams(location.search);
-    const payment = searchParams.get('payment');
-    if (payment === 'cancel') {
-      toast.error('Paiement annulé. Votre réservation n\'a pas été finalisée.');
-    }
+    // Gestion du paiement annulé déplacée dans Index.tsx pour éviter les doublons de toasts
     
     if (stateSpectacle) {
       setSelectedSpectacle(stateSpectacle);
@@ -79,6 +79,56 @@ const Reservation = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSpectacle]);
 
+  // Validation du code promo
+  const validatePromoCode = async () => {
+    if (!promoCode.trim()) {
+      toast.error("Veuillez saisir un code promo");
+      return;
+    }
+
+    setIsValidatingPromo(true);
+    try {
+      console.log('Envoi de la requête avec:', { code: promoCode.trim(), totalAmount: totalPanier });
+      
+      const response = await fetch(`${API_URL}/api/reservations/validate-promo-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          totalAmount: totalPanier
+        })
+      });
+
+      const data = await response.json();
+      console.log('Réponse reçue:', { status: response.status, data });
+
+      if (response.ok) {
+        console.log('Code promo valide, données:', data);
+        setAppliedPromoCode(data.promoCode);
+        toast.success(`Code promo appliqué ! ${data.promoCode.description}`);
+      } else {
+        console.log('Code promo invalide:', data);
+        toast.error(data.error || "Code promo invalide");
+        setAppliedPromoCode(null);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la validation:', error);
+      toast.error("Erreur lors de la validation du code promo");
+      setAppliedPromoCode(null);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
+
+  // Suppression du code promo
+  const removePromoCode = () => {
+    setAppliedPromoCode(null);
+    setPromoCode("");
+    toast.success("Code promo supprimé");
+  };
+
   if (loading)
     return (
       <section id="upcoming-shows" className="bg-black py-12">
@@ -89,6 +139,27 @@ const Reservation = () => {
 
   // Calcul du total général du panier
   const totalPanier = cart.reduce((sum, item) => sum + (item.prix * (nbBillets[item.id] || 1)), 0);
+
+  // Calcul de la réduction appliquée
+  const calculateDiscount = () => {
+    if (!appliedPromoCode) return 0;
+
+    switch (appliedPromoCode.type) {
+      case 'percentage':
+        return (totalPanier * appliedPromoCode.value) / 100;
+      case 'fixed':
+        return Math.min(appliedPromoCode.value, totalPanier); // Ne pas dépasser le total
+      case 'free_ticket':
+        // Pour les tickets gratuits, on calcule le prix du ticket le moins cher
+        const cheapestTicket = Math.min(...cart.map(item => item.prix));
+        return Math.min(cheapestTicket, totalPanier);
+      default:
+        return 0;
+    }
+  };
+
+  const discount = calculateDiscount();
+  const totalFinal = totalPanier - discount;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -244,6 +315,7 @@ const Reservation = () => {
                           state: {
                             cart,
                             nbBillets,
+                            appliedPromoCode,
                           },
                         });
                       }
@@ -289,10 +361,67 @@ const Reservation = () => {
                 </div>
                   );
                 })}
-                <div className="flex justify-between items-center font-bold text-lg mb-4">
-                  <div>Total</div>
-                  <div className="text-yellow-400">{totalPanier} €</div>
+                
+                {/* Section Code Promo */}
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  {appliedPromoCode ? (
+                    <div className="bg-green-900 border border-green-600 rounded-lg p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-green-400 font-semibold">Code promo appliqué</div>
+                        <button
+                          onClick={removePromoCode}
+                          className="text-red-400 hover:text-red-300"
+                          title="Supprimer le code promo"
+                        >
+                          <i className="fa-solid fa-times"></i>
+                        </button>
+                      </div>
+                      <div className="text-sm text-green-300">{appliedPromoCode.code}</div>
+                      <div className="text-xs text-green-400">{appliedPromoCode.description}</div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <input 
+                        type="text" 
+                        placeholder="Code promo" 
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && validatePromoCode()}
+                        className="bg-gray-800 border border-gray-700 rounded-l-md py-2 px-3 focus:outline-none focus:border-yellow-400 flex-grow text-white" 
+                      />
+                      <button 
+                        onClick={validatePromoCode}
+                        disabled={isValidatingPromo}
+                        className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-r-md disabled:opacity-50"
+                      >
+                        {isValidatingPromo ? (
+                          <i className="fa-solid fa-spinner fa-spin"></i>
+                        ) : (
+                          'Appliquer'
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {/* Calcul du total avec réduction */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between items-center">
+                    <div>Sous-total</div>
+                    <div>{totalPanier} €</div>
+                  </div>
+                  {appliedPromoCode && (
+                    <div className="flex justify-between items-center text-green-400">
+                      <div>Réduction {appliedPromoCode.type === 'percentage' ? `(${appliedPromoCode.value}%)` : ''}</div>
+                      <div>-{discount.toFixed(2)} €</div>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center font-bold text-lg border-t border-gray-700 pt-2">
+                    <div>Total</div>
+                    <div className="text-yellow-400">{totalFinal.toFixed(2)} €</div>
+                  </div>
+                </div>
+
                 <div className="mt-6 text-sm text-gray-400">
                   <div className="flex items-center mb-2">
                     <i className="fa-solid fa-shield-halved mr-2"></i>
@@ -306,12 +435,6 @@ const Reservation = () => {
                     <i className="fa-solid fa-mobile-screen-button mr-2"></i>
                     Présentation sur mobile acceptée
                   </div>
-                </div>
-                <div className="mt-6 flex items-center">
-                  <input type="text" placeholder="Code promo" className="bg-gray-800 border border-gray-700 rounded-l-md py-2 px-3 focus:outline-none focus:border-yellow-400 flex-grow" />
-                  <button className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-r-md">
-                    Appliquer
-                  </button>
                 </div>
               </div>
             )}

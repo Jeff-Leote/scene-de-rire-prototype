@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
-import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData, FeaturedArtist, User } from '../services/types';
+import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData, FeaturedArtist, User, PromoCode, PromoCodeFormData } from '../services/types';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users' | 'promocodes'>('spectacles');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSpectacleModalOpen, setIsSpectacleModalOpen] = useState(false);
@@ -19,7 +19,7 @@ const Dashboard = () => {
   const [selectedSpectacle, setSelectedSpectacle] = useState<Spectacle | null>(null);
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user', id: number } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user' | 'promocode', id: number } | null>(null);
   const [spectacleFormData, setSpectacleFormData] = useState({
     title: '',
     img: '',
@@ -55,6 +55,20 @@ const Dashboard = () => {
   const [lieuFormData, setLieuFormData] = useState({ image_path: '', image_detail_path: '', is_main: false });
   const [users, setUsers] = useState<User[]>([]);
   const [availability, setAvailability] = useState<Record<number, { places_total: number; places_reservees: number; places_restantes: number }>>({});
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [isPromoCodeModalOpen, setIsPromoCodeModalOpen] = useState(false);
+  const [isAddingPromoCode, setIsAddingPromoCode] = useState(false);
+  const [selectedPromoCode, setSelectedPromoCode] = useState<PromoCode | null>(null);
+  const [promoCodeFormData, setPromoCodeFormData] = useState<PromoCodeFormData>({
+    code: '',
+    type: 'percentage',
+    value: '',
+    description: '',
+    is_active: true,
+    max_uses: '',
+    valid_from: '',
+    valid_until: ''
+  });
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -130,6 +144,13 @@ const Dashboard = () => {
         }
         const usersData = await usersResponse.json();
         setUsers(usersData);
+
+        // Récupérer les codes promo
+        const promoCodesResponse = await fetch(`${API_URL}/api/admin/promo-codes`, { headers });
+        if (!promoCodesResponse.ok) throw new Error('Erreur lors de la récupération des codes promo');
+        const promoCodesData = await promoCodesResponse.json();
+        setPromoCodes(promoCodesData);
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -396,6 +417,9 @@ console.debug('Spectacle request:', {
         case 'user':
           url = `${API_URL}/api/admin/users/${itemToDelete.id}`;
           break;
+        case 'promocode':
+          url = `${API_URL}/api/admin/promo-codes/${itemToDelete.id}`;
+          break;
         default:
           throw new Error('Type d\'élément non reconnu');
       }
@@ -423,9 +447,12 @@ console.debug('Spectacle request:', {
         case 'user':
           setUsers(prev => prev.filter(u => u.id !== itemToDelete.id));
           break;
+        case 'promocode':
+          setPromoCodes(prev => prev.filter(pc => pc.id !== itemToDelete.id));
+          break;
       }
 
-      toast.success(`${itemToDelete.type === 'spectacle' ? 'Spectacle' : itemToDelete.type === 'artist' ? 'Artiste' : 'Utilisateur'} supprimé avec succès`);
+      toast.success(`${itemToDelete.type === 'spectacle' ? 'Spectacle' : itemToDelete.type === 'artist' ? 'Artiste' : itemToDelete.type === 'promocode' ? 'Code promo' : 'Utilisateur'} supprimé avec succès`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -707,6 +734,185 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
     }
   };
 
+  const handleAddPromoCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promoCodeFormData.code || !promoCodeFormData.value || !promoCodeFormData.valid_from || !promoCodeFormData.valid_until) {
+      toast.error('Tous les champs sont requis');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/promo-codes`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(promoCodeFormData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || data.details || 'Erreur lors de l\'ajout du code promo');
+      }
+
+      setPromoCodes([...promoCodes, data]);
+      setPromoCodeFormData({
+        code: '',
+        type: 'percentage',
+        value: '',
+        description: '',
+        is_active: true,
+        max_uses: '',
+        valid_from: '',
+        valid_until: ''
+      });
+      setIsPromoCodeModalOpen(false);
+      toast.success('Code promo ajouté avec succès');
+    } catch (err) {
+      console.error('Erreur complète:', err);
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const handleEditPromoCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPromoCode) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/promo-codes/${selectedPromoCode.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(promoCodeFormData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de la modification du code promo');
+      }
+
+      setPromoCodes(promoCodes.map(pc => pc.id === selectedPromoCode.id ? data : pc));
+      setSelectedPromoCode(null);
+      setIsEditModalOpen(false);
+      toast.success('Code promo modifié avec succès');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const handlePromoCodeInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setPromoCodeFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePromoCodeTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPromoCodeFormData(prev => ({
+      ...prev,
+      type: e.target.value as PromoCode['type']
+    }));
+  };
+
+  const handlePromoCodeStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPromoCodeFormData(prev => ({
+      ...prev,
+      is_active: e.target.checked
+    }));
+  };
+
+  const handlePromoCodeMaxUsesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPromoCodeFormData(prev => ({
+      ...prev,
+      max_uses: e.target.value
+    }));
+  };
+
+  const handlePromoCodeValidFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPromoCodeFormData(prev => ({
+      ...prev,
+      valid_from: e.target.value
+    }));
+  };
+
+  const handlePromoCodeValidUntilChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPromoCodeFormData(prev => ({
+      ...prev,
+      valid_until: e.target.value
+    }));
+  };
+
+  const handleEditPromoCodeClick = (promoCode: PromoCode) => {
+    setSelectedPromoCode(promoCode);
+    setPromoCodeFormData({
+      code: promoCode.code,
+      type: promoCode.type,
+      value: promoCode.value.toString(),
+      description: promoCode.description,
+      is_active: promoCode.is_active,
+      max_uses: promoCode.max_uses?.toString() || '',
+      valid_from: promoCode.valid_from || '',
+      valid_until: promoCode.valid_until || ''
+    });
+    setIsPromoCodeModalOpen(true);
+    setIsAddingPromoCode(false);
+  };
+
+  const handleDeletePromoCode = async (id: number) => {
+    if (!window.confirm('Supprimer ce code promo ?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/admin/promo-codes/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error('Erreur lors de la suppression');
+      setPromoCodes(prev => prev.filter(pc => pc.id !== id));
+      toast.success('Code promo supprimé');
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Une erreur est survenue'
+      );
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -853,17 +1059,59 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             >
               Utilisateurs
             </button>
-          </div>
-          {/* Retirer le bouton d'ajout d'image pour la catégorie lieu */}
-          {activeTab !== 'featured' && activeTab !== 'reservations' && activeTab !== 'lieu' && activeTab !== 'users' && (
             <button
-              onClick={activeTab === 'spectacles' ? handleAddSpectacleClick : handleAddArtistClick}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+              onClick={() => setActiveTab('promocodes')}
+              className={`px-4 py-2 rounded ${
+                activeTab === 'promocodes'
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              } transition duration-300`}
             >
-              <i className="fa-solid fa-plus"></i>
-              <span>Ajouter {activeTab === 'spectacles' ? 'un spectacle' : 'un artiste'}</span>
+              Codes Promo
             </button>
-          )}
+          </div>
+                      {/* Boutons d'ajout selon l'onglet actif */}
+            {activeTab === 'spectacles' && (
+              <button
+                onClick={handleAddSpectacleClick}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+              >
+                <i className="fa-solid fa-plus"></i>
+                <span>Ajouter un spectacle</span>
+              </button>
+            )}
+            {activeTab === 'artists' && (
+              <button
+                onClick={handleAddArtistClick}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+              >
+                <i className="fa-solid fa-plus"></i>
+                <span>Ajouter un artiste</span>
+              </button>
+            )}
+            {activeTab === 'promocodes' && (
+              <button
+                onClick={() => {
+                  setSelectedPromoCode(null);
+                  setPromoCodeFormData({
+                    code: '',
+                    type: 'percentage',
+                    value: '',
+                    description: '',
+                    is_active: true,
+                    max_uses: '',
+                    valid_from: '',
+                    valid_until: ''
+                  });
+                  setIsPromoCodeModalOpen(true);
+                  setIsAddingPromoCode(true);
+                }}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+              >
+                <i className="fa-solid fa-plus"></i>
+                <span>Ajouter un code promo</span>
+              </button>
+            )}
         </div>
 
         {/* Content */}
@@ -1161,6 +1409,69 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
           </div>
         )}
 
+        {activeTab === 'promocodes' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Gestion des codes promo</h2>
+            {promoCodes.length === 0 ? (
+              <p className="text-gray-400 text-center">Aucun code promo</p>
+            ) : (
+              <div className="space-y-4">
+                {promoCodes.map((promoCode) => (
+                  <div key={promoCode.id} className="bg-gray-900 rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                                             <div>
+                         <h3 className="text-xl font-bold text-white mb-2">Code: {promoCode.code}</h3>
+                         <p className="text-gray-400 mb-1">
+                           Type: <span className="text-yellow-400 font-semibold">
+                             {promoCode.type === 'percentage' ? 'Pourcentage' : 
+                              promoCode.type === 'fixed' ? 'Montant fixe' : 'Ticket gratuit'}
+                           </span>
+                         </p>
+                         <p className="text-gray-400 mb-1">
+                           Valeur: <span className="text-green-400 font-semibold">
+                             {promoCode.type === 'percentage' ? `${promoCode.value}%` : 
+                              promoCode.type === 'fixed' ? `${promoCode.value}€` : `${promoCode.value} ticket(s)`}
+                           </span>
+                         </p>
+                         <p className="text-gray-400 mb-1">Description: {promoCode.description}</p>
+                         <p className="text-gray-400 mb-1">
+                           Statut: <span className={`font-semibold ${promoCode.is_active ? 'text-green-400' : 'text-red-400'}`}>
+                             {promoCode.is_active ? 'Actif' : 'Inactif'}
+                           </span>
+                         </p>
+                         <p className="text-gray-400 mb-1">
+                           Utilisations: <span className="text-blue-400 font-semibold">
+                             {promoCode.current_uses} / {promoCode.max_uses ? promoCode.max_uses : '∞'}
+                           </span>
+                         </p>
+                         <p className="text-gray-400 mb-1">
+                           Validité: {promoCode.valid_from ? formatDate(promoCode.valid_from) : 'Non définie'} - {promoCode.valid_until ? formatDate(promoCode.valid_until) : 'Non définie'}
+                         </p>
+                       </div>
+                      <div className="text-right">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditPromoCodeClick(promoCode)}
+                            className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => handleDeletePromoCode(promoCode.id)}
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+                         )}
+           </div>
+         )}
+
         {/* Modal de modification/ajout de spectacle */}
         {isSpectacleModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1388,6 +1699,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                 Êtes-vous sûr de vouloir supprimer {
                   itemToDelete?.type === 'spectacle' ? 'ce spectacle' : 
                   itemToDelete?.type === 'artist' ? 'cet artiste' : 
+                  itemToDelete?.type === 'promocode' ? 'ce code promo' : 
                   'cet utilisateur'
                 } ? 
                 Cette action est irréversible.
@@ -1477,6 +1789,130 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                 <div className="flex justify-end space-x-4 mt-6">
                   <button type="button" onClick={() => { setIsLieuModalOpen(false); setIsAddingLieu(false); }} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300">Annuler</button>
                   <button type="submit" className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal ajout/modif code promo */}
+        {isPromoCodeModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+              <h2 className="text-2xl font-bold text-white mb-4">
+                {isAddingPromoCode ? 'Ajouter un code promo' : 'Modifier le code promo'}
+              </h2>
+              <form onSubmit={isAddingPromoCode ? handleAddPromoCode : handleEditPromoCode} className="space-y-4">
+                <div>
+                  <label className="block text-white mb-2">Code</label>
+                  <input
+                    type="text"
+                    name="code"
+                    value={promoCodeFormData.code}
+                    onChange={handlePromoCodeInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Type</label>
+                                     <select
+                     name="type"
+                     value={promoCodeFormData.type}
+                     onChange={handlePromoCodeTypeChange}
+                     className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                     required
+                   >
+                     <option value="percentage">Pourcentage (%)</option>
+                     <option value="fixed">Montant fixe (€)</option>
+                     <option value="free_ticket">Ticket gratuit</option>
+                   </select>
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Valeur</label>
+                  <input
+                    type="number"
+                    name="value"
+                    value={promoCodeFormData.value}
+                    onChange={handlePromoCodeInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Description</label>
+                  <textarea
+                    name="description"
+                    value={promoCodeFormData.description}
+                    onChange={handlePromoCodeInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    rows={4}
+                    required
+                  />
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={promoCodeFormData.is_active}
+                    onChange={handlePromoCodeStatusChange}
+                    className="mr-2"
+                  />
+                  <label className="text-white">Actif</label>
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Utilisations maximales</label>
+                  <input
+                    type="number"
+                    name="max_uses"
+                    value={promoCodeFormData.max_uses}
+                    onChange={handlePromoCodeMaxUsesChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    min="0"
+                    placeholder="0 pour illimité"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Date de début</label>
+                  <input
+                    type="date"
+                    name="valid_from"
+                    value={promoCodeFormData.valid_from}
+                    onChange={handlePromoCodeValidFromChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Date de fin</label>
+                  <input
+                    type="date"
+                    name="valid_until"
+                    value={promoCodeFormData.valid_until}
+                    onChange={handlePromoCodeValidUntilChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end space-x-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPromoCodeModalOpen(false);
+                      setIsAddingPromoCode(false);
+                    }}
+                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                  >
+                    {isAddingPromoCode ? 'Ajouter' : 'Enregistrer'}
+                  </button>
                 </div>
               </form>
             </div>

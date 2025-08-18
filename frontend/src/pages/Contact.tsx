@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { ChevronDown, Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, Clock } from "lucide-react";
 
 type FormData = {
@@ -34,11 +34,7 @@ const Contact = () => {
     // Here you would normally send the form data to your server
 
     
-    toast({
-      title: "Message envoyé",
-      description: "Merci pour votre message, nous reviendrons vers vous rapidement.",
-      duration: 5000,
-    });
+    toast.success("Message envoyé ! Merci pour votre message, nous reviendrons vers vous rapidement.");
     
     reset();
   };

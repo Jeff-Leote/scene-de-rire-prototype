@@ -9,7 +9,7 @@ const ReservationPaiement = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { token } = useAuth();
-  const { cart = [], nbBillets = {}, prenom, nom, email } = location.state || {};
+  const { cart = [], nbBillets = {}, prenom, nom, email, appliedPromoCode } = location.state || {};
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,6 +30,7 @@ const ReservationPaiement = () => {
         prenom,
         nom,
         email,
+        promoCode: appliedPromoCode,
       }, token);
       
       if (res && res.url) {
@@ -47,6 +48,26 @@ const ReservationPaiement = () => {
   };
 
   const totalPanier = cart.reduce((sum, item) => sum + (item.prix * (nbBillets[item.id] || 1)), 0);
+
+  // Calcul de la réduction appliquée
+  const calculateDiscount = () => {
+    if (!appliedPromoCode) return 0;
+
+    switch (appliedPromoCode.type) {
+      case 'percentage':
+        return (totalPanier * appliedPromoCode.value) / 100;
+      case 'fixed':
+        return Math.min(appliedPromoCode.value, totalPanier);
+      case 'free_ticket':
+        const cheapestTicket = Math.min(...cart.map(item => item.prix));
+        return Math.min(cheapestTicket, totalPanier);
+      default:
+        return 0;
+    }
+  };
+
+  const discount = calculateDiscount();
+  const totalFinal = totalPanier - discount;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -111,7 +132,30 @@ const ReservationPaiement = () => {
                   </div>
                 </div>
               ))}
-              <div className="text-right font-bold text-xl text-yellow-400 mt-4">Total : {totalPanier} €</div>
+              {appliedPromoCode && (
+                <div className="bg-green-900 border border-green-600 rounded-lg p-3 mb-4">
+                  <div className="text-green-400 font-semibold mb-1">Code promo appliqué</div>
+                  <div className="text-sm text-green-300">{appliedPromoCode.code}</div>
+                  <div className="text-xs text-green-400">{appliedPromoCode.description}</div>
+                </div>
+              )}
+              
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between items-center">
+                  <div>Sous-total</div>
+                  <div>{totalPanier} €</div>
+                </div>
+                {appliedPromoCode && (
+                  <div className="flex justify-between items-center text-green-400">
+                    <div>Réduction {appliedPromoCode.type === 'percentage' ? `(${appliedPromoCode.value}%)` : ''}</div>
+                    <div>-{discount.toFixed(2)} €</div>
+                  </div>
+                )}
+                <div className="flex justify-between items-center font-bold text-lg border-t border-gray-700 pt-2">
+                  <div>Total</div>
+                  <div className="text-yellow-400">{totalFinal.toFixed(2)} €</div>
+                </div>
+              </div>
             </div>
           </div>
 

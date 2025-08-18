@@ -8,6 +8,7 @@ export async function createReservationCheckout(data: {
   prenom?: string;
   nom?: string;
   email?: string;
+  promoCode?: any;
 }, token?: string) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) {
