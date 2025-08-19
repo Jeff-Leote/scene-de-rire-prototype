@@ -9,7 +9,8 @@ const Dashboard = () => {
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users' | 'promocodes'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users' | 'promocodes' | 'settings'>('spectacles');
+  const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSpectacleModalOpen, setIsSpectacleModalOpen] = useState(false);
@@ -150,6 +151,14 @@ const Dashboard = () => {
         if (!promoCodesResponse.ok) throw new Error('Erreur lors de la récupération des codes promo');
         const promoCodesData = await promoCodesResponse.json();
         setPromoCodes(promoCodesData);
+        // Récupérer l'email de contact
+        try {
+          const settingsRes = await fetch(`${API_URL}/api/admin/settings/contact-email`, { headers });
+          if (settingsRes.ok) {
+            const s = await settingsRes.json();
+            setContactEmail(s.email || '');
+          }
+        } catch {}
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -1069,6 +1078,16 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             >
               Codes Promo
             </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-2 rounded ${
+                activeTab === 'settings'
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              } transition duration-300`}
+            >
+              Paramètres
+            </button>
           </div>
                       {/* Boutons d'ajout selon l'onglet actif */}
             {activeTab === 'spectacles' && (
@@ -1609,6 +1628,50 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="bg-gray-800 rounded-lg p-6 max-w-xl">
+            <h2 className="text-2xl font-bold text-white mb-6">Paramètres</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white mb-2">Email de réception des messages (Contact)</label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                  placeholder="contact@exemple.com"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('token');
+                      const res = await fetch(`${API_URL}/api/admin/settings/contact-email`, {
+                        method: 'PUT',
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: contactEmail })
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || 'Erreur lors de la sauvegarde');
+                      setContactEmail(data.email);
+                      toast.success('Email de contact sauvegardé');
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+                    }
+                  }}
+                  className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                >
+                  Enregistrer
+                </button>
+              </div>
             </div>
           </div>
         )}

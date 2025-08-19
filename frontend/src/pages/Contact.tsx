@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { toast } from "@/components/ui/sonner";
+import { useAuth } from '@/contexts/AuthContext';
 import { ChevronDown, Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, Clock } from "lucide-react";
 
 type FormData = {
@@ -19,8 +20,19 @@ type FormData = {
 };
 
 const Contact = () => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
+  const { user } = useAuth();
+  const { register, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm<FormData>();
   const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+
+  // Pré-remplir les champs si l'utilisateur est connecté
+  useEffect(() => {
+    if (user) {
+      setValue('firstName', user.firstName || '');
+      setValue('lastName', user.lastName || '');
+      setValue('email', user.email || '');
+    }
+  }, [user, setValue]);
 
   const toggleFAQ = (id: string) => {
     if (openFaq === id) {
@@ -30,13 +42,29 @@ const Contact = () => {
     }
   };
 
-  const onSubmit = (data: FormData) => {
-    // Here you would normally send the form data to your server
+  const onSubmit = async (data: FormData) => {
+    if (!privacyAccepted) {
+      toast.error("Vous devez accepter la politique de confidentialité pour envoyer le message");
+      return;
+    }
 
-    
-    toast.success("Message envoyé ! Merci pour votre message, nous reviendrons vers vous rapidement.");
-    
-    reset();
+    try {
+      const API_URL = import.meta.env.VITE_API_URL;
+      const res = await fetch(`${API_URL}/api/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Erreur lors de l\'envoi du message');
+      }
+      toast.success("Message envoyé ! Merci pour votre message, nous reviendrons vers vous rapidement.");
+      reset();
+      setPrivacyAccepted(false); // Réinitialiser la case à cocher après envoi
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
   };
 
   return (
@@ -123,7 +151,8 @@ const Contact = () => {
                     <Input
                       id="firstName"
                       {...register("firstName", { required: true })}
-                      className={`w-full ${errors.firstName ? 'border-red-500' : ''}`}
+                      className={`w-full ${errors.firstName ? 'border-red-500' : ''} ${user ? 'bg-gray-100' : ''}`}
+                      readOnly={!!user}
                     />
                     {errors.firstName && <p className="mt-1 text-sm text-red-500">Ce champ est requis</p>}
                   </div>
@@ -133,7 +162,8 @@ const Contact = () => {
                     <Input
                       id="lastName"
                       {...register("lastName", { required: true })}
-                      className={`w-full ${errors.lastName ? 'border-red-500' : ''}`}
+                      className={`w-full ${errors.lastName ? 'border-red-500' : ''} ${user ? 'bg-gray-100' : ''}`}
+                      readOnly={!!user}
                     />
                     {errors.lastName && <p className="mt-1 text-sm text-red-500">Ce champ est requis</p>}
                   </div>
@@ -145,9 +175,11 @@ const Contact = () => {
                     id="email"
                     type="email"
                     {...register("email", { required: true, pattern: /^\S+@\S+$/i })}
-                    className={`w-full ${errors.email ? 'border-red-500' : ''}`}
+                    className={`w-full ${errors.email ? 'border-red-500' : ''} ${user ? 'bg-gray-100' : ''}`}
+                    readOnly={!!user}
                   />
                   {errors.email && <p className="mt-1 text-sm text-red-500">Veuillez entrer une adresse email valide</p>}
+                  {user && <p className="mt-1 text-sm text-gray-500">Email pré-rempli depuis votre compte</p>}
                 </div>
                 
                 <div>
@@ -180,23 +212,37 @@ const Contact = () => {
                     <Checkbox 
                       id="privacy" 
                       {...register("privacy", { required: true })}
+                      checked={privacyAccepted}
+                      onCheckedChange={(checked) => setPrivacyAccepted(checked as boolean)}
                     />
                   </div>
                   <div className="ml-3">
                     <label htmlFor="privacy" className="text-sm text-gray-600">
+                      <span className="text-red-500 mr-1">*</span>
                       J'accepte que mes données soient traitées conformément à la <span className="text-yellow-400 hover:underline cursor-pointer">politique de confidentialité</span>.
                     </label>
                     {errors.privacy && <p className="mt-1 text-sm text-red-500">Vous devez accepter la politique de confidentialité</p>}
                   </div>
                 </div>
                 
-                <div className="text-right">
+                <div className="text-right relative group">
                   <Button 
                     type="submit" 
-                    className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-3 rounded-md font-medium transition duration-300"
+                    disabled={!privacyAccepted}
+                    className={`px-8 py-3 rounded-md font-medium transition duration-300 ${
+                      privacyAccepted 
+                        ? 'bg-yellow-400 hover:bg-yellow-500 text-black' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                   >
                     Envoyer
                   </Button>
+                  {!privacyAccepted && (
+                    <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                      Veuillez accepter la politique de confidentialité pour envoyer le message
+                      <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                  )}
                 </div>
               </form>
             </div>

@@ -127,6 +127,15 @@ CREATE TABLE promo_codes (
 );
 
 -- =====================================================
+-- TABLE PARAMETRES (SETTINGS)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS settings (
+  `key` VARCHAR(100) PRIMARY KEY,
+  `value` TEXT,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =====================================================
 -- CLÉS ÉTRANGÈRES
 -- =====================================================
 ALTER TABLE avis ADD FOREIGN KEY (user_id) REFERENCES user(id);
@@ -198,6 +207,11 @@ INSERT INTO promo_codes (code, type, value, description, is_active, max_uses, va
 ('WELCOME10', 'percentage', 10.00, 'Reduction de 10% pour les nouveaux clients', TRUE, 100, '2025-01-01', '2025-12-31'),
 ('FREETICKET', 'free_ticket', 1.00, 'Un ticket gratuit pour tout achat', TRUE, 50, '2025-01-01', '2025-06-30'),
 ('DISCOUNT5', 'fixed', 5.00, 'Reduction fixe de 5€', TRUE, 200, '2025-01-01', '2025-12-31');
+
+-- 10. Paramètres par défaut
+INSERT INTO settings (`key`, `value`) VALUES
+('contact_recipient_email', 'contact@espacecomedia.fr')
+ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 
 -- =====================================================
 -- FIN D'INITIALISATION

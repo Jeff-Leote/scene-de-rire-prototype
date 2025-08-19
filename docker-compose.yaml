@@ -39,9 +39,15 @@ services:
       - FRONTEND_URL=http://localhost:5173
       - NODE_ENV=development
       - JWT_SECRET=Apres_lheure_cest_plus_lheure_franchement
+      # Configuration SMTP Gmail (local et production)
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=junior97301@gmail.com
+      - SMTP_PASS=azwrabuivhturkpq
+      - FROM_EMAIL=contact@espacecomedie.fr
     volumes:
       - ./backend:/app
-      - /app/node_modules
+      - ./backend/node_modules:/app/node_modules
       - backend_logs:/app/logs
       - backend_uploads:/app/uploads
     depends_on:

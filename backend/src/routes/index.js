@@ -7,6 +7,7 @@ const artistesRoutes = require("./artistes");
 const adminRoutes = require("./admin");
 const reservationsRoutes = require("./reservations");
 const lieuRoutes = require("./lieu");
+const contactRoutes = require("./contact");
 
 router.use("/auth", authRoutes);
 router.use("/spectacles", spectaclesRoutes);  // <-- ajout
@@ -14,5 +15,6 @@ router.use("/artistes", artistesRoutes);
 router.use("/admin", adminRoutes);
 router.use("/reservations", reservationsRoutes);
 router.use("/lieu", lieuRoutes);
+router.use("/contact", contactRoutes);
 
 module.exports = router;

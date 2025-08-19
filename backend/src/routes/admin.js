@@ -6,6 +6,36 @@ const { auth, isAdmin } = require('./auth');
 // Middleware pour protéger toutes les routes admin
 router.use(auth, isAdmin);
 
+// ====== Paramètres (settings) ======
+// Récupérer l'email destinataire des messages contact
+router.get('/settings/contact-email', async (req, res) => {
+  try {
+    await db.query("CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )");
+    const [rows] = await db.query('SELECT `value` FROM settings WHERE `key` = ? LIMIT 1', ['contact_recipient_email']);
+    const envFallback = process.env.CONTACT_RECIPIENT_EMAIL || process.env.FROM_EMAIL || process.env.SMTP_USER || '';
+    res.json({ email: (rows[0]?.value) || envFallback });
+  } catch (error) {
+    console.error('Erreur lecture contact-email:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Mettre à jour l'email destinataire des messages contact
+router.put('/settings/contact-email', async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Email invalide' });
+    }
+    await db.query("CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )");
+    await db.query('INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)', ['contact_recipient_email', email]);
+    res.json({ email });
+  } catch (error) {
+    console.error('Erreur maj contact-email:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Récupérer tous les spectacles (pour l'admin)
 router.get('/spectacles', async (req, res) => {
 
