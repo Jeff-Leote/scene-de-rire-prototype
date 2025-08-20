@@ -47,6 +47,36 @@ const ReservationInformations = () => {
   const discount = calculateDiscount();
   const totalFinal = totalPanier - discount;
 
+  const formatDateFr = (value: string) => {
+    try {
+      const date = value?.includes('T') ? new Date(value) : new Date(`${value}T00:00:00`);
+      return date.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch {
+      return value;
+    }
+  };
+
+  const formatTimeFr = (value: string) => {
+    if (!value) return '';
+    try {
+      if (value.includes('T')) {
+        const d = new Date(value);
+        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
+      const m = value.match(/^\d{2}:\d{2}/);
+      return m ? m[0] : value;
+    } catch {
+      return value;
+    }
+  };
+
+  const billetLabel = (count: number) => (count > 1 ? 'billets' : 'billet');
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header activeItem="Réservation" />
@@ -57,7 +87,7 @@ const ReservationInformations = () => {
             <div className="flex justify-between">
               <div className="w-1/3 text-center">
                 <div className="relative">
-                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center">
+                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center ring-2 ring-gray-900 shadow-lg">
                     <i className="fa-solid fa-calendar-days"></i>
                   </div>
                   <div className="text-xs mt-2">Sélection</div>
@@ -65,7 +95,7 @@ const ReservationInformations = () => {
               </div>
               <div className="w-1/3 text-center">
                 <div className="relative">
-                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center">
+                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center ring-2 ring-gray-900 shadow-lg">
                     <i className="fa-solid fa-user"></i>
                   </div>
                   <div className="text-xs mt-2">Informations</div>
@@ -73,7 +103,7 @@ const ReservationInformations = () => {
               </div>
               <div className="w-1/3 text-center">
                 <div className="relative">
-                  <div className="w-10 h-10 mx-auto bg-gray-700 rounded-full text-white flex items-center justify-center">
+                  <div className="w-10 h-10 mx-auto bg-gray-800 rounded-full text-white flex items-center justify-center ring-2 ring-gray-900">
                     <i className="fa-solid fa-credit-card"></i>
                   </div>
                   <div className="text-xs mt-2 text-gray-400">Paiement</div>
@@ -81,14 +111,14 @@ const ReservationInformations = () => {
               </div>
             </div>
             <div className="relative mt-4">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gray-700"></div>
-              <div className="absolute top-0 left-0 w-2/3 h-1 bg-yellow-400"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gray-800 rounded"></div>
+              <div className="absolute top-0 left-0 w-2/3 h-1 bg-gradient-to-r from-yellow-300 to-yellow-500 rounded"></div>
             </div>
           </div>
 
           {/* Contenu principal */}
           <div className="max-w-full mx-auto">
-            <div className="bg-gray-900 rounded-lg p-8 w-full relative" style={{ paddingTop: '3.5rem' }}>
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl p-8 w-full relative ring-1 ring-gray-800 shadow-lg" style={{ paddingTop: '3.5rem' }}>
               {/* Flèche retour intégrée dans la card */}
               <button
                 className="absolute top-4 left-4 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full text-lg transition flex items-center z-10"
@@ -106,9 +136,9 @@ const ReservationInformations = () => {
                     </div>
                     <div>
                       <div className="font-bold text-lg">{item.title}</div>
-                      <div className="text-gray-300 text-sm mb-1">{item.date_spectacle} à {item.heure_spectacle}</div>
+                      <div className="text-gray-300 text-sm mb-1">{formatDateFr(item.date_spectacle)} à {formatTimeFr(item.heure_spectacle)}</div>
                       <div className="text-gray-400 text-sm mb-1">Lieu : {item.lieu}</div>
-                      <div className="text-yellow-400 font-bold text-lg">{item.prix} € × {nbBillets[item.id] || 1} billets = {item.prix * (nbBillets[item.id] || 1)} €</div>
+                      <div className="text-yellow-400 font-bold text-lg">{item.prix} € × {nbBillets[item.id] || 1} {billetLabel(nbBillets[item.id] || 1)} = {item.prix * (nbBillets[item.id] || 1)} €</div>
                     </div>
                   </div>
                 ))}
@@ -204,7 +234,7 @@ const ReservationInformations = () => {
                 <div className="text-center mt-8">
                   <button
                     type="submit"
-                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition"
+                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition shadow-lg"
                     disabled={!isFormValid}
                   >
                     Continuer

@@ -77,7 +77,17 @@ const SpectacleDetail = () => {
       toast.error("Spectacle complet, malheureusement vous êtes arrivés trop tard");
       return;
     }
-    navigate("/reservation", { state: { spectacle } });
+    if (!spectacle) return;
+    const minimal = {
+      id: spectacle.id,
+      title: spectacle.title,
+      date_spectacle: spectacle.date_spectacle,
+      heure_spectacle: spectacle.heure_spectacle,
+      prix: spectacle.prix,
+      img: spectacle.img,
+      lieu: spectacle.lieu,
+    };
+    navigate("/reservation", { state: { spectacle: minimal } });
   };
 
   if (loading) {

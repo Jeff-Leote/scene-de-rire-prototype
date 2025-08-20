@@ -161,6 +161,34 @@ const Reservation = () => {
   const discount = calculateDiscount();
   const totalFinal = totalPanier - discount;
 
+  const formatDateFr = (value: string) => {
+    try {
+      const date = value?.includes('T') ? new Date(value) : new Date(`${value}T00:00:00`);
+      return date.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch {
+      return value;
+    }
+  };
+
+  const formatTimeFr = (value: string) => {
+    if (!value) return '';
+    try {
+      if (value.includes('T')) {
+        const d = new Date(value);
+        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
+      const m = value.match(/^\d{2}:\d{2}/);
+      return m ? m[0] : value;
+    } catch {
+      return value;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Header activeItem="Réservation" />
@@ -171,7 +199,7 @@ const Reservation = () => {
             <div className="flex justify-between">
               <div className="w-1/3 text-center">
                 <div className="relative">
-                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center">
+                  <div className="w-10 h-10 mx-auto bg-yellow-400 rounded-full text-black flex items-center justify-center ring-2 ring-gray-900 shadow-lg">
                     <i className="fa-solid fa-calendar-days"></i>
                   </div>
                   <div className="text-xs mt-2">Choix des places</div>
@@ -179,7 +207,7 @@ const Reservation = () => {
               </div>
               <div className="w-1/3 text-center">
                 <div className="relative">
-                  <div className="w-10 h-10 mx-auto bg-gray-700 rounded-full text-white flex items-center justify-center">
+                  <div className="w-10 h-10 mx-auto bg-gray-800 rounded-full text-white flex items-center justify-center ring-2 ring-gray-900">
                     <i className="fa-solid fa-user"></i>
                   </div>
                   <div className="text-xs mt-2 text-gray-400">Informations</div>
@@ -187,7 +215,7 @@ const Reservation = () => {
               </div>
               <div className="w-1/3 text-center">
                 <div className="relative">
-                  <div className="w-10 h-10 mx-auto bg-gray-700 rounded-full text-white flex items-center justify-center">
+                  <div className="w-10 h-10 mx-auto bg-gray-800 rounded-full text-white flex items-center justify-center ring-2 ring-gray-900">
                     <i className="fa-solid fa-credit-card"></i>
                   </div>
                   <div className="text-xs mt-2 text-gray-400">Paiement</div>
@@ -195,8 +223,8 @@ const Reservation = () => {
               </div>
             </div>
             <div className="relative mt-4">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gray-700"></div>
-              <div className="absolute top-0 left-0 w-1/3 h-1 bg-yellow-400"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gray-800 rounded"></div>
+              <div className="absolute top-0 left-0 w-1/3 h-1 bg-gradient-to-r from-yellow-300 to-yellow-500 rounded"></div>
             </div>
           </div>
 
@@ -205,11 +233,23 @@ const Reservation = () => {
             {/* Left Column (2/3 width) */}
             <div id="booking-main-content" className="md:col-span-2">
               {/* Affichage de la liste des spectacles du panier */}
-              <div className="flex flex-col gap-4 my-6">
-                {cart.map((item) => (
+              <div className="flex flex-col gap-4">
+                {cart.length === 0 ? (
+                  <div className="bg-gray-900 rounded-lg p-8 text-center">
+                    <i className="fa-solid fa-cart-shopping text-4xl text-gray-600 mb-3"></i>
+                    <div className="text-lg font-semibold text-white mb-2">Votre panier est vide</div>
+                    <p className="text-gray-400 mb-4">Choisissez un spectacle pour ajouter des billets.</p>
+                    <button
+                      className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-full transition"
+                      onClick={() => navigate('/spectacles')}
+                    >
+                      Voir les spectacles
+                    </button>
+                  </div>
+                ) : cart.map((item) => (
                   <div
                     key={item.id}
-                    className={`bg-gray-900 rounded-lg p-4 cursor-pointer border-2 ${selectedSpectacle?.id === item.id ? 'border-yellow-400' : 'border-transparent'} transition flex items-center justify-between`}
+                    className={`bg-gray-900/80 backdrop-blur-sm rounded-xl p-4 cursor-pointer border ${selectedSpectacle?.id === item.id ? 'border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.15)]' : 'border-gray-800 hover:border-gray-700'} transition-colors duration-200 flex items-center justify-between`}
                     onClick={() => setSelectedSpectacle(item)}
                   >
                     <div className="flex items-center">
@@ -218,21 +258,21 @@ const Reservation = () => {
                       </div>
                     <div>
                         <h2 className="text-xl font-bold text-yellow-400">{item.title}</h2>
-                        <div className="text-gray-300 text-sm mb-1">{item.date_spectacle} à {item.heure_spectacle}</div>
+                        <div className="text-gray-300 text-sm mb-1">{formatDateFr(item.date_spectacle)} à {formatTimeFr(item.heure_spectacle)}</div>
                         <div className="text-gray-400 text-sm mb-1">Lieu : {item.lieu}</div>
                         <div className="text-lg font-bold text-yellow-400">{item.prix} €</div>
                         {/* Contrôle du nombre de billets pour chaque spectacle */}
                         <div className="flex items-center mt-2">
                           <span className="text-white mr-2">Billets :</span>
                           <button
-                            className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                            className="w-7 h-7 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white transition-colors"
                             onClick={e => { e.stopPropagation(); setNbBillets(n => ({ ...n, [item.id]: Math.max(1, (n[item.id] || 1) - 1) })); }}
                           >
                             -
                         </button>
                           <span className="mx-2 w-6 text-center">{nbBillets[item.id] || 1}</span>
                           <button
-                            className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-white"
+                            className="w-7 h-7 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white transition-colors"
                             onClick={e => { e.stopPropagation(); setNbBillets(n => ({ ...n, [item.id]: (n[item.id] || 1) + 1 })); }}
                           >
                             +
@@ -241,7 +281,7 @@ const Reservation = () => {
                       </div>
                     </div>
                     <button
-                      className="ml-4 text-red-500 hover:text-red-700 p-2 rounded-full z-10"
+                      className="ml-4 text-red-500 hover:text-red-400 p-2 rounded-full z-10 transition-colors"
                       onClick={e => {
                         e.stopPropagation();
                         removeFromCart(item.id);
@@ -308,7 +348,7 @@ const Reservation = () => {
                 {/* Bouton Continuer en dehors du cadre */}
                 <div className="text-center mt-4 mb-8">
                   <button
-                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition"
+                    className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition shadow-lg"
                     onClick={() => {
                       if (selectedSpectacle) {
                         navigate("/reservation/informations", {
@@ -332,7 +372,7 @@ const Reservation = () => {
             {/* Right Column (1/3 width) - Order Summary */}
             <div id="order-summary" className="md:col-span-1">
             {/* Résumé de la commande pour tout le panier */}
-            {cart.length > 0 && (
+            {cart.length > 0 ? (
               <div className="bg-gray-900 rounded-lg p-6 sticky top-24 mt-8 md:mt-0 md:col-span-1">
                 <h2 className="text-xl font-semibold mb-4 flex items-center">
                   <i className="fa-solid fa-receipt mr-2 text-yellow-400"></i>
@@ -348,14 +388,14 @@ const Reservation = () => {
                   </div>
                   <div className="flex justify-between mb-2">
                     <div className="text-gray-300">Date</div>
-                        <div>{item.date_spectacle}</div>
+                        <div>{formatDateFr(item.date_spectacle)}</div>
                   </div>
                       <div className="flex justify-between mb-2">
                     <div className="text-gray-300">Heure</div>
-                        <div>{item.heure_spectacle}</div>
+                        <div>{formatTimeFr(item.heure_spectacle)}</div>
                   </div>
                   <div className="flex justify-between mb-2">
-                        <div>Billet × {nbBillets[item.id] || 1}</div>
+                        <div>Billet{(nbBillets[item.id] || 1) > 1 ? 's' : ''} × {nbBillets[item.id] || 1}</div>
                         <div>{totalSpectacle} €</div>
                   </div>
                 </div>
@@ -436,6 +476,12 @@ const Reservation = () => {
                     Présentation sur mobile acceptée
                   </div>
                 </div>
+              </div>
+            ) : (
+              <div className="bg-gray-900 rounded-lg p-6 md:col-span-1 text-center">
+                <i className="fa-solid fa-basket-shopping text-3xl text-gray-600 mb-3"></i>
+                <div className="text-white font-semibold mb-1">Panier vide</div>
+                <div className="text-gray-400 text-sm">Ajoutez un spectacle pour afficher le récapitulatif.</div>
               </div>
             )}
             </div>

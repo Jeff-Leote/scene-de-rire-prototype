@@ -26,6 +26,37 @@ import ValidateTicket from "./pages/ValidateTicket";
 
 const queryClient = new QueryClient();
 
+// Petit Error Boundary pour éviter les écrans blancs
+import React from 'react';
+
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }>{
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: unknown) {
+    // eslint-disable-next-line no-console
+    console.error('Erreur UI non interceptée:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center p-8 text-center">
+          <div>
+            <div className="text-2xl font-bold mb-2">Une erreur est survenue</div>
+            <div className="text-gray-400 mb-6">Veuillez actualiser la page. Si le problème persiste, réessayez plus tard.</div>
+            <button className="bg-yellow-400 text-black px-4 py-2 rounded" onClick={() => window.location.reload()}>Actualiser</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children as React.ReactElement;
+  }
+}
+
 const App = () => (
   <AuthProvider>
     <CartProvider>
@@ -33,7 +64,7 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/spectacles" element={<Shows />} />

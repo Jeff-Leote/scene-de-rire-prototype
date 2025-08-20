@@ -1002,11 +1002,11 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
   return (
     <div className="min-h-screen bg-gray-950 pt-24 pb-12">
       <div className="container mx-auto px-6">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold text-white">Dashboard Administrateur</h1>
           <Link 
             to="/" 
-            className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 flex items-center space-x-2"
+            className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 flex items-center space-x-2 w-full sm:w-auto justify-center"
           >
             <i className="fa-solid fa-arrow-left"></i>
             <span>Retour au site</span>
@@ -1014,11 +1014,11 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
         </div>
         
         {/* Onglets */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex space-x-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+          <div className="flex overflow-x-auto whitespace-nowrap gap-2 -mx-4 px-4 md:mx-0 md:px-0">
             <button
               onClick={() => setActiveTab('spectacles')}
-              className={`px-4 py-2 rounded ${
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'spectacles'
                   ? 'bg-yellow-400 text-black'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1028,7 +1028,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             </button>
             <button
               onClick={() => setActiveTab('artists')}
-              className={`px-4 py-2 rounded ${
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'artists'
                   ? 'bg-yellow-400 text-black'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1038,7 +1038,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             </button>
             <button
               onClick={() => setActiveTab('featured')}
-              className={`px-4 py-2 rounded ${
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'featured'
                   ? 'bg-yellow-400 text-black'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1048,7 +1048,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             </button>
             <button
               onClick={() => setActiveTab('reservations')}
-              className={`px-4 py-2 rounded ${
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'reservations'
                   ? 'bg-yellow-400 text-black'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1058,19 +1058,19 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             </button>
             <button
               onClick={() => setActiveTab('lieu')}
-              className={`px-4 py-2 rounded ${activeTab === 'lieu' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${activeTab === 'lieu' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
             >
               Lieu
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-4 py-2 rounded ${activeTab === 'users' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${activeTab === 'users' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
             >
               Utilisateurs
             </button>
             <button
               onClick={() => setActiveTab('promocodes')}
-              className={`px-4 py-2 rounded ${
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'promocodes'
                   ? 'bg-yellow-400 text-black'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1080,7 +1080,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-4 py-2 rounded ${
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'settings'
                   ? 'bg-yellow-400 text-black'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -1093,7 +1093,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             {activeTab === 'spectacles' && (
               <button
                 onClick={handleAddSpectacleClick}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
               >
                 <i className="fa-solid fa-plus"></i>
                 <span>Ajouter un spectacle</span>
@@ -1102,7 +1102,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             {activeTab === 'artists' && (
               <button
                 onClick={handleAddArtistClick}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
               >
                 <i className="fa-solid fa-plus"></i>
                 <span>Ajouter un artiste</span>
@@ -1125,7 +1125,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                   setIsPromoCodeModalOpen(true);
                   setIsAddingPromoCode(true);
                 }}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2"
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
               >
                 <i className="fa-solid fa-plus"></i>
                 <span>Ajouter un code promo</span>
@@ -1197,16 +1197,16 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                         )}
                       </div>
                     )}
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <button 
                         onClick={() => handleEditSpectacleClick(spectacle)}
-                        className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                        className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
                       >
                         Modifier
                       </button>
                       <button 
                         onClick={() => handleDeleteClick('spectacle', spectacle.id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                        className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
                         Supprimer
                       </button>
@@ -1232,16 +1232,16 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                       {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
                     </p>
                     <p className="text-gray-400 mb-4 line-clamp-3">{artist.biographie}</p>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <button 
                         onClick={() => handleEditArtistClick(artist)}
-                        className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                        className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
                       >
                         Modifier
                       </button>
                       <button 
                         onClick={() => handleDeleteClick('artist', artist.id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                        className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
                         Supprimer
                       </button>
@@ -1260,7 +1260,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             <div className="space-y-4">
               {reservations.map((reservation) => (
                 <div key={reservation.reservation_id} className="bg-gray-800 rounded-lg p-6">
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-white mb-2">{reservation.title}</h3>
                       <p className="text-gray-400 mb-1">Artiste: {reservation.artiste_name}</p>
@@ -1333,9 +1333,9 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                     <div className="p-4">
                       <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {img.image_path}</p>
                       <p className="text-gray-400 mb-2"><b>Type:</b> {img.is_main ? <span className="text-green-400 font-bold">Principale</span> : <span className="text-blue-400">Galerie</span>}</p>
-                      <div className="flex space-x-2 mt-2">
-                        <button onClick={() => handleEditLieuClick(img)} className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
-                        <button onClick={() => handleDeleteClick('lieu' as const, img.id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Supprimer</button>
+                      <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                        <button onClick={() => handleEditLieuClick(img)} className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
+                        <button onClick={() => handleDeleteClick('lieu' as const, img.id)} className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Supprimer</button>
                       </div>
                     </div>
                   </div>
@@ -1354,7 +1354,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
               <div className="space-y-4">
                 {users.map((user) => (
                   <div key={user.id} className="bg-gray-900 rounded-lg p-6">
-                    <div className="flex justify-between items-start mb-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
                       <div>
                         <h3 className="text-xl font-bold text-white mb-2">
                           {user.civility} {user.firstName} {user.lastName}
@@ -1370,27 +1370,6 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                             {user.isActive !== false ? 'Actif' : 'Suspendu'}
                           </span>
                         </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleToggleUserStatus(user)}
-                            className={`px-4 py-2 rounded text-sm transition duration-300 ${
-                              user.isActive !== false 
-                                ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                                : 'bg-green-500 text-white hover:bg-green-600'
-                            }`}
-                          >
-                            {user.isActive !== false ? 'Suspendre' : 'Réactiver'}
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteClick('user', user.id)}
-                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                            disabled={user.role === 'admin'}
-                          >
-                            Supprimer
-                          </button>
-                        </div>
                       </div>
                     </div>
                     
@@ -1415,10 +1394,29 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                       <div className="text-sm text-gray-400">
                         <p>Dernière connexion: {user.lastLogin ? formatDate(user.lastLogin) : 'Jamais connecté'}</p>
                       </div>
-                      {user.role === 'admin' && (
+                      {user.role === 'admin' ? (
                         <span className="text-yellow-400 text-sm font-semibold">
                           ⚠️ Impossible de supprimer un administrateur
                         </span>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            onClick={() => handleToggleUserStatus(user)}
+                            className={`w-full sm:w-auto px-4 py-2 rounded text-sm transition duration-300 ${
+                              user.isActive !== false 
+                                ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                                : 'bg-green-500 text-white hover:bg-green-600'
+                            }`}
+                          >
+                            {user.isActive !== false ? 'Suspendre' : 'Réactiver'}
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteClick('user', user.id)}
+                            className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1437,8 +1435,8 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
               <div className="space-y-4">
                 {promoCodes.map((promoCode) => (
                   <div key={promoCode.id} className="bg-gray-900 rounded-lg p-6">
-                    <div className="flex justify-between items-start mb-4">
-                                             <div>
+                    <div className="mb-4">
+                      <div>
                          <h3 className="text-xl font-bold text-white mb-2">Code: {promoCode.code}</h3>
                          <p className="text-gray-400 mb-1">
                            Type: <span className="text-yellow-400 font-semibold">
@@ -1466,22 +1464,22 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                          <p className="text-gray-400 mb-1">
                            Validité: {promoCode.valid_from ? formatDate(promoCode.valid_from) : 'Non définie'} - {promoCode.valid_until ? formatDate(promoCode.valid_until) : 'Non définie'}
                          </p>
-                       </div>
-                      <div className="text-right">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditPromoCodeClick(promoCode)}
-                            className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                          >
-                            Modifier
-                          </button>
-                          <button
-                            onClick={() => handleDeletePromoCode(promoCode.id)}
-                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                          >
-                            Supprimer
-                          </button>
-                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-700 flex justify-end">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          onClick={() => handleEditPromoCodeClick(promoCode)}
+                          className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => handleDeletePromoCode(promoCode.id)}
+                          className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                        >
+                          Supprimer
+                        </button>
                       </div>
                     </div>
                   </div>
