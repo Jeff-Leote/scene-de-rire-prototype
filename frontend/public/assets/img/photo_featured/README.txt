@@ -1,0 +1,2 @@
+Ce dossier doit contenir les photos à l'affiche des artistes (ex: artiste1_featured.jpg, artiste2_featured.jpg, ...).
+Placez ici toutes les images utilisées pour illustrer les artistes à la une dans l'application. 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -102,9 +103,10 @@ const ShowsList = () => {
                 >
                   <div className="relative h-64">
                     <img
-                      src={spectacle.img ? `/src/assets/img/spectacles/${spectacle.img}` : "/placeholder.jpg"}
+                      src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
                       alt={spectacle.title}
                       className="object-cover w-full h-full"
+                      onError={onImgErrorSwap}
                     />
                     <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
                       {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
