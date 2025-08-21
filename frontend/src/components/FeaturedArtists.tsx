@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { Link } from 'react-router-dom';
 import { Artist } from '../services/types';
 
@@ -64,8 +65,9 @@ const FeaturedArtists = () => {
               <div className="relative overflow-hidden rounded-full aspect-square mb-4">
                 <img 
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
-                  src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''} 
+                  src={buildImgSrc('photo_artiste', artist.photo)} 
                   alt={`Portrait de ${artist.name}`}
+                  onError={onImgErrorSwap}
                 />
                 <div className="absolute inset-0 bg-yellow-400 bg-opacity-0 group-hover:bg-opacity-20 transition duration-300"></div>
               </div>

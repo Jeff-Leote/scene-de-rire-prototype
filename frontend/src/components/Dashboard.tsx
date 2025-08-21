@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
@@ -1140,9 +1141,10 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             {featuredArtist ? (
               <div className="flex items-start space-x-6">
                 <img 
-                  src={featuredArtist.photo ? `/src/assets/img/photo_artiste/${featuredArtist.photo}` : ''} 
+                  src={buildImgSrc('photo_artiste', featuredArtist.photo)} 
                   alt={featuredArtist.name} 
                   className="w-48 h-48 object-cover rounded-lg"
+                  onError={onImgErrorSwap}
                 />
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-2">{featuredArtist.name}</h3>
@@ -1169,7 +1171,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {spectacles.map((spectacle) => (
                 <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={spectacle.img ? `/src/assets/img/spectacles/${spectacle.img}` : ''} alt={spectacle.title} className="w-full h-48 object-cover" />
+                  <img src={buildImgSrc('spectacles', spectacle.img)} alt={spectacle.title} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
                     <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
@@ -1225,7 +1227,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {artists.map((artist) => (
                 <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''} alt={artist.name} className="w-full h-48 object-cover" />
+                  <img src={buildImgSrc('photo_artiste', artist.photo)} alt={artist.name} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
                     <p className="text-gray-400 mb-2">
@@ -1807,9 +1809,10 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                     }}
                   >
                     <img
-                      src={artist.photo ? `/src/assets/img/photo_artiste/${artist.photo}` : ''}
+                      src={buildImgSrc('photo_artiste', artist.photo)}
                       alt={artist.name}
                       className="w-full h-32 object-cover rounded-lg mb-3"
+                      onError={onImgErrorSwap}
                     />
                     <h3 className="text-lg font-bold text-white">{artist.name}</h3>
                     <p className="text-gray-400 text-sm line-clamp-2">{artist.biographie}</p>

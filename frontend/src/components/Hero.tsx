@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { Link } from 'react-router-dom';
 import { FeaturedArtist } from '../services/types';
 
@@ -97,8 +98,9 @@ const Hero = () => {
         <div className="relative overflow-hidden rounded-lg h-[500px] mb-12">
           <img 
             className="absolute inset-0 w-full h-full object-cover" 
-            src={featuredArtist.photo_featured ? `/src/assets/img/photo_featured/${featuredArtist.photo_featured}` : ''} 
+            src={buildImgSrc('photo_featured', featuredArtist.photo_featured)} 
             alt={`${featuredArtist.name} performing on stage`} 
+            onError={onImgErrorSwap}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           <div className="absolute bottom-0 left-0 p-8 w-full md:w-2/3">

@@ -1,3 +1,4 @@
+import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -27,7 +28,7 @@ const SpectacleDetail = () => {
     const link = document.createElement("link");
     link.rel = "preload";
     link.as = "image";
-    link.href = `/src/assets/img/spectacles/${spectacle.img}`;
+    link.href = buildImgSrc('spectacles', spectacle.img);
     document.head.appendChild(link);
 
     return () => {
@@ -123,13 +124,10 @@ const SpectacleDetail = () => {
             {/* Hero Section */}
             <div className="relative h-[400px] rounded-lg overflow-hidden mb-8">
               <img
-                src={
-                  spectacle.img
-                    ? `/src/assets/img/spectacles/${spectacle.img}`
-                    : "/placeholder.jpg"
-                }
+                src={buildImgSrc('spectacles', spectacle.img || undefined) || "/placeholder.jpg"}
                 alt={spectacle.title}
                 className="w-full h-full object-cover object-[center_25%]"
+                onError={onImgErrorSwap}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-8">
@@ -198,12 +196,11 @@ const SpectacleDetail = () => {
                   <div className="flex items-center">
                     <img
                       src={
-                        spectacle.artiste_photo
-                          ? `/src/assets/img/photo_artiste/${spectacle.artiste_photo}`
-                          : "/placeholder.jpg"
+                        buildImgSrc('photo_artiste', spectacle.artiste_photo || undefined) || "/placeholder.jpg"
                       }
                       alt={spectacle.artiste_name}
                       className="w-24 h-24 rounded-full object-cover mr-6"
+                      onError={onImgErrorSwap}
                     />
                     <div>
                       <h3 className="text-xl font-bold text-white mb-2">{spectacle.artiste_name}</h3>

@@ -363,9 +363,10 @@ const MyAccount = () => {
                       <div className="flex items-start space-x-4">
                         <div className="w-20 h-28 overflow-hidden rounded-md flex-shrink-0">
                           <img 
-                            src={`/src/assets/img/spectacles/${reservation.img}`} 
+                            src={`/assets/img/spectacles/${reservation.img}`} 
                             alt={reservation.title}
                             className="w-full h-full object-cover"
+                            onError={(e) => { const el = e.currentTarget as HTMLImageElement; el.src = `/src/assets/img/spectacles/${reservation.img}`; }}
                           />
                         </div>
                         <div className="flex-1">
