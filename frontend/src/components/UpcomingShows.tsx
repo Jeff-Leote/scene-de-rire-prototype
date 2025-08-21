@@ -106,7 +106,7 @@ const UpcomingShows = () => {
             >
               <div className="relative h-64">
                 <img
-                  src={buildImgSrc('spectacles', spectacle.img || undefined) || "/placeholder.jpg"}
+                  src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
                   alt={spectacle.title}
                   className="w-full h-full object-cover"
                   onError={onImgErrorSwap}

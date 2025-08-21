@@ -124,7 +124,7 @@ const SpectacleDetail = () => {
             {/* Hero Section */}
             <div className="relative h-[400px] rounded-lg overflow-hidden mb-8">
               <img
-                src={buildImgSrc('spectacles', spectacle.img || undefined) || "/placeholder.jpg"}
+                src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
                 alt={spectacle.title}
                 className="w-full h-full object-cover object-[center_25%]"
                 onError={onImgErrorSwap}
@@ -196,7 +196,7 @@ const SpectacleDetail = () => {
                   <div className="flex items-center">
                     <img
                       src={
-                        buildImgSrc('photo_artiste', spectacle.artiste_photo || undefined) || "/placeholder.jpg"
+                        buildImgSrc('photo_artiste', spectacle.artiste_photo || undefined) || "/assets/placeholder.jpg"
                       }
                       alt={spectacle.artiste_name}
                       className="w-24 h-24 rounded-full object-cover mr-6"

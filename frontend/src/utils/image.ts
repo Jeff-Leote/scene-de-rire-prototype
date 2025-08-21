@@ -18,10 +18,10 @@ export function onImgErrorSwap(e: React.SyntheticEvent<HTMLImageElement, Event>)
     } else if (current.includes('/src/assets/')) {
       el.src = current.replace('/src/assets/', '/assets/');
     } else {
-      el.src = '/placeholder.jpg';
+      el.src = '/assets/placeholder.jpg';
     }
   } else {
-    el.src = '/placeholder.jpg';
+    el.src = '/assets/placeholder.jpg';
   }
 }
 
