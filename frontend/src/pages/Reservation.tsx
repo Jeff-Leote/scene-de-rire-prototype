@@ -204,21 +204,21 @@ const Reservation = () => {
             setSpectacles([sp]);
             setLoading(false);
           }
-        } else if (urlSpectacleId) {
+    } else if (urlSpectacleId) {
           const sp = await fetchSpectacleById(Number(urlSpectacleId));
           if (isMounted) {
             setSelectedSpectacle(sp);
             setSpectacles([sp]);
             setLoading(false);
           }
-        } else {
+    } else {
           const spList = await fetchSpectacles();
           if (isMounted) {
-            setSpectacles(spList);
+          setSpectacles(spList);
             if (cartRef.current.length > 0) {
               const cartSpectacle = spList.find(s => s.id === cartRef.current[0].id);
-              if (cartSpectacle) setSelectedSpectacle(cartSpectacle);
-            }
+            if (cartSpectacle) setSelectedSpectacle(cartSpectacle);
+          }
             setLoading(false);
           }
         }
@@ -496,7 +496,7 @@ const Reservation = () => {
               <div className="absolute top-0 left-0 w-1/3 h-1 bg-gradient-to-r from-yellow-300 to-yellow-500 rounded"></div>
             </div>
           </div>
-          
+
           {cart.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-gray-400 text-6xl mb-4">
@@ -548,28 +548,28 @@ const Reservation = () => {
                             <div className="text-white font-medium">Prix unitaire</div>
                           </div>
                           <div className="text-yellow-400 font-bold text-lg">{formatPrice(selectedSpectacle.prix)} €</div>
-                        </div>
+                      </div>
                         
                         <div className="flex items-center justify-between mt-4">
-                          <div>
+                    <div>
                             <div className="text-sm text-gray-400">Nombre de billets</div>
                           </div>
                           <div className="flex items-center space-x-3">
-                            <button
+                          <button
                               onClick={() => handleBilletChange(selectedSpectacle.id, getNbBillets(selectedSpectacle.id) - 1)}
                               className="w-8 h-8 bg-gray-700 text-white rounded flex items-center justify-center hover:bg-gray-600 transition duration-200 text-lg"
                               disabled={getNbBillets(selectedSpectacle.id) <= 1}
-                            >
-                              -
-                            </button>
+                          >
+                            -
+                        </button>
                             <span className="text-white text-lg w-12 text-center font-medium">{getNbBillets(selectedSpectacle.id)}</span>
-                            <button
+                          <button
                               onClick={() => handleBilletChange(selectedSpectacle.id, getNbBillets(selectedSpectacle.id) + 1)}
                               className="w-8 h-8 bg-gray-700 text-white rounded flex items-center justify-center hover:bg-gray-600 transition duration-200 text-lg"
-                            >
-                              +
-                            </button>
-                          </div>
+                          >
+                            +
+                        </button>
+                        </div>
                         </div>
                         
                         <div className="border-t border-gray-700 mt-4 pt-4">
@@ -622,9 +622,9 @@ const Reservation = () => {
                             <h4 className="text-white font-medium text-sm">{item.title || 'Titre non disponible'}</h4>
                             <p className="text-gray-400 text-xs">{formatDateFr(item.date_spectacle)}</p>
                             <p className="text-yellow-400 text-sm">{formatPrice(item.prix)}€ par billet</p>
-                          </div>
-                        </div>
-                        <button
+                      </div>
+                    </div>
+                    <button
                           onClick={(e) => {
                             e.stopPropagation(); // Empêcher la sélection du spectacle
                             handleRemoveFromCart(item.id);
@@ -632,7 +632,7 @@ const Reservation = () => {
                           className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500 transition duration-300 text-xs font-medium"
                         >
                           Supprimer
-                        </button>
+                    </button>
                       </div>
                       
                       {/* Affichage de la quantité (non modifiable ici) */}
@@ -644,17 +644,17 @@ const Reservation = () => {
                         </div>
                         <div className="text-yellow-400 font-semibold text-lg">{formatPrice(item.prix * getNbBillets(item.id))}€</div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
+                  </div>
+                ))}
+                  </div>
+                  
                 {/* Code promo */}
                 <div className="mb-6">
                   <h4 className="text-white font-medium mb-3">Code promo</h4>
                   {appliedPromoCode ? (
                     <div className="bg-green-900/30 border border-green-500 rounded-lg p-3">
                       <div className="flex items-center justify-between">
-                        <div>
+                    <div>
                           <p className="text-green-400 font-medium">{appliedPromoCode.code}</p>
                           <p className="text-green-300 text-sm">
                             {appliedPromoCode.type === 'percentage' && `${appliedPromoCode.value}% de réduction`}
@@ -664,11 +664,11 @@ const Reservation = () => {
                           {appliedPromoCode.description && appliedPromoCode.description.trim() !== "" && (
                             <p className="text-xs text-green-400 mt-1">{appliedPromoCode.description}</p>
                           )}
-                        </div>
-                        <button
+                  </div>
+                      <button
                           onClick={removePromoCode}
                           className="text-red-400 hover:text-red-300"
-                        >
+                      >
                           <i className="fa-solid fa-times"></i>
                         </button>
                       </div>
@@ -693,7 +693,7 @@ const Reservation = () => {
                         ) : (
                           'Appliquer'
                         )}
-                      </button>
+                        </button>
                     </div>
                   )}
                 </div>
@@ -708,7 +708,7 @@ const Reservation = () => {
                     <div className="flex justify-between text-green-400 mb-2">
                       <span>Réduction</span>
                       <span>-{formatPrice(discount)} €</span>
-                    </div>
+                  </div>
                   )}
                   <div className="flex justify-between text-white font-bold text-lg">
                     <span>Total</span>
@@ -716,10 +716,10 @@ const Reservation = () => {
                   </div>
                 </div>
 
-                <button
+                  <button
                   onClick={handleContinue}
                   className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded-full text-lg transition shadow-lg"
-                >
+                  >
                   Continuer
                   <i className="fa-solid fa-arrow-right ml-2"></i>
                 </button>
@@ -739,9 +739,9 @@ const Reservation = () => {
                     <span>Présentation sur mobile acceptée</span>
                   </div>
                 </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           
           {/* Section d'aide en bas */}
           <div className="mt-16 max-w-6xl mx-auto">
@@ -753,11 +753,11 @@ const Reservation = () => {
                 <h4 className="font-semibold text-white mb-2">Par téléphone</h4>
                 <p className="text-sm text-gray-400">01 23 45 67 89</p>
                 <p className="text-xs text-gray-500">Lun-Ven, 10h-19h</p>
-              </div>
+            </div>
               <div className="bg-gray-900/50 rounded-xl p-6 text-center">
                 <div className="text-yellow-400 text-2xl mb-3">
                   <i className="fa-solid fa-envelope"></i>
-                </div>
+          </div>
                 <h4 className="font-semibold text-white mb-2">Par email</h4>
                 <p className="text-sm text-gray-400">billetterie@comedieclub.fr</p>
                 <p className="text-xs text-gray-500">Réponse sous 24h</p>
@@ -765,7 +765,7 @@ const Reservation = () => {
               <div className="bg-gray-900/50 rounded-xl p-6 text-center">
                 <div className="text-yellow-400 text-2xl mb-3">
                   <i className="fa-solid fa-circle-question"></i>
-                </div>
+              </div>
                 <h4 className="font-semibold text-white mb-2">FAQ</h4>
                 <p className="text-sm text-gray-400">Consultez notre aide en ligne</p>
                 <p className="text-xs text-gray-500">et questions fréquentes</p>

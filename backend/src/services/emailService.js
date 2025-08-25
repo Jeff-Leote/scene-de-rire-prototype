@@ -5,9 +5,19 @@ const createTransport = async () => {
   // Vérifier si on a des credentials SMTP configurés (Gmail)
   const hasSmtpConfig = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
   
+  console.log('📧 Configuration email - Variables d\'environnement:');
+  console.log('📧 SMTP_HOST:', process.env.SMTP_HOST ? '✓ Configuré' : '✗ Manquant');
+  console.log('📧 SMTP_USER:', process.env.SMTP_USER ? '✓ Configuré' : '✗ Manquant');
+  console.log('📧 SMTP_PASS:', process.env.SMTP_PASS ? '✓ Configuré' : '✗ Manquant');
+  console.log('📧 NODE_ENV:', process.env.NODE_ENV || 'non défini');
+  
   if (hasSmtpConfig) {
     // Utiliser SMTP configuré (Gmail)
     console.log('📧 Utilisation de SMTP configuré pour l\'envoi d\'emails');
+    console.log('📧 Host:', process.env.SMTP_HOST);
+    console.log('📧 Port:', process.env.SMTP_PORT || 587);
+    console.log('📧 User:', process.env.SMTP_USER);
+    
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT || 587,
@@ -15,7 +25,10 @@ const createTransport = async () => {
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
-      }
+      },
+      // Ajouter des options de debug pour diagnostiquer les problèmes
+      debug: process.env.NODE_ENV === 'development',
+      logger: process.env.NODE_ENV === 'development'
     });
   } else {
     // Fallback vers Ethereal Email pour les tests
@@ -38,6 +51,9 @@ const createTransport = async () => {
 // Fonction pour envoyer un email
 const sendEmail = async (to, subject, message) => {
   try {
+    console.log('📧 Début envoi email à:', to);
+    console.log('📧 Sujet:', subject);
+    
     const transporter = await createTransport();
     
     // Générer un lien de désabonnement unique avec token sécurisé
@@ -49,6 +65,9 @@ const sendEmail = async (to, subject, message) => {
       : (process.env.FRONTEND_URL || 'http://localhost:5173');
     
     const unsubscribeUrl = `${baseUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
+    const directUnsubscribeUrl = `${baseUrl}/api/newsletter/unsubscribe`;
+    
+    console.log('📧 URL de désabonnement générée:', unsubscribeUrl);
     
     const mailOptions = {
       from: process.env.FROM_EMAIL || process.env.SMTP_USER || 'Espace Comédie <noreply@espacecomedie.fr>',
@@ -86,7 +105,15 @@ const sendEmail = async (to, subject, message) => {
                   Cet email a été envoyé par <strong>Espace Comédie</strong>.<br/>
                   Pour toute question, écrivez-nous à <a href="mailto:contact@espacecomedie.fr" style="color:#111111;text-decoration:underline;">contact@espacecomedie.fr</a>.<br/>
                   <br/>
-                  <a href="${unsubscribeUrl}" style="color:#dc2626;text-decoration:underline;font-size:11px;">Se désabonner de la newsletter</a>
+                  <div style="margin-top: 16px; padding: 12px; background-color: #f9fafb; border-radius: 6px; border-left: 4px solid #dc2626;">
+                    <p style="margin: 0 0 8px 0; font-weight: 600; color: #374151;">Se désabonner :</p>
+                    <p style="margin: 0 0 8px 0; font-size: 11px; color: #6b7280;">
+                      • <a href="${unsubscribeUrl}" style="color:#dc2626;text-decoration:underline;">Page de désabonnement sécurisée</a> (recommandé)
+                    </p>
+                    <p style="margin: 0; font-size: 11px; color: #6b7280;">
+                      • <a href="mailto:contact@espacecomedie.fr?subject=Désabonnement newsletter&body=Je souhaite me désabonner de la newsletter pour l'adresse ${encodeURIComponent(to)}" style="color:#dc2626;text-decoration:underline;">Désabonnement par email</a>
+                    </p>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -98,6 +125,7 @@ const sendEmail = async (to, subject, message) => {
       `
     };
 
+    console.log('📧 Tentative d\'envoi via SMTP...');
     const info = await transporter.sendMail(mailOptions);
     
     // Vérifier si on utilise Ethereal (mode test)
@@ -109,27 +137,54 @@ const sendEmail = async (to, subject, message) => {
       console.log('📧 Message ID:', info.messageId);
     } else {
       console.log('📧 Email envoyé via SMTP configuré:', info.messageId);
+      console.log('📧 Réponse du serveur SMTP:', info.response);
     }
     
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Erreur envoi email:', error);
-    throw new Error('Erreur lors de l\'envoi de l\'email');
+    console.error('❌ Erreur détaillée envoi email:', error);
+    console.error('❌ Code d\'erreur:', error.code);
+    console.error('❌ Message d\'erreur:', error.message);
+    console.error('❌ Stack trace:', error.stack);
+    
+    // Retourner une erreur plus descriptive
+    let errorMessage = 'Erreur lors de l\'envoi de l\'email';
+    
+    if (error.code === 'EAUTH') {
+      errorMessage = 'Erreur d\'authentification SMTP - Vérifiez les identifiants Gmail';
+    } else if (error.code === 'ECONNECTION') {
+      errorMessage = 'Erreur de connexion au serveur SMTP - Vérifiez la configuration réseau';
+    } else if (error.code === 'ETIMEDOUT') {
+      errorMessage = 'Timeout de connexion au serveur SMTP';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 
 // Fonction pour envoyer des emails en masse
 const sendBulkEmails = async (recipients, subject, message) => {
+  console.log('📧 Début envoi en masse à', recipients.length, 'destinataires');
   const results = [];
   
   for (const recipient of recipients) {
     try {
+      console.log('📧 Envoi à:', recipient);
       const result = await sendEmail(recipient, subject, message);
       results.push({ email: recipient, success: true, messageId: result.messageId });
+      console.log('📧 ✓ Succès pour:', recipient);
     } catch (error) {
+      console.error('📧 ✗ Échec pour:', recipient, '- Erreur:', error.message);
       results.push({ email: recipient, success: false, error: error.message });
     }
   }
+  
+  const successCount = results.filter(r => r.success).length;
+  const failureCount = results.filter(r => !r.success).length;
+  
+  console.log('📧 Résultats envoi en masse:', successCount, 'succès,', failureCount, 'échecs');
   
   return results;
 };

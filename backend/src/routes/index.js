@@ -46,6 +46,36 @@ router.post('/newsletter/subscribe', async (req, res) => {
   }
 });
 
+// Route pour vérifier si un utilisateur a un compte
+router.get('/newsletter/check-user/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Email invalide' });
+    }
+
+    const db = require('../db');
+    
+    // Vérifier si l'email existe dans la table users
+    const [users] = await db.query('SELECT id, email FROM users WHERE email = ?', [email]);
+    const hasAccount = users.length > 0;
+    
+    // Vérifier si l'email est inscrit à la newsletter
+    const [subscribers] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
+    const isSubscribed = subscribers.length > 0;
+    
+    res.json({ 
+      hasAccount, 
+      isSubscribed,
+      email 
+    });
+  } catch (error) {
+    console.error('Erreur vérification utilisateur:', error);
+    res.status(500).json({ error: 'Erreur lors de la vérification' });
+  }
+});
+
 // Route publique pour se désabonner de la newsletter
 router.post('/newsletter/unsubscribe', async (req, res) => {
   try {

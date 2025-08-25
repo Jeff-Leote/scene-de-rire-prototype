@@ -12,26 +12,53 @@ const Unsubscribe = () => {
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [isUnsubscribed, setIsUnsubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userCheck, setUserCheck] = useState<{
+    hasAccount: boolean;
+    isSubscribed: boolean;
+    email: string;
+  } | null>(null);
 
   useEffect(() => {
     const emailParam = searchParams.get('email');
     if (emailParam) {
       setEmail(emailParam);
-    }
-    
-    // Vérifier l'authentification après un court délai
-    const checkAuth = setTimeout(() => {
-      if (!isAuthenticated) {
-        // Rediriger vers la connexion avec l'URL de retour
-        const currentUrl = window.location.href;
-        navigate(`/connexion?redirect=${encodeURIComponent(currentUrl)}`);
-        return;
-      }
+      checkUserAccount(emailParam);
+    } else {
       setIsLoading(false);
-    }, 100);
+    }
+  }, [searchParams]);
 
-    return () => clearTimeout(checkAuth);
-  }, [searchParams, isAuthenticated, navigate]);
+  const checkUserAccount = async (emailToCheck: string) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${API_URL}/api/newsletter/check-user/${encodeURIComponent(emailToCheck)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUserCheck(data);
+        
+        // Si l'utilisateur a un compte mais n'est pas connecté, rediriger vers la connexion
+        if (data.hasAccount && !isAuthenticated) {
+          const currentUrl = window.location.href;
+          navigate(`/connexion?redirect=${encodeURIComponent(currentUrl)}`);
+          return;
+        }
+        
+        // Si l'utilisateur n'est pas inscrit à la newsletter
+        if (!data.isSubscribed) {
+          setIsUnsubscribed(true);
+          toast.success('Cet email n\'était pas inscrit à la newsletter');
+          return;
+        }
+      } else {
+        toast.error('Erreur lors de la vérification de l\'email');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion lors de la vérification');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleUnsubscribe = async () => {
     if (!email) {
@@ -65,13 +92,13 @@ const Unsubscribe = () => {
     }
   };
 
-  // Afficher un loader pendant la vérification d'authentification
+  // Afficher un loader pendant la vérification
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-          <p className="text-gray-600">Vérification de l'authentification...</p>
+          <p className="text-gray-600">Vérification de votre compte...</p>
         </div>
       </div>
     );
@@ -124,6 +151,13 @@ const Unsubscribe = () => {
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
                   Connecté en tant que : <strong>{user.email}</strong>
+                </p>
+              </div>
+            )}
+            {userCheck && !userCheck.hasAccount && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-800">
+                  <strong>Désabonnement direct :</strong> Vous n'avez pas de compte, vous pouvez vous désabonner directement.
                 </p>
               </div>
             )}
