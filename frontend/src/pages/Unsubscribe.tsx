@@ -50,12 +50,54 @@ const Unsubscribe = () => {
           toast.success('Cet email n\'était pas inscrit à la newsletter');
           return;
         }
+
+        // Si l'utilisateur n'a pas de compte, désabonner directement
+        if (!data.hasAccount) {
+          await handleDirectUnsubscribe(emailToCheck);
+          return;
+        }
+
+        // Si l'utilisateur a un compte et est connecté, afficher la page de confirmation
+        setIsLoading(false);
       } else {
         toast.error('Erreur lors de la vérification de l\'email');
+        setIsLoading(false);
       }
     } catch (error) {
       toast.error('Erreur de connexion lors de la vérification');
+      setIsLoading(false);
+    }
+  };
+
+  const handleDirectUnsubscribe = async (emailToUnsubscribe: string) => {
+    try {
+      setIsUnsubscribing(true);
+      const API_URL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${API_URL}/api/newsletter/unsubscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: emailToUnsubscribe }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsUnsubscribed(true);
+        toast.success('Désabonnement direct réussi !');
+      } else if (response.status === 403 && data.hasAccount) {
+        // L'utilisateur a un compte, rediriger vers la connexion
+        const currentUrl = window.location.href;
+        navigate(`/connexion?redirect=${encodeURIComponent(currentUrl)}`);
+        return;
+      } else {
+        toast.error(data.error || 'Erreur lors du désabonnement');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion');
     } finally {
+      setIsUnsubscribing(false);
       setIsLoading(false);
     }
   };
@@ -66,30 +108,7 @@ const Unsubscribe = () => {
       return;
     }
 
-    setIsUnsubscribing(true);
-    try {
-      const API_URL = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${API_URL}/api/newsletter/unsubscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setIsUnsubscribed(true);
-        toast.success('Désabonnement réussi !');
-      } else {
-        toast.error(data.error || 'Erreur lors du désabonnement');
-      }
-    } catch (error) {
-      toast.error('Erreur de connexion');
-    } finally {
-      setIsUnsubscribing(false);
-    }
+    await handleDirectUnsubscribe(email);
   };
 
   // Afficher un loader pendant la vérification
@@ -151,13 +170,6 @@ const Unsubscribe = () => {
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
                   Connecté en tant que : <strong>{user.email}</strong>
-                </p>
-              </div>
-            )}
-            {userCheck && !userCheck.hasAccount && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800">
-                  <strong>Désabonnement direct :</strong> Vous n'avez pas de compte, vous pouvez vous désabonner directement.
                 </p>
               </div>
             )}

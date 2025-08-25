@@ -64,10 +64,13 @@ const sendEmail = async (to, subject, message) => {
       ? 'https://espacecomedie.fr' 
       : (process.env.FRONTEND_URL || 'http://localhost:5173');
     
+    // URL de désabonnement simple et directe
     const unsubscribeUrl = `${baseUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
-    const directUnsubscribeUrl = `${baseUrl}/api/newsletter/unsubscribe`;
     
     console.log('📧 URL de désabonnement générée:', unsubscribeUrl);
+    console.log('📧 Base URL utilisée:', baseUrl);
+    console.log('📧 NODE_ENV:', process.env.NODE_ENV);
+    console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL);
     
     const mailOptions = {
       from: process.env.FROM_EMAIL || process.env.SMTP_USER || 'Espace Comédie <noreply@espacecomedie.fr>',
@@ -106,12 +109,8 @@ const sendEmail = async (to, subject, message) => {
                   Pour toute question, écrivez-nous à <a href="mailto:contact@espacecomedie.fr" style="color:#111111;text-decoration:underline;">contact@espacecomedie.fr</a>.<br/>
                   <br/>
                   <div style="margin-top: 16px; padding: 12px; background-color: #f9fafb; border-radius: 6px; border-left: 4px solid #dc2626;">
-                    <p style="margin: 0 0 8px 0; font-weight: 600; color: #374151;">Se désabonner :</p>
-                    <p style="margin: 0 0 8px 0; font-size: 11px; color: #6b7280;">
-                      • <a href="${unsubscribeUrl}" style="color:#dc2626;text-decoration:underline;">Page de désabonnement sécurisée</a> (recommandé)
-                    </p>
                     <p style="margin: 0; font-size: 11px; color: #6b7280;">
-                      • <a href="mailto:contact@espacecomedie.fr?subject=Désabonnement newsletter&body=Je souhaite me désabonner de la newsletter pour l'adresse ${encodeURIComponent(to)}" style="color:#dc2626;text-decoration:underline;">Désabonnement par email</a>
+                      <a href="${unsubscribeUrl}" style="color:#dc2626;text-decoration:underline;font-weight:600;">Se désabonner de la newsletter</a>
                     </p>
                   </div>
                 </div>

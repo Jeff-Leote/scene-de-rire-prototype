@@ -93,12 +93,29 @@ router.post('/newsletter/unsubscribe', async (req, res) => {
       return res.status(400).json({ error: 'Cet email n\'est pas inscrit à la newsletter' });
     }
 
-    // Supprimer l'email de la newsletter
+    // Vérifier si l'utilisateur a un compte
+    const [users] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    const hasAccount = users.length > 0;
+
+    if (hasAccount) {
+      // L'utilisateur a un compte, retourner une erreur pour forcer la redirection
+      return res.status(403).json({ 
+        error: 'Authentication required',
+        hasAccount: true,
+        message: 'Vous avez un compte. Veuillez vous connecter pour vous désabonner.'
+      });
+    }
+
+    // L'utilisateur n'a pas de compte, désabonner directement
     await db.query('DELETE FROM newsletter_subscribers WHERE email = ?', [email]);
     
-    console.log('📧 Désabonnement newsletter:', email);
+    console.log('📧 Désabonnement direct newsletter:', email);
     
-    res.json({ success: true, message: 'Désabonnement de la newsletter réussi !' });
+    res.json({ 
+      success: true, 
+      hasAccount: false,
+      message: 'Désabonnement de la newsletter réussi !' 
+    });
   } catch (error) {
     console.error('Erreur désabonnement newsletter:', error);
     res.status(500).json({ error: 'Erreur lors du désabonnement de la newsletter' });
