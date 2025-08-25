@@ -1,4 +1,4 @@
- import React, { useEffect, useState } from "react";
+ import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -36,41 +36,7 @@ const PaymentStatus = () => {
   const [message, setMessage] = useState<string>("Vérification du paiement...");
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const payment = searchParams.get("payment");
-    const sessionIdParam = searchParams.get("session_id");
-
-    if (payment === "success" && sessionIdParam) {
-      setSessionId(sessionIdParam);
-      checkStatus(sessionIdParam);
-    } else if (payment === "cancel") {
-      setStatus("cancelled");
-      setMessage("Paiement annulé");
-      toast.error("Paiement annulé");
-      
-      // Enregistrer la réservation annulée si on a un session_id
-      if (sessionIdParam) {
-        setSessionId(sessionIdParam);
-        registerCancelledReservation(sessionIdParam)
-          .then(() => {
-        
-          })
-          .catch((error) => {
-            console.error("Erreur lors de l'enregistrement:", error);
-          });
-      }
-      
-      // Rediriger vers la page mon compte après 3 secondes
-      setTimeout(() => {
-        navigate("/mon-compte");
-      }, 5000);
-    } else {
-      navigate("/");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, navigate]);
-
-  const checkStatus = async (sessionId: string) => {
+  const checkStatus = useCallback(async (sessionId: string) => {
     try {
       const result = await checkPaymentStatus(sessionId);
       setStatus(result.status);
@@ -106,7 +72,40 @@ const PaymentStatus = () => {
         navigate("/reservation");
       }, 3000);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    const sessionIdParam = searchParams.get("session_id");
+
+    if (payment === "success" && sessionIdParam) {
+      setSessionId(sessionIdParam);
+      checkStatus(sessionIdParam);
+    } else if (payment === "cancel") {
+      setStatus("cancelled");
+      setMessage("Paiement annulé");
+      toast.error("Paiement annulé");
+      
+      // Enregistrer la réservation annulée si on a un session_id
+      if (sessionIdParam) {
+        setSessionId(sessionIdParam);
+        registerCancelledReservation(sessionIdParam)
+          .then(() => {
+        
+          })
+          .catch((error) => {
+            console.error("Erreur lors de l'enregistrement:", error);
+          });
+      }
+      
+      // Rediriger vers la page mon compte après 3 secondes
+      setTimeout(() => {
+        navigate("/mon-compte");
+      }, 5000);
+    } else {
+      navigate("/");
+    }
+  }, [searchParams, navigate, checkStatus]);
 
   const getStatusIcon = () => {
     switch (status) {

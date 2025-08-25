@@ -3,12 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../contexts/AuthContext";
+import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
 
 const ReservationInformations = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { cart = [], nbBillets = {}, appliedPromoCode } = location.state || {};
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const [prenom, setPrenom] = useState(user?.firstName || "");
   const [nom, setNom] = useState(user?.lastName || "");
@@ -16,6 +17,12 @@ const ReservationInformations = () => {
   const [email, setEmail] = useState(user?.email || "");
   const [manualEmail, setManualEmail] = useState("");
   const [touched, setTouched] = useState(false);
+
+  // Protection de la page
+  if (!isAuthenticated) {
+    navigate("/connexion");
+    return null;
+  }
 
   if (!cart.length) {
     // Si on accède à la page sans données, retour à la réservation
@@ -36,9 +43,10 @@ const ReservationInformations = () => {
         return (totalPanier * appliedPromoCode.value) / 100;
       case 'fixed':
         return Math.min(appliedPromoCode.value, totalPanier);
-      case 'free_ticket':
+      case 'free_ticket': {
         const cheapestTicket = Math.min(...cart.map(item => item.prix));
         return Math.min(cheapestTicket, totalPanier);
+      }
       default:
         return 0;
     }
@@ -132,7 +140,12 @@ const ReservationInformations = () => {
                 {cart.map((item) => (
                   <div key={item.id} className="flex items-center mb-4">
                     <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
-                      <img className="w-full h-full object-cover" src={item.img} alt={item.title} />
+                      <img 
+                        className="w-full h-full object-cover" 
+                        src={buildImgSrc('spectacles', item.img)} 
+                        alt={item.title}
+                        onError={onImgErrorSwap}
+                      />
                     </div>
                     <div>
                       <div className="font-bold text-lg">{item.title}</div>

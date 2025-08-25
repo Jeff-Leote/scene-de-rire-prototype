@@ -1,4 +1,6 @@
 
+import { Link } from 'react-router-dom';
+
 const Footer = () => {
   return (
     <footer id="footer" className="bg-black text-white pt-16 pb-8 border-t border-gray-800">
@@ -29,12 +31,11 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-4 text-white">Navigation</h3>
             <ul className="space-y-2">
-              <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Accueil</span></li>
-              <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Spectacles</span></li>
-              <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Artistes</span></li>
-              <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">La Salle</span></li>
-              <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">À propos</span></li>
-              <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Contact</span></li>
+              <li><Link to="/" className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Accueil</Link></li>
+              <li><Link to="/spectacles" className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Spectacles</Link></li>
+              <li><Link to="/le-lieu" className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Le lieu</Link></li>
+              <li><Link to="/reservation" className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Réservation</Link></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Contact</Link></li>
             </ul>
           </div>
           
@@ -45,7 +46,6 @@ const Footer = () => {
               <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Mentions légales</span></li>
               <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">CGV</span></li>
               <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Politique de confidentialité</span></li>
-              <li><span className="text-gray-400 hover:text-yellow-400 transition duration-300 cursor-pointer">Plan du site</span></li>
             </ul>
           </div>
           

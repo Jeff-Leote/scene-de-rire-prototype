@@ -102,8 +102,8 @@ CREATE TABLE paiement_reservation (
 -- TABLE LIEU (Images de la galerie)
 -- =====================================================
 CREATE TABLE lieu (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  image_path VARCHAR(512) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_path VARCHAR(512) NOT NULL,
   image_detail_path VARCHAR(512),
   is_main BOOLEAN DEFAULT FALSE
 );
@@ -198,14 +198,14 @@ INSERT INTO paiement_reservation (paiement_id, reservation_id, montant) VALUES
 
 -- 8. Images du lieu de test
 INSERT INTO lieu (image_path, is_main) VALUES
-('/src/assets/img/lieu/lieu_principal.jpg', TRUE),
-('/src/assets/img/lieu/lieu_galerie_1.jpg', FALSE),
-('/src/assets/img/lieu/lieu_galerie_2.jpg', FALSE);
+('bar.webp', TRUE),
+('bar1.webp', FALSE),
+('bar2.webp', FALSE);
 
 -- 9. Codes promo de test
 INSERT INTO promo_codes (code, type, value, description, is_active, max_uses, valid_from, valid_until) VALUES
 ('WELCOME10', 'percentage', 10.00, 'Reduction de 10% pour les nouveaux clients', TRUE, 100, '2025-01-01', '2025-12-31'),
-('FREETICKET', 'free_ticket', 1.00, 'Un ticket gratuit pour tout achat', TRUE, 50, '2025-01-01', '2025-06-30'),
+('FREETICKET', 'free_ticket', 1.00, 'Un ticket gratuit pour tout achat', TRUE, 50, '2025-01-01', '2025-12-31'),
 ('DISCOUNT5', 'fixed', 5.00, 'Reduction fixe de 5€', TRUE, 200, '2025-01-01', '2025-12-31');
 
 -- 10. Paramètres par défaut
@@ -217,3 +217,11 @@ ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 -- FIN D'INITIALISATION
 -- =====================================================
 
+-- Création de la table newsletter_subscribers
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email (email),
+  INDEX idx_subscribed_at (subscribed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

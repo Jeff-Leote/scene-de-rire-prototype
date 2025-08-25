@@ -4,14 +4,21 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { createReservationCheckout } from "../services/reservation";
 import { useAuth } from "../contexts/AuthContext";
+import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
 
 const ReservationPaiement = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const { cart = [], nbBillets = {}, prenom, nom, email, appliedPromoCode } = location.state || {};
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Protection de la page
+  if (!isAuthenticated) {
+    navigate("/connexion");
+    return null;
+  }
 
   if (!cart.length) {
     navigate("/reservation");
@@ -58,9 +65,10 @@ const ReservationPaiement = () => {
         return (totalPanier * appliedPromoCode.value) / 100;
       case 'fixed':
         return Math.min(appliedPromoCode.value, totalPanier);
-      case 'free_ticket':
+      case 'free_ticket': {
         const cheapestTicket = Math.min(...cart.map(item => item.prix));
         return Math.min(cheapestTicket, totalPanier);
+      }
       default:
         return 0;
     }
@@ -152,7 +160,12 @@ const ReservationPaiement = () => {
               {cart.map(item => (
                 <div key={item.id} className="flex items-center mb-4">
                   <div className="mr-4 w-20 h-28 overflow-hidden rounded-md">
-                    <img className="w-full h-full object-cover" src={item.img} alt={item.title} />
+                    <img 
+                      className="w-full h-full object-cover" 
+                      src={buildImgSrc('spectacles', item.img)} 
+                      alt={item.title}
+                      onError={onImgErrorSwap}
+                    />
                   </div>
                   <div>
                     <div className="font-bold text-lg">{item.title}</div>

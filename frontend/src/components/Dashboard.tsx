@@ -5,12 +5,26 @@ import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
 import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData, FeaturedArtist, User, PromoCode, PromoCodeFormData } from '../services/types';
 
+interface LieuImage {
+  id: number;
+  image_path: string;
+  image_detail_path?: string;
+  is_main: boolean;
+}
+
+interface AvailabilityData {
+  places_total: number;
+  places_reservees: number;
+  places_restantes: number;
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
+  const API_URL = import.meta.env.VITE_API_URL;
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users' | 'promocodes' | 'settings'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users' | 'promocodes' | 'newsletter' | 'settings'>('spectacles');
   const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,14 +63,13 @@ const Dashboard = () => {
   });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [lieuImages, setLieuImages] = useState<any[]>([]);
+  const [lieuImages, setLieuImages] = useState<LieuImage[]>([]);
   const [isLieuModalOpen, setIsLieuModalOpen] = useState(false);
-  const [isAddingLieu, setIsAddingLieu] = useState(false);
-  const [selectedLieu, setSelectedLieu] = useState(null);
+
+  const [selectedLieu, setSelectedLieu] = useState<LieuImage | null>(null);
   const [lieuFormData, setLieuFormData] = useState({ image_path: '', image_detail_path: '', is_main: false });
   const [users, setUsers] = useState<User[]>([]);
-  const [availability, setAvailability] = useState<Record<number, { places_total: number; places_reservees: number; places_restantes: number }>>({});
+  const [availability, setAvailability] = useState<Record<number, AvailabilityData>>({});
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [isPromoCodeModalOpen, setIsPromoCodeModalOpen] = useState(false);
   const [isAddingPromoCode, setIsAddingPromoCode] = useState(false);
@@ -72,7 +85,15 @@ const Dashboard = () => {
     valid_until: ''
   });
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  // Newsletter et emails
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<string[]>([]);
+  const [emailFormData, setEmailFormData] = useState({
+    subject: '',
+    message: '',
+    recipients: 'all' // 'all' ou 'newsletter'
+  });
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,7 +124,7 @@ const Dashboard = () => {
               }
             })
           );
-          const map: Record<number, { places_total: number; places_reservees: number; places_restantes: number }> = {};
+          const map: Record<number, AvailabilityData> = {};
           entries.forEach((e) => { if (e) map[e[0]] = e[1]; });
           setAvailability(map);
         } catch {
@@ -152,6 +173,18 @@ const Dashboard = () => {
         if (!promoCodesResponse.ok) throw new Error('Erreur lors de la récupération des codes promo');
         const promoCodesData = await promoCodesResponse.json();
         setPromoCodes(promoCodesData);
+
+        // Récupérer les abonnés newsletter
+        try {
+          const newsletterResponse = await fetch(`${API_URL}/api/admin/newsletter/subscribers`, { headers });
+          if (newsletterResponse.ok) {
+            const newsletterData = await newsletterResponse.json();
+            setNewsletterSubscribers(newsletterData);
+          }
+        } catch {
+          // Ignorer les erreurs de récupération des abonnés
+        }
+
         // Récupérer l'email de contact
         try {
           const settingsRes = await fetch(`${API_URL}/api/admin/settings/contact-email`, { headers });
@@ -159,7 +192,9 @@ const Dashboard = () => {
             const s = await settingsRes.json();
             setContactEmail(s.email || '');
           }
-        } catch {}
+        } catch {
+          // Ignorer les erreurs de récupération des paramètres
+        }
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -169,7 +204,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [API_URL]);
 
   // Polling: rafraîchir périodiquement les jauges sur l'onglet Spectacles
   useEffect(() => {
@@ -191,7 +226,9 @@ const Dashboard = () => {
         const map: Record<number, { places_total: number; places_reservees: number; places_restantes: number }> = {};
         entries.forEach((e) => { if (e) map[e[0]] = e[1]; });
         setAvailability((prev) => ({ ...prev, ...map }));
-      } catch {}
+      } catch {
+        // Ignorer les erreurs de polling
+      }
     };
 
     const interval = setInterval(tick, 10000);
@@ -331,7 +368,9 @@ console.debug('Spectacle request:', {
               }
             }));
           }
-        } catch {}
+        } catch {
+          // Ignorer les erreurs de mise à jour des disponibilités
+        }
       }
       setIsSpectacleModalOpen(false);
       setIsAddingSpectacle(false);
@@ -399,8 +438,7 @@ console.debug('Spectacle request:', {
       fetch(`${API_URL}/api/lieu/images/${id}`, { method: 'DELETE' })
         .then(res => {
           if (!res.ok) throw new Error('Erreur lors de la suppression');
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setLieuImages((prev: any[]) => prev.filter(image => image.id !== id));
+          setLieuImages((prev: LieuImage[]) => prev.filter(image => image.id !== id));
           toast.success('Image supprimée');
         })
         .catch(err => toast.error(err.message || 'Erreur'));
@@ -449,10 +487,10 @@ console.debug('Spectacle request:', {
 
       switch (itemToDelete.type) {
         case 'spectacle':
-          setSpectacles(prev => prev.filter(s => s.id !== itemToDelete.id));
+        setSpectacles(prev => prev.filter(s => s.id !== itemToDelete.id));
           break;
         case 'artist':
-          setArtists(prev => prev.filter(a => a.id !== itemToDelete.id));
+        setArtists(prev => prev.filter(a => a.id !== itemToDelete.id));
           break;
         case 'user':
           setUsers(prev => prev.filter(u => u.id !== itemToDelete.id));
@@ -608,15 +646,9 @@ console.debug('Spectacle request:', {
     }
   };
 
-const handleAddLieuClick = () => {
-  setIsAddingLieu(true);
-  setSelectedLieu(null);
-  setLieuFormData({ image_path: '', image_detail_path: '', is_main: false });
-  setIsLieuModalOpen(true);
-};
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const handleEditLieuClick = (img: any) => {
+
+const handleEditLieuClick = (img: LieuImage) => {
   setSelectedLieu(img);
   setLieuFormData({
     image_path: img.image_path,
@@ -640,11 +672,8 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
       return;
     }
 
-    const url = isAddingLieu
-      ? `${API_URL}/api/lieu/images`
-      : `${API_URL}/api/lieu/images/${selectedLieu?.id}`;
-
-    const method = isAddingLieu ? 'POST' : 'PUT';
+    const url = `${API_URL}/api/lieu/images/${selectedLieu?.id}`;
+    const method = 'PUT';
 
     const response = await fetch(url, {
       method,
@@ -658,51 +687,47 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
     if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
     const data = await response.json();
 
-    if (isAddingLieu) {
-      setLieuImages(prev => [...prev, data]);
-    } else {
-      setLieuImages(prev =>
-        prev.map(img => (img.id === data.id ? data : img))
-      );
-    }
+    setLieuImages(prev =>
+      prev.map(img => (img.id === data.id ? data : img))
+    );
 
     setIsLieuModalOpen(false);
     toast.success('Image enregistrée');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    toast.error(err.message || 'Erreur');
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Erreur';
+    toast.error(errorMessage);
   }
 };
 
-  const handleDeleteLieu = async (id: number) => {
-    if (!window.confirm('Supprimer cette image ?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-
-      const response = await fetch(
-        `${API_URL}/api/lieu/images/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) throw new Error('Erreur lors de la suppression');
-      setLieuImages(prev => prev.filter(img => img.id !== id));
-      toast.success('Image supprimée');
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Une erreur est survenue'
-      );
+const handleDeleteLieu = async (id: number) => {
+  if (!window.confirm('Supprimer cette image ?')) return;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Session expirée. Veuillez vous reconnecter.');
+      return;
     }
-  };
+
+    const response = await fetch(
+      `${API_URL}/api/lieu/images/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) throw new Error('Erreur lors de la suppression');
+    setLieuImages(prev => prev.filter(img => img.id !== id));
+    toast.success('Image supprimée');
+  } catch (err) {
+    toast.error(
+      err instanceof Error ? err.message : 'Une erreur est survenue'
+    );
+  }
+};
 
   const handleToggleUserStatus = async (user: User) => {
     try {
@@ -876,6 +901,59 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
       ...prev,
       valid_until: e.target.value
     }));
+  };
+
+  // Fonctions pour la newsletter et emails
+  const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEmailFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailFormData.subject || !emailFormData.message) {
+      toast.error('Le sujet et le message sont requis');
+      return;
+    }
+
+    try {
+      setIsSendingEmail(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailFormData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de l\'envoi de l\'email');
+      }
+
+      setIsEmailModalOpen(false);
+      setEmailFormData({ subject: '', message: '', recipients: 'all' });
+      toast.success(`Email envoyé avec succès à ${data.recipientsCount} destinataires`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   const handleEditPromoCodeClick = (promoCode: PromoCode) => {
@@ -1080,6 +1158,16 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
               Codes Promo
             </button>
             <button
+              onClick={() => setActiveTab('newsletter')}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
+                activeTab === 'newsletter'
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              } transition duration-300`}
+            >
+              Newsletter
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'settings'
@@ -1092,11 +1180,11 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
           </div>
                       {/* Boutons d'ajout selon l'onglet actif */}
             {activeTab === 'spectacles' && (
-              <button
+            <button
                 onClick={handleAddSpectacleClick}
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
-              >
-                <i className="fa-solid fa-plus"></i>
+            >
+              <i className="fa-solid fa-plus"></i>
                 <span>Ajouter un spectacle</span>
               </button>
             )}
@@ -1130,8 +1218,24 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
               >
                 <i className="fa-solid fa-plus"></i>
                 <span>Ajouter un code promo</span>
-              </button>
-            )}
+            </button>
+          )}
+            {activeTab === 'newsletter' && (
+              <button
+                onClick={() => {
+                  setEmailFormData({
+                    subject: '',
+                    message: '',
+                    recipients: 'all'
+                  });
+                  setIsEmailModalOpen(true);
+                }}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
+              >
+                <i className="fa-solid fa-envelope"></i>
+                <span>Envoyer un email</span>
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -1331,7 +1435,12 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {lieuImages.map(img => (
                   <div key={img.id} className="bg-gray-900 rounded-lg overflow-hidden">
-                    <img src={img.image_path} alt="lieu" className="w-full h-48 object-cover" />
+                    <img 
+                      src={buildImgSrc('image_path', img.image_path)} 
+                      alt="lieu" 
+                      className="w-full h-48 object-cover" 
+                      onError={onImgErrorSwap}
+                    />
                     <div className="p-4">
                       <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {img.image_path}</p>
                       <p className="text-gray-400 mb-2"><b>Type:</b> {img.is_main ? <span className="text-green-400 font-bold">Principale</span> : <span className="text-blue-400">Galerie</span>}</p>
@@ -1487,9 +1596,86 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                   </div>
                 ))}
               </div>
-                         )}
-           </div>
-         )}
+            )}
+          </div>
+        )}
+
+        {activeTab === 'newsletter' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Gestion de la Newsletter</h2>
+            
+            {/* Statistiques */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-gray-900 rounded-lg p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-yellow-400 text-black">
+                    <i className="fa-solid fa-users text-xl"></i>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-gray-400 text-sm">Abonnés Newsletter</p>
+                    <p className="text-white text-2xl font-bold">{newsletterSubscribers.length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900 rounded-lg p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-green-400 text-black">
+                    <i className="fa-solid fa-user text-xl"></i>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-gray-400 text-sm">Utilisateurs Totaux</p>
+                    <p className="text-white text-2xl font-bold">{users.length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900 rounded-lg p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-blue-400 text-black">
+                    <i className="fa-solid fa-envelope text-xl"></i>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-gray-400 text-sm">Taux d'Abonnement</p>
+                    <p className="text-white text-2xl font-bold">
+                      {users.length > 0 ? Math.round((newsletterSubscribers.length / users.length) * 100) : 0}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Liste des abonnés */}
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Liste des abonnés à la newsletter</h3>
+              {newsletterSubscribers.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">Aucun abonné à la newsletter</p>
+              ) : (
+                <div className="space-y-3">
+                  {newsletterSubscribers.map((email, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center">
+                          <i className="fa-solid fa-envelope text-black"></i>
+                        </div>
+                        <div className="ml-4">
+                          <p className="text-white font-semibold">{email}</p>
+                          <p className="text-gray-400 text-sm">Abonné à la newsletter</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <i className="fa-solid fa-check mr-1"></i>
+                          Actif
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Modal de modification/ajout de spectacle */}
         {isSpectacleModalOpen && (
@@ -1851,7 +2037,7 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                   <label htmlFor="is_main" className="text-white">Image principale (affichée sur l'accueil)</label>
                 </div>
                 <div className="flex justify-end space-x-4 mt-6">
-                  <button type="button" onClick={() => { setIsLieuModalOpen(false); setIsAddingLieu(false); }} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300">Annuler</button>
+                  <button type="button" onClick={() => { setIsLieuModalOpen(false); }} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300">Annuler</button>
                   <button type="submit" className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Enregistrer</button>
                 </div>
               </form>
@@ -1976,6 +2162,94 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
                     className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
                   >
                     {isAddingPromoCode ? 'Ajouter' : 'Enregistrer'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal d'envoi d'email */}
+        {isEmailModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+              <h2 className="text-2xl font-bold text-white mb-4">Envoyer un email</h2>
+              <form onSubmit={handleSendEmail} className="space-y-4">
+                <div>
+                  <label className="block text-white mb-2">Destinataires</label>
+                  <select
+                    name="recipients"
+                    value={emailFormData.recipients}
+                    onChange={handleEmailInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    required
+                  >
+                    <option value="all">Tous les utilisateurs ({users.length})</option>
+                    <option value="newsletter">Abonnés newsletter ({newsletterSubscribers.length})</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Sujet</label>
+                  <input
+                    type="text"
+                    name="subject"
+                    value={emailFormData.subject}
+                    onChange={handleEmailInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    placeholder="Sujet de l'email"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Message</label>
+                  <textarea
+                    name="message"
+                    value={emailFormData.message}
+                    onChange={handleEmailInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    rows={8}
+                    placeholder="Contenu de votre message..."
+                    required
+                  />
+                </div>
+                <div className="bg-yellow-400 text-black p-4 rounded-lg">
+                  <p className="font-semibold mb-2">⚠️ Attention</p>
+                  <p className="text-sm">
+                    Cet email sera envoyé à {emailFormData.recipients === 'all' ? users.length : newsletterSubscribers.length} destinataire(s).
+                    Assurez-vous que votre message est approprié et respecte les règles de confidentialité.
+                  </p>
+                </div>
+                <div className="flex justify-end space-x-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEmailModalOpen(false);
+                      setEmailFormData({ subject: '', message: '', recipients: 'all' });
+                    }}
+                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSendingEmail}
+                    className={`px-4 py-2 rounded transition duration-300 ${
+                      isSendingEmail
+                        ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                        : 'bg-yellow-400 text-black hover:bg-yellow-300'
+                    }`}
+                  >
+                    {isSendingEmail ? (
+                      <span className="flex items-center">
+                        <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                        Envoi en cours...
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <i className="fa-solid fa-paper-plane mr-2"></i>
+                        Envoyer
+                      </span>
+                    )}
                   </button>
                 </div>
               </form>

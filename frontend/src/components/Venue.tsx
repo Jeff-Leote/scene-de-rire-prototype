@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LieuImage } from "../services/lieu";
-
-// Mapping dynamique des images assets
-const images = import.meta.glob('../assets/img/**/*.{jpg,jpeg,png,webp,svg}', { eager: true, import: 'default' });
-function getImageUrl(filename: string): string {
-  const entry = Object.entries(images).find(([key]) => key.endsWith(filename));
-  return (entry ? entry[1] : '') as string;
-}
+import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
 
 const Venue = () => {
   const navigate = useNavigate();
@@ -23,9 +17,9 @@ const Venue = () => {
         if (!res.ok) throw new Error("Erreur lors du chargement de l'image principale du lieu");
         const data: LieuImage | null = await res.json();
         setMainImage(data);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        setError(err.message || "Erreur inconnue");
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -83,8 +77,9 @@ const Venue = () => {
               ) : mainImage ? (
                 <img
                   className="w-full h-full object-cover"
-                  src={getImageUrl(mainImage.image_path)}
+                  src={buildImgSrc('image_path', mainImage.image_path)}
                   alt="comedy club interior"
+                  onError={onImgErrorSwap}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">

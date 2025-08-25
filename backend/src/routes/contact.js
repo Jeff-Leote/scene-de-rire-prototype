@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const nodemailer = require('nodemailer');
+const { sendEmail } = require('../services/emailService');
 
 async function getRecipientEmail() {
   try {
@@ -18,38 +18,7 @@ async function getRecipientEmail() {
   return process.env.CONTACT_RECIPIENT_EMAIL || process.env.FROM_EMAIL || process.env.SMTP_USER;
 }
 
-function buildTransport() {
-  // Prefer explicit SMTP settings
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
 
-  console.log('SMTP Config:', { host, port, user: user ? '***' : undefined, pass: pass ? '***' : undefined });
-
-  if (host && port && user && pass) {
-    return nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465, // true for 465, false for others
-      auth: { user, pass },
-    });
-  }
-
-  // Fallback to direct (useful for Mailtrap or local dev if configured via URL)
-  if (process.env.SMTP_URL) {
-    console.log('Using SMTP_URL fallback');
-    return nodemailer.createTransport(process.env.SMTP_URL);
-  }
-
-  // For testing, use a mock transport
-  console.log('Using mock transport for testing');
-  return nodemailer.createTransport({
-    host: 'localhost',
-    port: 1025,
-    ignoreTLS: true,
-  });
-}
 
 router.post('/', async (req, res) => {
   try {
@@ -63,67 +32,35 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: "Adresse de réception non configurée." });
     }
 
-    const transporter = buildTransport();
-    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || email;
+    console.log('📧 Envoi email contact:', { from: email, to: toEmail, subject });
 
-    // En mode développement, afficher les détails et simuler l'envoi
-    if (process.env.NODE_ENV === 'development') {
-      console.log('=== EMAIL ENVOYÉ (MODE DÉVELOPPEMENT) ===');
-      console.log('📧 De:', fromEmail);
-      console.log('📧 À:', toEmail);
-      console.log('📧 Sujet:', `[Contact] ${subject}`);
-      console.log('📧 Message:', message);
-      console.log('📧 Configuration SMTP:', {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        user: process.env.SMTP_USER ? '***' : 'Non configuré'
-      });
-      console.log('==========================================');
-      
-      // Si SMTP est configuré, essayer d'envoyer un vrai email
-      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        try {
-          const info = await transporter.sendMail({
-            from: fromEmail,
-            to: toEmail,
-            subject: `[Contact] ${subject}`,
-            replyTo: email,
-            text: `Message de ${firstName} ${lastName} <${email}>\n\n${message}`,
-            html: `
-              <p><b>De:</b> ${firstName} ${lastName} &lt;${email}&gt;</p>
-              <p><b>Sujet:</b> ${subject}</p>
-              <p><b>Message:</b></p>
-              <p>${message.replace(/\n/g, '<br/>')}</p>
-            `,
-          });
-          console.log('✅ Email envoyé avec succès via SMTP:', info.messageId);
-          return res.json({ success: true, messageId: info.messageId });
-        } catch (smtpError) {
-          console.log('❌ Erreur SMTP:', smtpError.message);
-          console.log('📧 Email simulé en mode développement');
-          return res.json({ success: true, messageId: 'dev-' + Date.now() });
-        }
-      } else {
-        console.log('📧 Email simulé (SMTP non configuré)');
-        return res.json({ success: true, messageId: 'dev-' + Date.now() });
-      }
-    }
+    // Utiliser le service d'email unifié
+    const result = await sendEmail(
+      toEmail,
+      `[Contact] ${subject}`,
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
+            <h1 style="color: #333; margin: 0;">📧 Nouveau message de contact</h1>
+          </div>
+          <div style="padding: 20px; background-color: white;">
+            <h2 style="color: #333;">Message de ${firstName} ${lastName}</h2>
+            <div style="line-height: 1.6; color: #555;">
+              <p><strong>De:</strong> ${firstName} ${lastName} &lt;${email}&gt;</p>
+              <p><strong>Sujet:</strong> ${subject}</p>
+              <p><strong>Message:</strong></p>
+              <p>${message.replace(/\n/g, '<br>')}</p>
+            </div>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="color: #888; font-size: 12px;">
+              Cet email a été envoyé depuis le formulaire de contact d'Espace Comédie.
+            </p>
+          </div>
+        </div>
+      `
+    );
 
-    const info = await transporter.sendMail({
-      from: fromEmail,
-      to: toEmail,
-      subject: `[Contact] ${subject}`,
-      replyTo: email,
-      text: `Message de ${firstName} ${lastName} <${email}>\n\n${message}`,
-      html: `
-        <p><b>De:</b> ${firstName} ${lastName} &lt;${email}&gt;</p>
-        <p><b>Sujet:</b> ${subject}</p>
-        <p><b>Message:</b></p>
-        <p>${message.replace(/\n/g, '<br/>')}</p>
-      `,
-    });
-
-    return res.json({ success: true, messageId: info.messageId });
+    return res.json({ success: true, messageId: result.messageId });
   } catch (error) {
     console.error('Erreur envoi contact:', error);
     return res.status(500).json({ error: "Impossible d'envoyer le message.", details: error.message });

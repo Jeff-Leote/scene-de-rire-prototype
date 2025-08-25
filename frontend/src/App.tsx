@@ -1,33 +1,45 @@
 // src/App.tsx
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider, CartProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import AutoLogout from "./components/AutoLogout";
-import Index from "./pages/Index";
-import Shows from "./pages/Shows";
-import Venue from "./pages/Venue";
-import Reservation from "./pages/Reservation";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
-import MyAccount from "./pages/MyAccount";
-import Dashboard from "./components/Dashboard";
-import SpectacleDetail from "./pages/SpectacleDetail";
-import Artists from "./pages/Artists";
-import ReservationInformations from "./pages/ReservationInformations";
-import ReservationPaiement from "./pages/ReservationPaiement";
-import PaymentStatus from "./pages/PaymentStatus";
-import ValidateTicket from "./pages/ValidateTicket";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@radix-ui/react-tooltip';
+import { Toaster as Sonner } from '@/components/ui/sonner';
 
+// Pages
+import Index from './pages/Index';
+import Shows from './pages/Shows';
+import SpectacleDetail from './pages/SpectacleDetail';
+import Venue from './pages/Venue';
+import Reservation from './pages/Reservation';
+import ReservationInformations from './pages/ReservationInformations';
+import ReservationPaiement from './pages/ReservationPaiement';
+import PaymentStatus from './pages/PaymentStatus';
+import ValidateTicket from './pages/ValidateTicket';
+import Artists from './pages/Artists';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import MyAccount from './pages/MyAccount';
+import Dashboard from './components/Dashboard';
+import Contact from './pages/Contact';
+import Unsubscribe from './pages/Unsubscribe';
+import NotFound from './pages/NotFound';
 
-const queryClient = new QueryClient();
+// Components
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider, CartProvider } from './contexts/AuthContext';
+import AutoLogout from './components/AutoLogout';
+
+// Configuration React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 // Petit Error Boundary pour éviter les écrans blancs
-import React from 'react';
 
 class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }>{
   constructor(props: { children: React.ReactNode }) {
@@ -37,9 +49,11 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(error: unknown) {
-    // eslint-disable-next-line no-console
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
+    // Log l'erreur pour le debugging
     console.error('Erreur UI non interceptée:', error);
+    console.error('Stack trace:', errorInfo.componentStack);
+    console.error('Error Info:', errorInfo);
   }
   render() {
     if (this.state.hasError) {
@@ -58,65 +72,68 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
 }
 
 const App = () => (
-  <AuthProvider>
-    <CartProvider>
-      <AutoLogout/>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/spectacles" element={<Shows />} />
-              <Route path="/spectacles/:id" element={<SpectacleDetail />} />
-              <Route path="/le-lieu" element={<Venue />} />
-              <Route path="/reservation" element={<Reservation />} />
-              <Route path="/reservation/informations" element={<ReservationInformations />} />
-              <Route path="/reservation/paiement" element={<ReservationPaiement />} />
-              <Route path="/payment-status" element={<PaymentStatus />} />
-              <Route path="/validate-ticket/:reservationId" element={<ValidateTicket />} />
+  <AppErrorBoundary>
+    <AuthProvider>
+      <CartProvider>
+        <AutoLogout/>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Sonner />
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/spectacles" element={<Shows />} />
+                <Route path="/spectacles/:id" element={<SpectacleDetail />} />
+                <Route path="/le-lieu" element={<Venue />} />
+                <Route path="/reservation" element={<Reservation />} />
+                <Route path="/reservation/informations" element={<ReservationInformations />} />
+                <Route path="/reservation/paiement" element={<ReservationPaiement />} />
+                <Route path="/payment-status" element={<PaymentStatus />} />
+                <Route path="/validate-ticket/:reservationId" element={<ValidateTicket />} />
 
-              <Route path="/artistes" element={<Artists />} />
-              <Route 
-                path="/connexion" 
-                element={
-                  <ProtectedRoute>
-                    <Login />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/inscription" 
-                element={
-                  <ProtectedRoute>
-                    <Register />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/mon-compte" 
-                element={
-                  <ProtectedRoute requireAuth>
-                    <MyAccount />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute requireAuth requireAdmin>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </CartProvider>
-  </AuthProvider>
+                <Route path="/artistes" element={<Artists />} />
+                <Route 
+                  path="/connexion" 
+                  element={
+                    <ProtectedRoute>
+                      <Login />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/inscription" 
+                  element={
+                    <ProtectedRoute>
+                      <Register />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/mon-compte" 
+                  element={
+                    <ProtectedRoute requireAuth>
+                      <MyAccount />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute requireAuth requireAdmin>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/unsubscribe" element={<Unsubscribe />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </CartProvider>
+    </AuthProvider>
+  </AppErrorBoundary>
 );
 
 export default App;

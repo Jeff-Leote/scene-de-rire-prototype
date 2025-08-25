@@ -2,9 +2,80 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { auth, isAdmin } = require('./auth');
+const { sendBulkEmails } = require('../services/emailService');
 
 // Middleware pour protéger toutes les routes admin
 router.use(auth, isAdmin);
+
+// ====== Newsletter ======
+// Récupérer tous les abonnés newsletter
+router.get('/newsletter/subscribers', async (req, res) => {
+  try {
+    const [subscribers] = await db.query(
+      'SELECT email, subscribed_at FROM newsletter_subscribers ORDER BY subscribed_at DESC'
+    );
+
+    // Retourner seulement les emails pour simplifier
+    const emails = subscribers.map(sub => sub.email);
+    res.json(emails);
+
+  } catch (error) {
+    console.error('Erreur récupération abonnés:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des abonnés' });
+  }
+});
+
+// Envoyer un email à tous les abonnés
+router.post('/newsletter/send', async (req, res) => {
+  try {
+    const { subject, message, recipients } = req.body;
+
+    if (!subject || !message) {
+      return res.status(400).json({ error: 'Sujet et message requis' });
+    }
+
+    let emails = [];
+
+    if (recipients === 'newsletter') {
+      // Récupérer les abonnés newsletter
+      const [subscribers] = await db.query('SELECT email FROM newsletter_subscribers');
+      emails = subscribers.map(sub => sub.email);
+    } else if (recipients === 'all') {
+      // Récupérer tous les utilisateurs
+      const [users] = await db.query('SELECT email FROM user');
+      emails = users.map(user => user.email);
+    }
+
+    if (emails.length === 0) {
+      return res.status(400).json({ error: 'Aucun destinataire trouvé' });
+    }
+
+    console.log(`📧 Envoi de ${emails.length} emails newsletter`);
+    console.log('📧 Sujet:', subject);
+    console.log('📧 Destinataires:', emails);
+
+    // Envoyer les emails avec le vrai service
+    const results = await sendBulkEmails(emails, subject, message);
+    
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+
+    console.log(`📧 Résultats: ${successCount} succès, ${failureCount} échecs`);
+
+    res.json({ 
+      success: true, 
+      recipientsCount: emails.length,
+      successCount,
+      failureCount,
+      results,
+      message: `Emails envoyés: ${successCount} succès, ${failureCount} échecs`
+    });
+
+  } catch (error) {
+    console.error('Erreur envoi newsletter:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'envoi de la newsletter' });
+  }
+});
 
 // ====== Paramètres (settings) ======
 // Récupérer l'email destinataire des messages contact

@@ -14,8 +14,6 @@ const ShowsList = () => {
   const [error, setError] = useState<string | null>(null);
   const limit = 9;
 
-  const API_URL = import.meta.env.VITE_API_URL;
-
   const formatHeure = (heure: string) => {
     // Si l'heure est au format HH:mm:ss, on ne garde que HH:mm
     return heure.split(':').slice(0, 2).join(':');
@@ -25,6 +23,7 @@ const ShowsList = () => {
     const fetchSpectacles = async () => {
       try {
         setLoading(true);
+        const API_URL = import.meta.env.VITE_API_URL;
         const res = await fetch(`${API_URL}/api/spectacles?page=${page}&limit=${limit}`);
         if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
 
@@ -44,9 +43,9 @@ const ShowsList = () => {
         } else {
           setError("Format de données inattendu");
         }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        setError(err.message || "Erreur inconnue");
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }

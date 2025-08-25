@@ -914,7 +914,7 @@ router.get("/validate/:reservationId", async (req, res) => {
 // Endpoint pour valider un code promo
 router.post('/validate-promo-code', async (req, res) => {
   try {
-    const { code, totalAmount } = req.body;
+    const { code, totalAmount, cart } = req.body;
     
     if (!code) {
       return res.status(400).json({ error: 'Code promo requis' });
@@ -961,8 +961,24 @@ router.post('/validate-promo-code', async (req, res) => {
         finalAmount = totalAmount - discountAmount;
         break;
       case 'free_ticket':
-        // Pour les tickets gratuits, on pourrait implémenter une logique spécifique
-        discountAmount = promoCode.value; // Montant équivalent
+        // Pour les tickets gratuits, on déduit le prix du billet le moins cher
+        // Le value dans la base représente le nombre de billets gratuits (généralement 1)
+        if (cart && Array.isArray(cart) && cart.length > 0) {
+          // Calculer le prix du billet le moins cher dans le panier
+          const validPrices = cart
+            .map(item => item.prix)
+            .filter(prix => typeof prix === 'number' && prix > 0);
+          
+          if (validPrices.length > 0) {
+            const cheapestTicket = Math.min(...validPrices);
+            discountAmount = Math.min(cheapestTicket * promoCode.value, totalAmount);
+          } else {
+            discountAmount = 0;
+          }
+        } else {
+          // Fallback si pas de panier fourni
+          discountAmount = Math.min(promoCode.value * 40, totalAmount); // 40€ par billet gratuit
+        }
         finalAmount = Math.max(0, totalAmount - discountAmount);
         break;
     }

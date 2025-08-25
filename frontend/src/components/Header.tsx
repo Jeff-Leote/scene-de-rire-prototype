@@ -96,9 +96,9 @@ const Header = ({ activeItem }: HeaderProps) => {
             </Link>
             <button 
               className="md:hidden text-white focus:outline-none"
-              onClick={() => setIsMobileMenuOpen(true)}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <i className="fa-solid fa-bars text-xl"></i>
+              <i className={`fa-solid ${isMobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-xl`}></i>
             </button>
           </div>
         </div>
@@ -129,27 +129,7 @@ const Header = ({ activeItem }: HeaderProps) => {
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
               Contact
             </Link>
-            {isAuthenticated ? (
-              <>
-                <Link to="/mon-compte" className="text-white text-2xl hover:text-yellow-400 transition duration-300">
-                  Mon compte
-                </Link>
-                {user?.role === 'admin' && (
-                  <Link to="/dashboard" className="text-white text-2xl hover:text-yellow-400 transition duration-300">
-                    Dashboard
-                  </Link>
-                )}
-                <button 
-                  onClick={() => {
-                    logout();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="text-white text-2xl hover:text-yellow-400 transition duration-300"
-                >
-                  Déconnexion
-                </button>
-              </>
-            ) : (
+            {!isAuthenticated && (
               <Link to="/connexion" className={`${activeItem === 'Connexion' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
                 Connexion
               </Link>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/components/ui/sonner";
 
@@ -11,7 +11,7 @@ const AutoLogout = ({ timeout = 5 * 60 * 1000 }: AutoLogoutProps) => {
   const timer = useRef<NodeJS.Timeout | null>(null);
   const warningTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     if (warningTimer.current) clearTimeout(warningTimer.current);
 
@@ -25,7 +25,7 @@ const AutoLogout = ({ timeout = 5 * 60 * 1000 }: AutoLogoutProps) => {
       logout();
       toast.error("Déconnecté pour inactivité.");
     }, timeout);
-  };
+  }, [timeout, logout]);
 
   useEffect(() => {
     if (!token) return;
@@ -42,8 +42,7 @@ const AutoLogout = ({ timeout = 5 * 60 * 1000 }: AutoLogoutProps) => {
       if (timer.current) clearTimeout(timer.current);
       if (warningTimer.current) clearTimeout(warningTimer.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, logout, timeout, resetTimer]);
 
   return null;
 };

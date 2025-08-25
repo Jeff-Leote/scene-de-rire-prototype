@@ -140,9 +140,9 @@ const MyAccount = () => {
       
       toast.success("Profil mis à jour avec succès !");
       setIsEditing(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.message || "Erreur inconnue");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -177,9 +177,9 @@ const MyAccount = () => {
 
       toast.success("Compte supprimé avec succès");
       logout();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.message || "Erreur lors de la suppression du compte");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erreur lors de la suppression du compte";
+      toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirmation(false);

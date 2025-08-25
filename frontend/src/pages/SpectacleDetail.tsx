@@ -79,16 +79,9 @@ const SpectacleDetail = () => {
       return;
     }
     if (!spectacle) return;
-    const minimal = {
-      id: spectacle.id,
-      title: spectacle.title,
-      date_spectacle: spectacle.date_spectacle,
-      heure_spectacle: spectacle.heure_spectacle,
-      prix: spectacle.prix,
-      img: spectacle.img,
-      lieu: spectacle.lieu,
-    };
-    navigate("/reservation", { state: { spectacle: minimal } });
+    
+    // Passer seulement l'ID et laisser Reservation.tsx récupérer les données
+    navigate("/reservation", { state: { spectacleId: spectacle.id } });
   };
 
   if (loading) {

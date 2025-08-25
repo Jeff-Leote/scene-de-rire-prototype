@@ -12,6 +12,9 @@ COPY package*.json ./
 # Installer les dépendances avec --legacy-peer-deps pour éviter les conflits
 RUN npm install --legacy-peer-deps
 
+# Installer explicitement qrcode
+RUN npm install qrcode @types/qrcode
+
 # Copier les fichiers avec les bonnes permissions
 COPY --chown=nodejs:nodejs . .
 

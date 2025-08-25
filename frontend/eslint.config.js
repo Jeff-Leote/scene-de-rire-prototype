@@ -25,5 +25,12 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "off",
     },
+  },
+  // Configuration spécifique pour les composants UI (shadcn/ui)
+  {
+    files: ["**/components/ui/**/*.{ts,tsx}", "**/contexts/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
   }
 );

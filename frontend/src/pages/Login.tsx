@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { ArrowLeft, Mic, Lightbulb, Mail, Loader2 } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,6 +17,9 @@ const Login = () => {
     password: '',
     remember: false
   });
+
+  // Récupérer l'URL de redirection depuis les paramètres
+  const redirectUrl = searchParams.get('redirect');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -53,10 +57,16 @@ const Login = () => {
       login(data.token, data.user);
       
       toast.success("Connexion réussie !");
-      navigate('/'); // Rediriger vers la page d'accueil
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.message || "Erreur inconnue");
+      
+      // Rediriger vers l'URL spécifiée ou la page d'accueil
+      if (redirectUrl) {
+        navigate(redirectUrl);
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +98,14 @@ const Login = () => {
       {/* Login form card */}
       <div id="login-card" className="w-full max-w-md bg-gray-900 rounded-lg shadow-2xl p-8 border border-gray-800">
         <h1 className="text-2xl font-bold text-white mb-6 text-center">Se connecter à votre espace</h1>
+        
+        {redirectUrl && (
+          <div className="mb-4 p-3 bg-blue-900 border border-blue-700 rounded-lg">
+            <p className="text-sm text-blue-200">
+              Vous devez être connecté pour accéder à cette page.
+            </p>
+          </div>
+        )}
         
         <form id="login-form" onSubmit={handleSubmit}>
           {/* Email field */}

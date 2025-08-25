@@ -8,7 +8,12 @@ export async function createReservationCheckout(data: {
   prenom?: string;
   nom?: string;
   email?: string;
-  promoCode?: any;
+  promoCode?: {
+    id: number;
+    code: string;
+    type: 'percentage' | 'fixed' | 'free_ticket';
+    value: number;
+  } | null;
 }, token?: string) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) {

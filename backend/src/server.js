@@ -81,7 +81,12 @@ app.use((err, req, res, next) => {
 });
 
 
-// Démarrage du serveur
-app.listen(PORT, () => {
-  console.log(`Serveur backend démarré sur http://localhost:${PORT}`);
-});
+// Démarrage du serveur avec délai pour laisser la base de données se connecter
+const startServer = () => {
+  app.listen(PORT, () => {
+    console.log(`Serveur backend démarré sur http://localhost:${PORT}`);
+  });
+};
+
+// Démarrer le serveur après un délai pour laisser la base de données se connecter
+setTimeout(startServer, 5000);

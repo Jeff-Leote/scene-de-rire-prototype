@@ -4,13 +4,7 @@ import Footer from "../components/Footer";
 import CTA from "../components/CTA";
 import React, { useEffect, useState } from "react";
 import { fetchGalleryLieuImages, LieuImage } from "../services/lieu";
-
-// Mapping dynamique des images assets
-const images = import.meta.glob('../assets/img/**/*.{jpg,jpeg,png,webp,svg}', { eager: true, import: 'default' });
-function getImageUrl(filename: string): string {
-  const entry = Object.entries(images).find(([key]) => key.endsWith(filename));
-  return (entry ? entry[1] : '') as string;
-}
+import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
 
 const Venue = () => {
   const [imagesList, setImages] = useState<LieuImage[]>([]);
@@ -24,9 +18,9 @@ const Venue = () => {
         if (!res.ok) throw new Error("Erreur lors du chargement des images de galerie du lieu");
         const data: LieuImage[] = await res.json();
         setImages(data);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        setError(err.message || "Erreur inconnue");
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -85,8 +79,9 @@ const Venue = () => {
                   <div key={img.id} className="aspect-square overflow-hidden rounded-lg">
                     <img
                       className="w-full h-full object-cover hover:scale-105 transition duration-500"
-                      src={getImageUrl(img.image_path)}
+                      src={buildImgSrc('image_path', img.image_path)}
                       alt="photo du lieu"
+                      onError={onImgErrorSwap}
                     />
                   </div>
                 ))}

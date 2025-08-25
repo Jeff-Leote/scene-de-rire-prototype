@@ -12,14 +12,25 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Test de la connexion
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error('Erreur de connexion à la base de données:', err);
-    return;
-  }
-  console.log('Connexion à la base de données réussie !');
-  connection.release();
-});
+// Test de la connexion avec retry
+const testConnection = (retries = 5, delay = 2000) => {
+  pool.getConnection((err, connection) => {
+    if (err) {
+      console.error(`Erreur de connexion à la base de données (tentative ${6 - retries}/5):`, err.message);
+      if (retries > 1) {
+        console.log(`Nouvelle tentative dans ${delay/1000} secondes...`);
+        setTimeout(() => testConnection(retries - 1, delay), delay);
+      } else {
+        console.error('Impossible de se connecter à la base de données après 5 tentatives');
+      }
+      return;
+    }
+    console.log('✅ Connexion à la base de données réussie !');
+    connection.release();
+  });
+};
+
+// Démarrer le test de connexion après un délai initial
+setTimeout(() => testConnection(), 3000);
 
 module.exports = pool.promise();

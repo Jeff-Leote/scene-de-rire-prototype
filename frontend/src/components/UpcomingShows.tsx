@@ -55,9 +55,9 @@ const UpcomingShows = () => {
         } catch {
           setAvailability({});
         }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        setError(err.message || "Erreur inconnue");
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -85,7 +85,10 @@ const UpcomingShows = () => {
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-white">Prochains spectacles</h2>
-          <span className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300">
+          <span 
+            className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300"
+            onClick={() => navigate('/spectacles')}
+          >
             Voir le calendrier complet
             <i className="fa-solid fa-arrow-right ml-2"></i>
           </span>

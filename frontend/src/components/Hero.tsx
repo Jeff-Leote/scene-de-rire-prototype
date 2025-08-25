@@ -133,13 +133,15 @@ const Hero = () => {
                 Réserver maintenant
                 </Link>
               )}
-              <Link 
-                to={`/artistes/${featuredArtist.id}`}
-                className="border border-yellow-400 text-yellow-400 px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300 flex items-center"
-              >
-                <i className="fa-solid fa-circle-info mr-2"></i>
-                Plus d'infos
-              </Link>
+              {featuredArtist.next_show && (
+                <Link 
+                  to={`/spectacles/${featuredArtist.next_show.id}`}
+                  className="border border-yellow-400 text-yellow-400 px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300 flex items-center"
+                >
+                  <i className="fa-solid fa-circle-info mr-2"></i>
+                  Plus d'infos
+                </Link>
+              )}
             </div>
           </div>
         </div>

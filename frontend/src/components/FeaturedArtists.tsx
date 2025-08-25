@@ -8,11 +8,10 @@ const FeaturedArtists = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL;
-
   useEffect(() => {
     const fetchArtists = async () => {
       try {
+        const API_URL = import.meta.env.VITE_API_URL;
         const response = await fetch(`${API_URL}/api/artistes`);
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des artistes');
