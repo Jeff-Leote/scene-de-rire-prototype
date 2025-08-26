@@ -77,6 +77,36 @@ router.post('/newsletter/send', async (req, res) => {
   }
 });
 
+// Désabonner un utilisateur de la newsletter (route admin)
+router.post('/newsletter/unsubscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Email invalide' });
+    }
+
+    // Vérifier si l'email existe dans la newsletter
+    const [existing] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
+    if (existing.length === 0) {
+      return res.status(400).json({ error: 'Cet email n\'est pas inscrit à la newsletter' });
+    }
+
+    // Désabonner l'utilisateur
+    await db.query('DELETE FROM newsletter_subscribers WHERE email = ?', [email]);
+    
+    console.log('📧 Désabonnement admin newsletter:', email);
+    
+    res.json({ 
+      success: true, 
+      message: 'Désabonnement de la newsletter réussi !' 
+    });
+  } catch (error) {
+    console.error('Erreur désabonnement admin newsletter:', error);
+    res.status(500).json({ error: 'Erreur lors du désabonnement de la newsletter' });
+  }
+});
+
 // ====== Paramètres (settings) ======
 // Récupérer l'email destinataire des messages contact
 router.get('/settings/contact-email', async (req, res) => {
