@@ -37,13 +37,6 @@ const Unsubscribe = () => {
         const data = await response.json();
         setUserCheck(data);
         
-        // Si l'utilisateur a un compte mais n'est pas connecté, rediriger vers la connexion
-        if (data.hasAccount && !isAuthenticated) {
-          const currentUrl = window.location.href;
-          navigate(`/connexion?redirect=${encodeURIComponent(currentUrl)}`);
-          return;
-        }
-        
         // Si l'utilisateur n'est pas inscrit à la newsletter
         if (!data.isSubscribed) {
           setIsUnsubscribed(true);
@@ -57,7 +50,7 @@ const Unsubscribe = () => {
           return;
         }
 
-        // Si l'utilisateur a un compte et est connecté, afficher la page de confirmation
+        // Afficher la page de confirmation pour tous les utilisateurs
         setIsLoading(false);
       } else {
         toast.error('Erreur lors de la vérification de l\'email');
@@ -88,11 +81,6 @@ const Unsubscribe = () => {
       if (response.ok) {
         setIsUnsubscribed(true);
         toast.success('Désabonnement réussi !');
-      } else if (response.status === 403 && data.hasAccount) {
-        // L'utilisateur a un compte mais n'est pas connecté, rediriger vers la connexion
-        const currentUrl = window.location.href;
-        navigate(`/connexion?redirect=${encodeURIComponent(currentUrl)}`);
-        return;
       } else {
         toast.error(data.error || 'Erreur lors du désabonnement');
       }
