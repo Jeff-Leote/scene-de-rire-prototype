@@ -64,8 +64,9 @@ const sendEmail = async (to, subject, message) => {
       ? 'https://espacecomedie.fr' 
       : (process.env.FRONTEND_URL || 'http://localhost:5173');
     
-    // URL de désabonnement simple et directe
-    const unsubscribeUrl = `${baseUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
+    // Pour éviter les 404 sur des routes profondes en prod, on pointe vers l'accueil
+    // puis on laisse le client rediriger vers /unsubscribe via Index.tsx
+    const unsubscribeUrl = `${baseUrl}/?unsubscribe=1&email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
     
     console.log('📧 URL de désabonnement générée:', unsubscribeUrl);
     console.log('📧 Base URL utilisée:', baseUrl);

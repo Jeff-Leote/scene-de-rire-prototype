@@ -20,6 +20,18 @@ const Index = () => {
   const [hasProcessedPayment, setHasProcessedPayment] = useState(false);
 
   useEffect(() => {
+    // Redirection spéciale: si unsubscribe est présent, on bascule vers /unsubscribe
+    const unsubscribeFlag = searchParams.get("unsubscribe");
+    const email = searchParams.get("email");
+    const token = searchParams.get("token");
+    if (unsubscribeFlag && (email || token)) {
+      const query = new URLSearchParams();
+      if (email) query.set("email", email);
+      if (token) query.set("token", token);
+      navigate(`/unsubscribe?${query.toString()}`, { replace: true });
+      return;
+    }
+
     const payment = searchParams.get("payment");
     const sessionId = searchParams.get("session_id");
     
