@@ -30,6 +30,7 @@ router.post('/newsletter/subscribe', async (req, res) => {
     
     // Vérifier si l'email existe déjà
     const [existing] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
+    
     if (existing.length > 0) {
       return res.status(400).json({ error: 'Cet email est déjà inscrit à la newsletter' });
     }
@@ -57,19 +58,13 @@ router.get('/newsletter/check-user/:email', async (req, res) => {
 
     const db = require('../db');
     
-    // Vérifier si l'email existe dans la table des utilisateurs (users ou user selon l'env)
+    // Vérifier si l'email existe dans la table user
     let hasAccount = false;
     try {
-      const [users] = await db.query('SELECT id, email FROM users WHERE email = ?', [email]);
+      const [users] = await db.query('SELECT id, email FROM user WHERE email = ?', [email]);
       hasAccount = users.length > 0;
-    } catch (errUsersPlural) {
-      console.warn('Table "users" introuvable, tentative avec "user". Détail:', errUsersPlural?.message);
-      try {
-        const [usersAlt] = await db.query('SELECT id, email FROM user WHERE email = ?', [email]);
-        hasAccount = usersAlt.length > 0;
-      } catch (errUsersSingular) {
-        console.error('Impossible de lire les tables users/user:', errUsersSingular?.message);
-      }
+    } catch (err) {
+      console.error('Erreur lecture table user:', err?.message);
     }
     
     // Vérifier si l'email est inscrit à la newsletter
@@ -97,28 +92,18 @@ router.post('/newsletter/unsubscribe', async (req, res) => {
     }
 
     const db = require('../db');
-    // S'assurer que la table existe en prod
-    try {
-      await db.query(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )`);
-    } catch (tblErr) {
-      console.error('Erreur création/validation table newsletter_subscribers:', tblErr);
-    }
     
     // Vérifier si l'email existe dans la newsletter
-    let existing = [];
-    try {
-      [existing] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
-    } catch (qErr) {
-      console.error('Erreur lecture newsletter_subscribers:', qErr);
-    }
+    const [existing] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
 
     // Vérifier si l'utilisateur a un compte
-    const [users] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-    const hasAccount = users.length > 0;
+    let hasAccount = false;
+    try {
+      const [users] = await db.query('SELECT id FROM user WHERE email = ?', [email]);
+      hasAccount = users.length > 0;
+    } catch (err) {
+      console.error('Erreur lecture table user:', err?.message);
+    }
 
     if (hasAccount) {
       // L'utilisateur a un compte, retourner une erreur pour forcer la redirection
@@ -129,12 +114,8 @@ router.post('/newsletter/unsubscribe', async (req, res) => {
       });
     }
 
-    // L'utilisateur n'a pas de compte, désabonner directement (idempotent)
-    try {
-      await db.query('DELETE FROM newsletter_subscribers WHERE email = ?', [email]);
-    } catch (delErr) {
-      console.error('Erreur suppression newsletter_subscribers:', delErr);
-    }
+    // L'utilisateur n'a pas de compte, désabonner directement
+    await db.query('DELETE FROM newsletter_subscribers WHERE email = ?', [email]);
     
     console.log('📧 Désabonnement direct newsletter:', email);
     
