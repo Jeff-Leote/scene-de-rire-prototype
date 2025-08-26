@@ -97,11 +97,23 @@ router.post('/newsletter/unsubscribe', async (req, res) => {
     }
 
     const db = require('../db');
+    // S'assurer que la table existe en prod
+    try {
+      await db.query(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+    } catch (tblErr) {
+      console.error('Erreur création/validation table newsletter_subscribers:', tblErr);
+    }
     
     // Vérifier si l'email existe dans la newsletter
-    const [existing] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
-    if (existing.length === 0) {
-      return res.status(400).json({ error: 'Cet email n\'est pas inscrit à la newsletter' });
+    let existing = [];
+    try {
+      [existing] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
+    } catch (qErr) {
+      console.error('Erreur lecture newsletter_subscribers:', qErr);
     }
 
     // Vérifier si l'utilisateur a un compte
@@ -117,15 +129,19 @@ router.post('/newsletter/unsubscribe', async (req, res) => {
       });
     }
 
-    // L'utilisateur n'a pas de compte, désabonner directement
-    await db.query('DELETE FROM newsletter_subscribers WHERE email = ?', [email]);
+    // L'utilisateur n'a pas de compte, désabonner directement (idempotent)
+    try {
+      await db.query('DELETE FROM newsletter_subscribers WHERE email = ?', [email]);
+    } catch (delErr) {
+      console.error('Erreur suppression newsletter_subscribers:', delErr);
+    }
     
     console.log('📧 Désabonnement direct newsletter:', email);
     
     res.json({ 
       success: true, 
       hasAccount: false,
-      message: 'Désabonnement de la newsletter réussi !' 
+      message: existing.length > 0 ? 'Désabonnement de la newsletter réussi !' : 'Adresse déjà non inscrite. Aucun changement.' 
     });
   } catch (error) {
     console.error('Erreur désabonnement newsletter:', error);
