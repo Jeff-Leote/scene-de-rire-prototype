@@ -105,16 +105,7 @@ router.post('/newsletter/unsubscribe', async (req, res) => {
       console.error('Erreur lecture table user:', err?.message);
     }
 
-    if (hasAccount) {
-      // L'utilisateur a un compte, retourner une erreur pour forcer la redirection
-      return res.status(403).json({ 
-        error: 'Authentication required',
-        hasAccount: true,
-        message: 'Vous avez un compte. Veuillez vous connecter pour vous désabonner.'
-      });
-    }
-
-    // L'utilisateur n'a pas de compte, désabonner directement
+    // Désabonner directement (que l'utilisateur ait un compte ou non)
     await db.query('DELETE FROM newsletter_subscribers WHERE email = ?', [email]);
     
     console.log('📧 Désabonnement direct newsletter:', email);

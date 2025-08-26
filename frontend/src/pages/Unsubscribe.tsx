@@ -74,49 +74,27 @@ const Unsubscribe = () => {
       setIsUnsubscribing(true);
       const API_URL = import.meta.env.VITE_API_URL;
       
-      // Si l'utilisateur est connecté, on peut désabonner directement
-      if (isAuthenticated && user) {
-        // Désabonner via l'API admin
-        const response = await fetch(`${API_URL}/api/admin/newsletter/unsubscribe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({ email: emailToUnsubscribe }),
-        });
+      // Utiliser toujours la route publique pour le désabonnement
+      const response = await fetch(`${API_URL}/api/newsletter/unsubscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: emailToUnsubscribe }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok) {
-          setIsUnsubscribed(true);
-          toast.success('Désabonnement réussi !');
-        } else {
-          toast.error(data.error || 'Erreur lors du désabonnement');
-        }
+      if (response.ok) {
+        setIsUnsubscribed(true);
+        toast.success('Désabonnement réussi !');
+      } else if (response.status === 403 && data.hasAccount) {
+        // L'utilisateur a un compte mais n'est pas connecté, rediriger vers la connexion
+        const currentUrl = window.location.href;
+        navigate(`/connexion?redirect=${encodeURIComponent(currentUrl)}`);
+        return;
       } else {
-        // Utilisateur non connecté, utiliser la route publique
-        const response = await fetch(`${API_URL}/api/newsletter/unsubscribe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: emailToUnsubscribe }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          setIsUnsubscribed(true);
-          toast.success('Désabonnement direct réussi !');
-        } else if (response.status === 403 && data.hasAccount) {
-          // L'utilisateur a un compte, rediriger vers la connexion
-          const currentUrl = window.location.href;
-          navigate(`/connexion?redirect=${encodeURIComponent(currentUrl)}`);
-          return;
-        } else {
-          toast.error(data.error || 'Erreur lors du désabonnement');
-        }
+        toast.error(data.error || 'Erreur lors du désabonnement');
       }
     } catch (error) {
       console.error('Erreur désabonnement:', error);
