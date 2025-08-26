@@ -57,9 +57,20 @@ router.get('/newsletter/check-user/:email', async (req, res) => {
 
     const db = require('../db');
     
-    // Vérifier si l'email existe dans la table users
-    const [users] = await db.query('SELECT id, email FROM users WHERE email = ?', [email]);
-    const hasAccount = users.length > 0;
+    // Vérifier si l'email existe dans la table des utilisateurs (users ou user selon l'env)
+    let hasAccount = false;
+    try {
+      const [users] = await db.query('SELECT id, email FROM users WHERE email = ?', [email]);
+      hasAccount = users.length > 0;
+    } catch (errUsersPlural) {
+      console.warn('Table "users" introuvable, tentative avec "user". Détail:', errUsersPlural?.message);
+      try {
+        const [usersAlt] = await db.query('SELECT id, email FROM user WHERE email = ?', [email]);
+        hasAccount = usersAlt.length > 0;
+      } catch (errUsersSingular) {
+        console.error('Impossible de lire les tables users/user:', errUsersSingular?.message);
+      }
+    }
     
     // Vérifier si l'email est inscrit à la newsletter
     const [subscribers] = await db.query('SELECT id FROM newsletter_subscribers WHERE email = ?', [email]);
@@ -71,7 +82,7 @@ router.get('/newsletter/check-user/:email', async (req, res) => {
       email 
     });
   } catch (error) {
-    console.error('Erreur vérification utilisateur:', error);
+    console.error('Erreur vérification utilisateur (check-user):', error);
     res.status(500).json({ error: 'Erreur lors de la vérification' });
   }
 });
