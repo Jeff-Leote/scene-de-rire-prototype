@@ -36,6 +36,7 @@ const Reservation = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const cartRef = useRef(cart);
+  const didAutoAddRef = useRef(false);
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Protection de la page - redirection si non connecté et panier vide
@@ -252,16 +253,17 @@ const Reservation = () => {
     }
   }, [addToCart]);
 
-  // Ajouter automatiquement le spectacle au panier quand il est chargé depuis SpectacleDetail
+  // Ajouter automatiquement le spectacle au panier UNIQUEMENT lors d'une arrivée depuis un lien direct/détail
   useEffect(() => {
-    // Ne rien faire si selectedSpectacle est null
     if (!selectedSpectacle) return;
-    
-    // Ajouter au panier seulement si le spectacle n'y est pas déjà
+    // Ne faire l'ajout auto qu'une seule fois et uniquement si on vient d'une source explicite
+    const cameFromDetail = Boolean(location.state?.spectacleId || params.id);
+    if (didAutoAddRef.current || !cameFromDetail) return;
     if (!cartRef.current.find(i => i.id === selectedSpectacle.id)) {
       handleAddToCart(selectedSpectacle);
+      didAutoAddRef.current = true;
     }
-  }, [selectedSpectacle, handleAddToCart]);
+  }, [selectedSpectacle, handleAddToCart, location.state?.spectacleId, params.id]);
 
   // Gestion de la suppression du panier
   const handleRemoveFromCart = useCallback((itemId: number) => {
@@ -323,7 +325,17 @@ const Reservation = () => {
         // Vérifier que les données reçues sont valides
         if (data?.promoCode && typeof data.promoCode === 'object') {
           console.log('✅ Code promo reçu:', data.promoCode);
-          setAppliedPromoCode(data.promoCode);
+          const normalized = {
+            id: Number(data.promoCode.id),
+            code: String(data.promoCode.code || ''),
+            type: data.promoCode.type as PromoCode['type'],
+            value: Number(data.promoCode.value) || 0,
+            max_uses: Number(data.promoCode.max_uses ?? 0) || 0,
+            current_uses: Number(data.promoCode.current_uses ?? 0) || 0,
+            is_active: Boolean(data.promoCode.is_active),
+            description: typeof data.promoCode.description === 'string' ? data.promoCode.description : ''
+          } as PromoCode;
+          setAppliedPromoCode(normalized);
           toast.success("Code promo appliqué avec succès !");
         } else {
           console.error('❌ Données de code promo invalides:', data);

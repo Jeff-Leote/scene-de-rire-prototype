@@ -48,30 +48,35 @@ const createTransport = async () => {
   }
 };
 
-// Fonction pour envoyer un email
-const sendEmail = async (to, subject, message) => {
+// Fonction pour envoyer un email (attachments optionnels, showUnsubscribe optionnel)
+const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe = true) => {
   try {
     console.log('📧 Début envoi email à:', to);
     console.log('📧 Sujet:', subject);
     
     const transporter = await createTransport();
     
-    // Générer un lien de désabonnement unique avec token sécurisé
-    const unsubscribeToken = Buffer.from(`${to}-${Date.now()}-${Math.random()}`).toString('base64');
-    
-    // Utiliser l'URL de production ou localhost selon l'environnement
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://espacecomedie.fr' 
-      : (process.env.FRONTEND_URL || 'http://localhost:5173');
-    
-    // Pour éviter les 404 sur des routes profondes en prod, on pointe vers l'accueil
-    // puis on laisse le client rediriger vers /unsubscribe via Index.tsx
-    const unsubscribeUrl = `${baseUrl}/?unsubscribe=1&email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
-    
-    console.log('📧 URL de désabonnement générée:', unsubscribeUrl);
-    console.log('📧 Base URL utilisée:', baseUrl);
-    console.log('📧 NODE_ENV:', process.env.NODE_ENV);
-    console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL);
+    // Générer un lien de désabonnement unique avec token sécurisé (seulement si showUnsubscribe = true)
+    let unsubscribeUrl = '';
+    if (showUnsubscribe) {
+      const unsubscribeToken = Buffer.from(`${to}-${Date.now()}-${Math.random()}`).toString('base64');
+      
+      // Utiliser l'URL de production ou localhost selon l'environnement
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://espacecomedie.fr' 
+        : (process.env.FRONTEND_URL || 'http://localhost:5173');
+      
+      // Pour éviter les 404 sur des routes profondes en prod, on pointe vers l'accueil
+      // puis on laisse le client rediriger vers /unsubscribe via Index.tsx
+      unsubscribeUrl = `${baseUrl}/?unsubscribe=1&email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
+      
+      console.log('📧 URL de désabonnement générée:', unsubscribeUrl);
+      console.log('📧 Base URL utilisée:', baseUrl);
+      console.log('📧 NODE_ENV:', process.env.NODE_ENV);
+      console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL);
+    } else {
+      console.log('📧 Lien de désabonnement désactivé pour cet email');
+    }
     
     const mailOptions = {
       from: process.env.FROM_EMAIL || process.env.SMTP_USER || 'Espace Comédie <noreply@espacecomedie.fr>',
@@ -109,11 +114,13 @@ const sendEmail = async (to, subject, message) => {
                   Cet email a été envoyé par <strong>Espace Comédie</strong>.<br/>
                   Pour toute question, écrivez-nous à <a href="mailto:contact@espacecomedie.fr" style="color:#111111;text-decoration:underline;">contact@espacecomedie.fr</a>.<br/>
                   <br/>
+                  ${showUnsubscribe ? `
                   <div style="margin-top: 16px; padding: 12px; background-color: #f9fafb; border-radius: 6px; border-left: 4px solid #dc2626;">
                     <p style="margin: 0; font-size: 11px; color: #6b7280;">
                       <a href="${unsubscribeUrl}" style="color:#dc2626;text-decoration:underline;font-weight:600;">Se désabonner de la newsletter</a>
                     </p>
                   </div>
+                  ` : ''}
                 </div>
               </td>
             </tr>
@@ -122,7 +129,8 @@ const sendEmail = async (to, subject, message) => {
             © ${new Date().getFullYear()} Espace Comédie. Tous droits réservés.
           </div>
         </div>
-      `
+      `,
+      attachments: Array.isArray(attachments) ? attachments : []
     };
 
     console.log('📧 Tentative d\'envoi via SMTP...');

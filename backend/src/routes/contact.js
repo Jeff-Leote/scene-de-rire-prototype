@@ -57,7 +57,9 @@ router.post('/', async (req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
+      [], // pas d'attachments
+      false // pas de lien de désabonnement pour les emails de contact
     );
 
     return res.json({ success: true, messageId: result.messageId });

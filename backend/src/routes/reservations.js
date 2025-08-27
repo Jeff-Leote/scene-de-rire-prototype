@@ -28,11 +28,12 @@ try {
   }
 }
 
-// Fonction pour générer un QR code unique pour une réservation
-async function generateQRCode(reservationId, spectacleId, spectacleTitle) {
+// Fonction pour générer un QR code unique pour un ticket
+async function generateTicketQRCode(ticketId, reservationId, spectacleId, spectacleTitle) {
   try {
     // Créer les données de validation du ticket
     const ticketData = {
+      ticket_id: ticketId,
       reservation_id: reservationId,
       spectacle_id: spectacleId,
       spectacle_title: spectacleTitle,
@@ -41,7 +42,7 @@ async function generateQRCode(reservationId, spectacleId, spectacleTitle) {
     };
 
     // Générer le nom du fichier
-    const fileName = `reservation_${reservationId}_${Date.now()}.png`;
+    const fileName = `ticket_${ticketId}_${Date.now()}.png`;
     const qrDir = path.join(__dirname, '../../qrcodes');
     const qrPath = path.join(qrDir, fileName);
 
@@ -63,10 +64,10 @@ async function generateQRCode(reservationId, spectacleId, spectacleTitle) {
       }
     });
 
-    console.log('✅ QR code généré:', fileName);
+    console.log('✅ QR code généré (ticket):', fileName);
     return fileName; // Retourner le nom du fichier pour le stocker en base
   } catch (error) {
-    console.error("❌ Erreur lors de la génération du QR code:", error);
+    console.error("❌ Erreur lors de la génération du QR code (ticket):", error);
     throw error;
   }
 }
@@ -160,7 +161,7 @@ async function handleSuccessfulPayment(session) {
       spectacleDetails[row.id] = { title: row.title };
     });
 
-    // 3. Créer les réservations avec QR codes
+    // 3. Créer les réservations et générer 1 ticket (donc 1 QR) par place
     for (const item of spectacles) {
       const [result] = await conn.query(
         "INSERT INTO reservation (user_id, spectacle_id, nb_places) VALUES (?, ?, ?)",
@@ -168,16 +169,33 @@ async function handleSuccessfulPayment(session) {
       );
       const reservationId = result.insertId;
       reservationIds.push(reservationId);
-
-      // Générer le QR code pour cette réservation
       const spectacleTitle = spectacleDetails[item.id].title;
-      const qrFileName = await generateQRCode(reservationId, item.id, spectacleTitle);
-      
-      // Mettre à jour la réservation avec le chemin du QR code
-      await conn.query(
-        "UPDATE reservation SET qr_code_path = ? WHERE id = ?",
-        [qrFileName, reservationId]
-      );
+
+      // S'assurer que la table ticket existe
+      await conn.query(`CREATE TABLE IF NOT EXISTS ticket (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        reservation_id INT NOT NULL,
+        qr_code_path VARCHAR(255) NULL,
+        used BOOLEAN DEFAULT FALSE,
+        used_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_reservation_id (reservation_id),
+        FOREIGN KEY (reservation_id) REFERENCES reservation(id)
+      )`);
+
+      // Générer un ticket par place
+      for (let i = 0; i < item.billets; i++) {
+        const [ticketRes] = await conn.query(
+          "INSERT INTO ticket (reservation_id) VALUES (?)",
+          [reservationId]
+        );
+        const ticketId = ticketRes.insertId;
+        const qrFileName = await generateTicketQRCode(ticketId, reservationId, item.id, spectacleTitle);
+        await conn.query(
+          "UPDATE ticket SET qr_code_path = ? WHERE id = ?",
+          [qrFileName, ticketId]
+        );
+      }
     }
 
     // 4. Incrémenter le compteur d'utilisations du code promo si utilisé
@@ -210,6 +228,95 @@ async function handleSuccessfulPayment(session) {
     }
 
     await conn.commit();
+
+    // 6. Envoyer les tickets par email (HTML brandé + images inline + pièces jointes)
+    try {
+      const { sendEmail } = require('../services/emailService');
+      const [rows] = await pool.query(
+        `SELECT 
+           t.id            AS ticket_id,
+           t.qr_code_path  AS qr_code_path,
+           r.id            AS reservation_id,
+           r.nb_places     AS nb_places,
+           s.title         AS spectacle_title,
+           s.date_spectacle AS date_spectacle,
+           s.heure_spectacle AS heure_spectacle,
+           s.lieu          AS lieu
+         FROM ticket t
+         JOIN reservation r ON t.reservation_id = r.id
+         JOIN spectacle s   ON r.spectacle_id = s.id
+         WHERE r.id IN (?)
+         ORDER BY r.id, t.id`,
+        [reservationIds]
+      );
+
+      const prenom = session.metadata?.prenom || '';
+      const nom = session.metadata?.nom || '';
+      const toEmail = session.customer_details?.email || session.customer_email || session.metadata?.email;
+
+      // Préparer attachments avec contentId pour affichage inline
+      const attachments = (rows || [])
+        .filter(r => !!r.qr_code_path)
+        .map(r => ({
+          filename: `ticket_${r.ticket_id}.png`,
+          path: path.join(__dirname, '../../qrcodes', r.qr_code_path),
+          cid: `ticket_${r.ticket_id}`
+        }));
+
+      // Construire le contenu HTML brandé listant les tickets
+      const groupByReservation = new Map();
+      for (const r of rows || []) {
+        if (!groupByReservation.has(r.reservation_id)) groupByReservation.set(r.reservation_id, []);
+        groupByReservation.get(r.reservation_id).push(r);
+      }
+
+      let messageHtml = `
+        <div style="font-family:Arial,sans-serif">
+          <p style="margin:0 0 16px 0;color:#111">Bonjour ${prenom} ${nom},</p>
+          <p style="margin:0 0 16px 0;color:#374151">Merci pour votre réservation. Voici vos billets électroniques. Présentez un QR par personne à l'entrée.</p>
+      `;
+
+      for (const [reservationId, tickets] of groupByReservation.entries()) {
+        const first = tickets[0];
+        messageHtml += `
+          <div style="margin:16px 0;padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-weight:700;color:#111">${first.spectacle_title}</div>
+              <div style="font-size:12px;color:#10b981;background:#ecfdf5;padding:2px 8px;border-radius:999px">${first.nb_places} place${first.nb_places>1?'s':''}</div>
+            </div>
+            <div style="font-size:13px;color:#374151;margin-bottom:12px">
+              <div>Date: ${first.date_spectacle}</div>
+              <div>Heure: ${first.heure_spectacle}</div>
+              <div>Lieu: ${first.lieu}</div>
+              <div>Détenteur: ${prenom} ${nom} (${toEmail||''})</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+        `;
+        for (const t of tickets) {
+          messageHtml += `
+            <div style="text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px">
+              <img src="cid:ticket_${t.ticket_id}" alt="QR ticket ${t.ticket_id}" style="max-width:140px;height:auto;display:block;margin:0 auto 8px auto" />
+              <div style="font-size:12px;color:#6b7280">Ticket #${t.ticket_id}</div>
+            </div>
+          `;
+        }
+        messageHtml += `</div></div>`;
+      }
+
+      messageHtml += `</div>`;
+
+      if (toEmail && attachments.length > 0) {
+        await sendEmail(
+          toEmail,
+          'Vos billets Espace Comédie',
+          messageHtml,
+          attachments,
+          false // pas de lien de désabonnement pour les billets
+        );
+      }
+    } catch (mailErr) {
+      console.error('Erreur envoi des tickets par email:', mailErr);
+    }
 
 
   } catch (err) {
@@ -507,7 +614,7 @@ router.post("/confirm", async (req, res) => {
       spectacleDetails[row.id] = { title: row.title };
     });
     
-    // 3. Enregistrer chaque réservation avec QR codes
+    // 3. Enregistrer chaque réservation et générer 1 ticket (QR) par place
     for (const item of spectacles) {
       const [result] = await conn.query(
         "INSERT INTO reservation (user_id, spectacle_id, nb_places) VALUES (?, ?, ?)",
@@ -515,16 +622,32 @@ router.post("/confirm", async (req, res) => {
       );
       const reservationId = result.insertId;
       reservationIds.push(reservationId);
-
-      // Générer le QR code pour cette réservation
       const spectacleTitle = spectacleDetails[item.id].title;
-      const qrFileName = await generateQRCode(reservationId, item.id, spectacleTitle);
-      
-      // Mettre à jour la réservation avec le chemin du QR code
-      await conn.query(
-        "UPDATE reservation SET qr_code_path = ? WHERE id = ?",
-        [qrFileName, reservationId]
-      );
+
+      // S'assurer que la table ticket existe
+      await conn.query(`CREATE TABLE IF NOT EXISTS ticket (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        reservation_id INT NOT NULL,
+        qr_code_path VARCHAR(255) NULL,
+        used BOOLEAN DEFAULT FALSE,
+        used_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_reservation_id (reservation_id),
+        FOREIGN KEY (reservation_id) REFERENCES reservation(id)
+      )`);
+
+      for (let i = 0; i < item.billets; i++) {
+        const [ticketRes] = await conn.query(
+          "INSERT INTO ticket (reservation_id) VALUES (?)",
+          [reservationId]
+        );
+        const ticketId = ticketRes.insertId;
+        const qrFileName = await generateTicketQRCode(ticketId, reservationId, item.id, spectacleTitle);
+        await conn.query(
+          "UPDATE ticket SET qr_code_path = ? WHERE id = ?",
+          [qrFileName, ticketId]
+        );
+      }
     }
 
     // 4. Créer un paiement global
@@ -672,42 +795,58 @@ router.post("/cancel", async (req, res) => {
   }
 });
 
-// Récupérer le QR code d'une réservation
-router.get("/:reservationId/qrcode", auth, async (req, res) => {
+// Récupérer la liste des tickets d'une réservation
+router.get("/:reservationId/tickets", auth, async (req, res) => {
   const { reservationId } = req.params;
-  
   try {
-    // Vérifier que la réservation appartient à l'utilisateur connecté
-    const [reservations] = await pool.query(`
-      SELECT r.qr_code_path, r.nb_places, s.title, s.date_spectacle, s.heure_spectacle
-      FROM reservation r
-      JOIN spectacle s ON r.spectacle_id = s.id
-      WHERE r.id = ? AND r.user_id = ?
-    `, [reservationId, req.user.id]);
-
+    // Vérifier la réservation
+    const [reservations] = await pool.query(
+      "SELECT id FROM reservation WHERE id = ? AND user_id = ?",
+      [reservationId, req.user.id]
+    );
     if (reservations.length === 0) {
       return res.status(404).json({ error: "Réservation non trouvée ou non autorisée" });
     }
+    const [tickets] = await pool.query(
+      "SELECT id as ticket_id, qr_code_path, used, used_at FROM ticket WHERE reservation_id = ? ORDER BY id ASC",
+      [reservationId]
+    );
+    res.json({ success: true, tickets });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des tickets:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération des tickets" });
+  }
+});
 
-    const reservation = reservations[0];
-    
-    if (!reservation.qr_code_path) {
-      return res.status(404).json({ error: "QR code non trouvé pour cette réservation" });
+// Récupérer le QR code d'un ticket
+router.get("/ticket/:ticketId/qrcode", auth, async (req, res) => {
+  const { ticketId } = req.params;
+  try {
+    const [rows] = await pool.query(
+      `SELECT t.qr_code_path, r.user_id
+       FROM ticket t
+       JOIN reservation r ON t.reservation_id = r.id
+       WHERE t.id = ?`,
+      [ticketId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Ticket non trouvé" });
     }
-
-    const qrPath = path.join(__dirname, '../../qrcodes', reservation.qr_code_path);
-    
-    // Vérifier que le fichier existe
+    const row = rows[0];
+    if (row.user_id !== req.user.id) {
+      return res.status(403).json({ error: "Non autorisé" });
+    }
+    if (!row.qr_code_path) {
+      return res.status(404).json({ error: "QR code non disponible" });
+    }
+    const qrPath = path.join(__dirname, '../../qrcodes', row.qr_code_path);
     if (!fs.existsSync(qrPath)) {
       return res.status(404).json({ error: "Fichier QR code non trouvé" });
     }
-
-    // Envoyer le fichier QR code
     res.sendFile(qrPath);
-    
   } catch (error) {
-    console.error("Erreur lors de la récupération du QR code:", error);
-    res.status(500).json({ error: "Erreur lors de la récupération du QR code" });
+    console.error("Erreur lors de la récupération du QR code du ticket:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération du QR code du ticket" });
   }
 });
 
@@ -721,7 +860,6 @@ router.get("/user/:userId", async (req, res) => {
         r.id as reservation_id,
         r.nb_places,
         r.date as reservation_date,
-        COALESCE(r.qr_code_path, NULL) as qr_code_path,
         s.id as spectacle_id,
         s.title,
         s.description,
@@ -744,10 +882,34 @@ router.get("/user/:userId", async (req, res) => {
       ORDER BY r.date DESC
     `, [userId]);
 
-    res.json({ 
-      success: true, 
-      reservations: reservations 
-    });
+    // Récupérer les tickets pour toutes les réservations
+    const reservationIds = reservations.map(r => r.reservation_id);
+    let ticketsByReservation = {};
+    if (reservationIds.length > 0) {
+      const [tickets] = await pool.query(
+        `SELECT id as ticket_id, reservation_id, qr_code_path, used, used_at
+         FROM ticket
+         WHERE reservation_id IN (?)
+         ORDER BY id ASC`,
+        [reservationIds]
+      );
+      tickets.forEach(t => {
+        if (!ticketsByReservation[t.reservation_id]) ticketsByReservation[t.reservation_id] = [];
+        ticketsByReservation[t.reservation_id].push({
+          ticket_id: t.ticket_id,
+          qr_code_path: t.qr_code_path,
+          used: t.used,
+          used_at: t.used_at
+        });
+      });
+    }
+
+    const enriched = reservations.map(r => ({
+      ...r,
+      tickets: ticketsByReservation[r.reservation_id] || []
+    }));
+
+    res.json({ success: true, reservations: enriched });
 
   } catch (error) {
     console.error("Erreur lors de la récupération des réservations:", error);

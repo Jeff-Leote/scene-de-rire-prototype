@@ -14,68 +14,64 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   const { token } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [qrCodeUrls, setQrCodeUrls] = useState<string[]>([]);
 
-  // Générer le QR code automatiquement avec les données de validation
+  // Générer un QR code par place
   useEffect(() => {
-    const generateQRCode = async () => {
+    const generateQRCodes = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Créer les données de validation du ticket
-        const ticketData = {
-          reservation_id: reservationId,
-          spectacle_title: spectacleTitle,
-          date_spectacle: dateSpectacle,
-          heure_spectacle: heureSpectacle,
-          nb_places: nbPlaces,
-          type: "ticket_validation",
-          timestamp: new Date().toISOString()
-        };
+        const urls: string[] = [];
+        const places = Math.max(1, Number(nbPlaces) || 1);
+        for (let index = 1; index <= places; index++) {
+          const ticketData = {
+            reservation_id: reservationId,
+            ticket_index: index,
+            spectacle_title: spectacleTitle,
+            date_spectacle: dateSpectacle,
+            heure_spectacle: heureSpectacle,
+            type: 'ticket_validation',
+            timestamp: new Date().toISOString(),
+          };
 
-        // Générer le QR code avec les données JSON
-        const qrDataUrl = await QRCode.toDataURL(JSON.stringify(ticketData), {
-          errorCorrectionLevel: 'H',
-          type: 'image/png',
-          margin: 1,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
+          const qrDataUrl = await QRCode.toDataURL(JSON.stringify(ticketData), {
+            errorCorrectionLevel: 'H',
+            type: 'image/png',
+            margin: 1,
+            color: { dark: '#000000', light: '#FFFFFF' },
+          });
+          urls.push(qrDataUrl);
+        }
 
-        setQrCodeUrl(qrDataUrl);
+        setQrCodeUrls(urls);
       } catch (err) {
-        console.error('Erreur lors de la génération du QR code:', err);
-        setError("Erreur lors de la génération du QR code");
+        console.error('Erreur lors de la génération des QR codes:', err);
+        setError('Erreur lors de la génération des QR codes');
       } finally {
         setIsLoading(false);
       }
     };
 
-    generateQRCode();
+    generateQRCodes();
   }, [reservationId, spectacleTitle, dateSpectacle, heureSpectacle, nbPlaces]);
 
-  const handleDownloadQR = async () => {
-    if (!qrCodeUrl) {
-      setError("QR code non disponible");
+  const handleDownloadQR = async (url: string, index: number) => {
+    if (!url) {
+      setError('QR code non disponible');
       return;
     }
-
     try {
-      // Convertir le data URL en blob
-      const response = await fetch(qrCodeUrl);
+      const response = await fetch(url);
       const blob = await response.blob();
-      
-      // Créer le lien de téléchargement
-      const url = window.URL.createObjectURL(blob);
+      const objectUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `ticket_reservation_${reservationId}.png`;
+      a.href = objectUrl;
+      a.download = `ticket_reservation_${reservationId}_#${index}.png`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(objectUrl);
       document.body.removeChild(a);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -85,9 +81,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          QR Code - Réservation #{reservationId}
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900">QR Codes - Réservation #{reservationId}</h3>
         <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
           {nbPlaces} place{nbPlaces > 1 ? 's' : ''}
         </span>
@@ -110,38 +104,32 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
         </div>
       </div>
 
-      <div className="text-center">
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-48">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : qrCodeUrl ? (
-            <img
-              src={qrCodeUrl}
-              alt={`QR Code pour la réservation ${reservationId}`}
-              className="mx-auto max-w-48 h-auto"
-              onError={() => setError("Impossible de charger le QR code")}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-48">
-              <div className="text-gray-400">
-                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1zm12 0h2a1 1 0 001-1V6a1 1 0 00-1-1h-2a1 1 0 00-1 1v1a1 1 0 001 1zM5 20h2a1 1 0 001-1v-1a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1z" />
-                </svg>
-              </div>
-            </div>
-          )}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-        
-        <button
-          onClick={handleDownloadQR}
-          disabled={isLoading || !qrCodeUrl}
-          className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-        >
-          {isLoading ? 'Génération...' : 'Télécharger QR Code'}
-        </button>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {qrCodeUrls.map((url, idx) => (
+            <div key={idx} className="text-center">
+              <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                <img
+                  src={url}
+                  alt={`QR Code ${idx + 1} pour la réservation ${reservationId}`}
+                  className="mx-auto max-w-48 h-auto"
+                  onError={() => setError('Impossible de charger le QR code')}
+                />
+              </div>
+              <button
+                onClick={() => handleDownloadQR(url, idx + 1)}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Télécharger QR #{idx + 1}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {error && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -151,8 +139,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 
       <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-blue-700 text-sm">
-          <strong>Info :</strong> Ce QR code contient les informations de votre ticket. 
-          Il peut être scanné pour vérifier la validité de votre réservation.
+          <strong>Info :</strong> Chaque QR correspond à une place. Présentez un QR par personne à l'entrée.
         </p>
       </div>
     </div>

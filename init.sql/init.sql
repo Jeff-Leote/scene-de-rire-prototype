@@ -70,11 +70,21 @@ CREATE TABLE reservation (
   user_id INT NOT NULL,
   spectacle_id INT NOT NULL,
   nb_places INT NOT NULL,
-  date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  qr_code_path VARCHAR(255) COMMENT 'Chemin vers le fichier QR code généré',
-  used BOOLEAN DEFAULT FALSE COMMENT 'Indique si le billet a été utilisé',
-  used_at TIMESTAMP NULL COMMENT 'Date et heure d''utilisation du billet',
-  qr_code_generated BOOLEAN DEFAULT FALSE COMMENT 'Indique si un QR code a été généré pour cette réservation'
+  date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- TABLE TICKETS (1 ticket/personne)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS ticket (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  reservation_id INT NOT NULL,
+  qr_code_path VARCHAR(255) NULL,
+  used BOOLEAN DEFAULT FALSE,
+  used_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_reservation_id (reservation_id),
+  FOREIGN KEY (reservation_id) REFERENCES reservation(id)
 );
 
 -- =====================================================
@@ -153,10 +163,9 @@ ALTER TABLE paiement_reservation ADD FOREIGN KEY (reservation_id) REFERENCES res
 CREATE INDEX idx_promo_codes_active ON promo_codes(is_active);
 CREATE INDEX idx_promo_codes_validity ON promo_codes(valid_from, valid_until);
 
--- Index pour le système de scan de QR codes
-CREATE INDEX idx_reservation_verification ON reservation(user_id, spectacle_id, used);
-CREATE INDEX idx_reservation_used_at ON reservation(used_at);
-CREATE INDEX idx_reservation_qr_generated ON reservation(qr_code_generated);
+-- Index pour le système de scan de QR codes (désormais au niveau des tickets)
+CREATE INDEX idx_ticket_used ON ticket(used);
+CREATE INDEX idx_ticket_used_at ON ticket(used_at);
 
 -- =====================================================
 -- DONNÉES DE TEST

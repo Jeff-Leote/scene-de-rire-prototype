@@ -244,17 +244,126 @@ router.put('/spectacles/:id', async (req, res) => {
 router.delete('/spectacles/:id', async (req, res) => {
   const { id } = req.params;
 
-
   try {
-    const [result] = await db.query('DELETE FROM spectacle WHERE id = ?', [id]);
-    
-    if (result.affectedRows === 0) {
+    // 1. Récupérer les informations du spectacle avant suppression
+    const [spectacleInfo] = await db.query(`
+      SELECT s.*, a.name as artiste_name 
+      FROM spectacle s 
+      JOIN artiste a ON s.artiste_id = a.id 
+      WHERE s.id = ?
+    `, [id]);
 
+    if (spectacleInfo.length === 0) {
       return res.status(404).json({ error: 'Spectacle non trouvé' });
     }
 
+    const spectacle = spectacleInfo[0];
 
-    res.json({ message: 'Spectacle supprimé avec succès' });
+    // 2. Récupérer tous les utilisateurs qui ont réservé des billets pour ce spectacle
+    const [reservations] = await db.query(`
+      SELECT 
+        u.id as user_id,
+        u.civility,
+        u.prenom,
+        u.nom,
+        u.email,
+        r.id as reservation_id,
+        r.nb_places,
+        r.date as reservation_date,
+        SUM(pr.montant) as montant_paye,
+        p.statut as paiement_statut
+      FROM reservation r
+      JOIN user u ON r.user_id = u.id
+      LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
+      LEFT JOIN paiement p ON pr.paiement_id = p.id
+      WHERE r.spectacle_id = ? AND p.statut = true
+      GROUP BY u.id, r.id, u.civility, u.prenom, u.nom, u.email, r.nb_places, r.date, p.statut
+    `, [id]);
+
+    // 3. Envoyer des emails d'annulation à tous les utilisateurs concernés
+    if (reservations.length > 0) {
+      try {
+        const { sendEmail } = require('../services/emailService');
+        
+        for (const reservation of reservations) {
+          const messageHtml = `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+              <div style="background:#f8f9fa;padding:20px;border-radius:12px;margin-bottom:20px">
+                <h2 style="color:#dc3545;margin:0 0 16px 0;font-size:24px">🚫 Spectacle Annulé</h2>
+                <p style="margin:0 0 16px 0;color:#111;font-size:16px">Bonjour ${reservation.prenom} ${reservation.nom},</p>
+                <p style="margin:0 0 16px 0;color:#374151;line-height:1.6">
+                  Nous sommes désolés de vous informer que le spectacle <strong>"${spectacle.title}"</strong> 
+                  prévu le <strong>${spectacle.date_spectacle}</strong> à <strong>${spectacle.heure_spectacle}</strong> 
+                  au <strong>${spectacle.lieu}</strong> a été annulé.
+                </p>
+                <div style="background:#fff;padding:16px;border-radius:8px;border-left:4px solid #dc3545;margin:16px 0">
+                  <h3 style="margin:0 0 12px 0;color:#111;font-size:18px">Détails de votre réservation :</h3>
+                  <ul style="margin:0;padding-left:20px;color:#374151">
+                    <li><strong>Spectacle :</strong> ${spectacle.title}</li>
+                    <li><strong>Artiste :</strong> ${spectacle.artiste_name}</li>
+                    <li><strong>Date :</strong> ${spectacle.date_spectacle}</li>
+                    <li><strong>Heure :</strong> ${spectacle.heure_spectacle}</li>
+                    <li><strong>Lieu :</strong> ${spectacle.lieu}</li>
+                    <li><strong>Nombre de places :</strong> ${reservation.nb_places}</li>
+                    <li><strong>Montant payé :</strong> ${reservation.montant_paye}€</li>
+                  </ul>
+                </div>
+                <p style="margin:16px 0;color:#374151;line-height:1.6">
+                  <strong>Remboursement :</strong> Un remboursement automatique sera effectué dans les 5 à 10 jours ouvrés 
+                  sur le moyen de paiement utilisé lors de votre réservation.
+                </p>
+                <p style="margin:16px 0;color:#374151;line-height:1.6">
+                  Pour toute question concernant votre remboursement, n'hésitez pas à nous contacter.
+                </p>
+                <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb">
+                  <p style="margin:0;color:#6b7280;font-size:14px">
+                    Cordialement,<br>
+                    L'équipe Espace Comédie
+                  </p>
+                </div>
+              </div>
+            </div>
+          `;
+
+          await sendEmail(
+            reservation.email,
+            `Annulation - ${spectacle.title}`,
+            messageHtml,
+            [], // pas d'attachments
+            false // pas de lien de désabonnement
+          );
+        }
+
+        console.log(`✅ Emails d'annulation envoyés à ${reservations.length} utilisateur(s) pour le spectacle "${spectacle.title}"`);
+      } catch (emailError) {
+        console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
+        // On continue même si l'envoi d'emails échoue
+      }
+    }
+
+    // 4. Supprimer les réservations associées (et leurs tickets) avant de supprimer le spectacle
+    if (reservations.length > 0) {
+      const reservationIds = reservations.map(r => r.reservation_id);
+      
+      // Supprimer d'abord les tickets associés
+      await db.query('DELETE FROM ticket WHERE reservation_id IN (?)', [reservationIds]);
+      
+      // Supprimer les liens paiement-réservation
+      await db.query('DELETE FROM paiement_reservation WHERE reservation_id IN (?)', [reservationIds]);
+      
+      // Supprimer les réservations
+      await db.query('DELETE FROM reservation WHERE id IN (?)', [reservationIds]);
+    }
+    
+    // 5. Maintenant supprimer le spectacle
+    const [result] = await db.query('DELETE FROM spectacle WHERE id = ?', [id]);
+    
+    res.json({ 
+      message: 'Spectacle supprimé avec succès',
+      emailsEnvoyes: reservations.length,
+      reservationsSupprimees: reservations.length,
+      spectacleSupprime: spectacle.title
+    });
   } catch (error) {
     console.error('Erreur lors de la suppression du spectacle:', error);
     res.status(500).json({ message: 'Erreur serveur' });
