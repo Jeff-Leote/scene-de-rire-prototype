@@ -1,73 +1,222 @@
-# Welcome to your Lovable project
+# 🎭 Espace Comédie - Application Frontend
 
-## Project info
+## 📋 Vue d'ensemble
 
-**URL**: https://lovable.dev/projects/fa731efc-4e8e-4259-9e51-424435bcfdb6
+Application frontend React pour l'Espace Comédie, une salle de spectacle spécialisée dans l'humour et la comédie. L'application permet la gestion des spectacles, réservations, et offre une interface moderne et sécurisée.
 
-## How can I edit this code?
+## 🛡️ Sécurité
 
-There are several ways of editing your application.
+L'application intègre un **système de sécurité complet** protégeant contre :
+- ✅ **XSS** (Cross-Site Scripting) - Sanitisation automatique
+- ✅ **CSRF** (Cross-Site Request Forgery) - Tokens de validation
+- ✅ **Attaques par Force Brute** - Rate limiting intelligent
+- ✅ **Injection** - Validation stricte des entrées
+- ✅ **Clickjacking** - Headers de sécurité
 
-**Use Lovable**
+### Documentation de Sécurité
+- 📖 [Guide de Sécurité](SECURITY.md) - Détails des protections
+- 📖 [Implémentation Sécurité](SECURITY_IMPLEMENTATION.md) - Guide technique
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/fa731efc-4e8e-4259-9e51-424435bcfdb6) and start prompting.
+## 🚀 Technologies
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Framework** : React 18 + TypeScript
+- **Build Tool** : Vite
+- **Styling** : Tailwind CSS + shadcn/ui
+- **Routing** : React Router DOM
+- **State Management** : React Query (TanStack)
+- **Validation** : Zod + React Hook Form
+- **Tests** : Vitest + React Testing Library
+- **Sécurité** : DOMPurify, js-cookie, rate-limiter-flexible
 
-**Use your preferred IDE**
+## 📁 Structure du Projet
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```
+frontend/
+├── src/
+│   ├── components/          # Composants React
+│   │   ├── ui/             # Composants UI (shadcn)
+│   │   ├── Newsletter.tsx  # Newsletter sécurisée
+│   │   ├── Header.tsx      # Navigation
+│   │   └── ...
+│   ├── pages/              # Pages de l'application
+│   ├── hooks/              # Hooks personnalisés
+│   │   └── useSecurity.ts  # Hook de sécurité
+│   ├── services/           # Services API
+│   │   └── secureApi.ts    # Service API sécurisé
+│   ├── utils/              # Utilitaires
+│   │   └── security.ts     # Fonctions de sécurité
+│   ├── contexts/           # Contextes React
+│   ├── test/               # Tests unitaires
+│   └── types/              # Types TypeScript
+├── public/                 # Assets statiques
+└── docs/                   # Documentation
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🛠️ Installation et Développement
 
-Follow these steps:
+### Prérequis
+- Node.js 18+ et npm
+- Docker et Docker Compose (pour l'environnement complet)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation Locale
+```bash
+# Cloner le projet
+git clone <repository-url>
+cd scene-de-rire-prototype/frontend
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Installer les dépendances
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Démarrer en mode développement
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environnement Docker (Recommandé)
+```bash
+# Depuis la racine du projet
+docker-compose up frontend
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+L'application sera disponible sur `http://localhost:5173`
 
-**Use GitHub Codespaces**
+## 🧪 Tests
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Tests Unitaires
+```bash
+# Lancer tous les tests
+npm test
 
-## What technologies are used for this project?
+# Interface de test interactive
+npm run test:ui
 
-This project is built with:
+# Tests avec couverture
+npm run test:coverage
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Tests en mode watch
+npm run test:watch
+```
 
-## How can I deploy this project?
+### Tests de Sécurité
+```bash
+# Audit de sécurité
+npm run security:audit
 
-Simply open [Lovable](https://lovable.dev/projects/fa731efc-4e8e-4259-9e51-424435bcfdb6) and click on Share -> Publish.
+# Correction automatique
+npm run security:fix
 
-## Can I connect a custom domain to my Lovable project?
+# Tests manuels de sécurité
+node src/test-simple.js
+```
 
-Yes, you can!
+## 📦 Scripts Disponibles
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Démarre le serveur de développement |
+| `npm run build` | Build de production |
+| `npm run preview` | Prévisualise le build de production |
+| `npm test` | Lance les tests unitaires |
+| `npm run test:ui` | Interface de test interactive |
+| `npm run test:coverage` | Tests avec rapport de couverture |
+| `npm run lint` | Vérification du code |
+| `npm run security:audit` | Audit de sécurité des dépendances |
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🔧 Configuration
+
+### Variables d'Environnement
+```env
+VITE_API_URL=http://localhost:5000  # URL de l'API backend
+```
+
+### Configuration TypeScript
+- `tsconfig.json` - Configuration TypeScript principale
+- `tsconfig.node.json` - Configuration pour Node.js
+- `src/types/test.d.ts` - Types pour les tests
+
+## 🎯 Fonctionnalités Principales
+
+### 🎭 Gestion des Spectacles
+- Affichage des spectacles à venir
+- Détails des spectacles
+- Calendrier des événements
+- Recherche et filtrage
+
+### 🎫 Système de Réservation
+- Réservation en ligne sécurisée
+- Paiement via Stripe
+- Génération de QR codes
+- Validation des billets
+
+### 👥 Gestion des Utilisateurs
+- Inscription/Connexion sécurisée
+- Profil utilisateur
+- Historique des réservations
+- Gestion des préférences
+
+### 📧 Newsletter Sécurisée
+- Inscription à la newsletter
+- Validation stricte des emails
+- Protection contre le spam
+- Gestion des désabonnements
+
+### 🏢 Administration
+- Dashboard administrateur
+- Gestion des spectacles
+- Statistiques de vente
+- Gestion des utilisateurs
+
+## 🛡️ Système de Sécurité
+
+### Protection XSS
+```typescript
+import { sanitizeString } from '@/utils/security'
+
+const userInput = '<script>alert("xss")</script>Hello'
+const sanitized = sanitizeString(userInput) // "Hello"
+```
+
+### Rate Limiting
+```typescript
+import { useSecurity } from '@/hooks/useSecurity'
+
+const { checkRateLimitForAction } = useSecurity()
+const isAllowed = checkRateLimitForAction('login', 5, 15 * 60 * 1000)
+```
+
+### Validation Stricte
+```typescript
+import { newsletterFormSchema } from '@/utils/security'
+
+const validatedData = newsletterFormSchema.parse({ email: userEmail })
+```
+
+## 📚 Documentation
+
+- 📖 [Guide de Sécurité](SECURITY.md) - Mesures de sécurité détaillées
+- 📖 [Implémentation Sécurité](SECURITY_IMPLEMENTATION.md) - Guide technique
+- 📖 [Configuration Production](../PRODUCTION_SETUP.md) - Déploiement
+- 📖 [Configuration Email](../EMAIL_CONFIG.md) - Configuration SMTP
+- 📖 [Configuration Stripe](../STRIPE_CONFIG.md) - Paiements
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+## 📄 Licence
+
+Ce projet est propriétaire de l'Espace Comédie.
+
+## 🆘 Support
+
+Pour toute question ou problème :
+- 📧 Email : contact@espacecomedie.fr
+- 🐛 Issues : GitHub Issues
+- 📖 Documentation : Voir les fichiers de documentation
+
+---
+
+**Espace Comédie** - Votre salle de spectacle pour l'humour et la comédie ! 🎭✨
