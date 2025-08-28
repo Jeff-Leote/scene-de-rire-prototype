@@ -33,7 +33,7 @@ const Reservation = () => {
   const location = useLocation();
   const params = useParams();
   const { addToCart, removeFromCart, cart } = useCart();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const cartRef = useRef(cart);
   const didAutoAddRef = useRef(false);
@@ -41,20 +41,11 @@ const Reservation = () => {
 
   // Protection de la page - redirection si non connecté
   useEffect(() => {
-    console.log('🔐 Reservation - isAuthenticated:', isAuthenticated);
-    console.log('🔐 Reservation - isLoading:', isLoading);
-    
-    if (!isLoading && !isAuthenticated) {
-      console.log('🚫 Utilisateur non connecté, redirection vers /connexion');
-      
-      // Utiliser setTimeout pour s'assurer que la redirection se fait après le rendu
-      const redirectTimer = setTimeout(() => {
-        navigate('/connexion', { replace: true });
-      }, 100);
-      
-      return () => clearTimeout(redirectTimer);
+    if (!isAuthenticated) {
+      navigate('/connexion');
+      return;
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, navigate]);
 
   // Mettre à jour la référence quand le panier change
   useEffect(() => {
@@ -425,41 +416,9 @@ const Reservation = () => {
     }
   }, []);
 
-  // Si en cours de vérification de l'authentification, afficher un loader
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black">
-        <Header activeItem="Réservation" />
-        <div className="pt-24 pb-16">
-          <div className="container mx-auto px-6">
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  // Si non connecté, afficher un message de redirection
+  // Si non connecté, ne rien afficher (redirection en cours)
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-black">
-        <Header activeItem="Réservation" />
-        <div className="pt-24 pb-16">
-          <div className="container mx-auto px-6">
-            <div className="flex justify-center items-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-                <p className="text-white text-lg">Redirection vers la page de connexion...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+    return null;
   }
 
   if (loading) {

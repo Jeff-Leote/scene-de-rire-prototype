@@ -23,57 +23,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    console.log('🚪 Déconnexion en cours...');
-    
-    // Nettoyer le localStorage
     localStorage.removeItem('token');
-    localStorage.removeItem('cart');
-    
-    // Réinitialiser l'état immédiatement
+    localStorage.removeItem('cart'); // Vider le panier lors de la déconnexion
     setToken(null);
     setUser(null);
-    
-    console.log('✅ Déconnexion terminée');
   };
 
   useEffect(() => {
     const verifyToken = async () => {
-      console.log('🔍 Vérification du token...');
-      
       if (!token) {
-        console.log('❌ Aucun token trouvé');
         setIsLoading(false);
         return;
       }
 
       try {
-        console.log('🌐 Vérification auprès de l\'API...');
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/auth/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
           },
         });
 
         if (!response.ok) {
-          console.log('❌ Token invalide, réponse:', response.status);
           throw new Error("Session expirée ou utilisateur supprimé");
         }
 
         const userData = await response.json();
-        console.log('✅ Token valide, utilisateur:', userData.email);
         setUser(userData);
       } catch (err) {
-        console.log('❌ Erreur lors de la vérification du token:', err);
         toast.error("Votre session a expiré ou votre compte a été supprimé.");
         logout();
       } finally {
-        // Ajouter un délai pour éviter les flashs en production
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 200);
+        setIsLoading(false);
       }
     };
 
