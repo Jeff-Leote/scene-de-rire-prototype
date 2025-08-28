@@ -1,0 +1,20 @@
+FROM node:24-alpine3.20
+
+WORKDIR /app
+
+# Installer les dépendances système
+RUN apk add --no-cache python3 make g++
+
+# Copier seulement package.json d'abord
+COPY package.json ./
+
+# Installer les dépendances
+RUN npm install --legacy-peer-deps
+
+# Copier le code source (sans les fichiers de config)
+COPY src/ ./src/
+
+EXPOSE 5173
+
+# Commande de démarrage
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

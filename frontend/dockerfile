@@ -2,26 +2,22 @@ FROM node:24-alpine3.20
 
 WORKDIR /app
 
-# Créer un utilisateur non-root
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Installer les dépendances système nécessaires
+RUN apk add --no-cache python3 make g++
 
-# Copier package.json et package-lock.json d'abord pour optimiser le cache
+# Copier package.json et package-lock.json d'abord
 COPY package*.json ./
 
-# Installer les dépendances avec --legacy-peer-deps pour éviter les conflits
+# Installer les dépendances
 RUN npm install --legacy-peer-deps
 
-# Installer explicitement qrcode
-RUN npm install qrcode @types/qrcode
+# Copier le reste des fichiers
+COPY . .
 
-# Copier les fichiers avec les bonnes permissions
-COPY --chown=nodejs:nodejs . .
-
-# Changer les permissions
-RUN chown -R nodejs:nodejs /app
-
-USER nodejs
+# Créer les dossiers nécessaires
+RUN mkdir -p dist
 
 EXPOSE 5173
+
+# Commande de démarrage avec host binding pour Docker
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

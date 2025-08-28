@@ -24,6 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('cart'); // Vider le panier lors de la déconnexion
     setToken(null);
     setUser(null);
   };
@@ -81,6 +82,7 @@ const CartContext = createContext<CartContextType>({
 });
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [cart, setCart] = useState<CartItem[]>(() => {
     const stored = localStorage.getItem('cart');
     return stored ? JSON.parse(stored) : [];
@@ -89,6 +91,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Vider le panier quand l'utilisateur se déconnecte
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setCart([]);
+    }
+  }, [isAuthenticated]);
 
   const addToCart = (item: CartItem) => {
     setCart((prev) => {

@@ -2,22 +2,43 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const hpp = require("hpp");
+const xss = require("xss-clean");
 const routes = require("./routes");
+
+// Import des middlewares de sécurité
+// const { 
+//   createRateLimiters, 
+//   sanitizeInput, 
+//   helmetConfig, 
+//   csrfProtection, 
+//   securityLogger 
+// } = require("./middleware/security");
+
+// const { validateSqlQuery } = require("./utils/sqlProtection");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Configuration des limites de taux
+// const rateLimiters = createRateLimiters();
 
 const allowedOrigins = [
   "http://localhost:5173",
   "https://scene-de-rire-prototype.onrender.com",
   "https://scene-de-rire-prototype-1.onrender.com",
   "https://espacecomedie.fr",
-  "https://www.espacecomedie.fr" // si tu utilises aussi le www
+  "https://www.espacecomedie.fr"
 ];
 
+// ====== MIDDLEWARES DE SÉCURITÉ ======
+
+// 1. Helmet - En-têtes de sécurité
+// app.use(helmetConfig);
+
+// 2. CORS - Contrôle d'accès cross-origin
 app.use(cors({
   origin: function(origin, callback){
-    // autoriser requêtes sans origin (ex: Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
@@ -27,13 +48,33 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
 }));
 
-// Configuration du body parser
-app.use(express.json());  
+// 3. Limite de taux générale
+// app.use(rateLimiters.general);
 
-app.use(express.urlencoded({ extended: true }));
+// 4. Protection contre les attaques HTTP Parameter Pollution
+app.use(hpp());
+
+// 5. Protection contre les attaques XSS
+app.use(xss());
+
+// 6. Configuration du body parser avec limite de taille
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 7. Sanitisation des entrées
+// app.use(sanitizeInput);
+
+// 8. Validation des requêtes SQL
+// app.use(validateSqlQuery);
+
+// 9. Protection CSRF
+// app.use(csrfProtection);
+
+// 10. Logging de sécurité
+// app.use(securityLogger);
 
 // Middleware de logging minimal en production
 app.use((req, res, next) => {
@@ -81,12 +122,17 @@ app.use((err, req, res, next) => {
 });
 
 
-// Démarrage du serveur avec délai pour laisser la base de données se connecter
-const startServer = () => {
-  app.listen(PORT, () => {
-    console.log(`Serveur backend démarré sur http://localhost:${PORT}`);
-  });
-};
+// Export de l'app pour les tests
+module.exports = app;
 
-// Démarrer le serveur après un délai pour laisser la base de données se connecter
-setTimeout(startServer, 5000);
+// Démarrage du serveur seulement si le fichier est exécuté directement
+if (require.main === module) {
+  const startServer = () => {
+    app.listen(PORT, () => {
+      console.log(`Serveur backend démarré sur http://localhost:${PORT}`);
+    });
+  };
+
+  // Démarrer le serveur après un délai pour laisser la base de données se connecter
+  setTimeout(startServer, 5000);
+}

@@ -39,12 +39,13 @@ const Reservation = () => {
   const didAutoAddRef = useRef(false);
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Protection de la page - redirection si non connecté et panier vide
+  // Protection de la page - redirection si non connecté
   useEffect(() => {
-    if (!isAuthenticated && cart.length === 0) {
+    if (!isAuthenticated) {
       navigate('/connexion');
+      return;
     }
-  }, [isAuthenticated, cart.length, navigate]);
+  }, [isAuthenticated, navigate]);
 
   // Mettre à jour la référence quand le panier change
   useEffect(() => {
@@ -415,21 +416,9 @@ const Reservation = () => {
     }
   }, []);
 
-  // Si non connecté et panier vide, afficher un message de chargement pendant la redirection
-  if (!isAuthenticated && cart.length === 0) {
-    return (
-      <div className="min-h-screen bg-black">
-        <Header activeItem="Réservation" />
-        <div className="pt-24 pb-16">
-          <div className="container mx-auto px-6">
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+  // Si non connecté, ne rien afficher (redirection en cours)
+  if (!isAuthenticated) {
+    return null;
   }
 
   if (loading) {
