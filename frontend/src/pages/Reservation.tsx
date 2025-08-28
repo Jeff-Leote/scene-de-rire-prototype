@@ -33,7 +33,7 @@ const Reservation = () => {
   const location = useLocation();
   const params = useParams();
   const { addToCart, removeFromCart, cart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const cartRef = useRef(cart);
   const didAutoAddRef = useRef(false);
@@ -41,11 +41,15 @@ const Reservation = () => {
 
   // Protection de la page - redirection si non connecté
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/connexion');
+    console.log('🔐 Reservation - isAuthenticated:', isAuthenticated);
+    console.log('🔐 Reservation - isLoading:', isLoading);
+    
+    if (!isLoading && !isAuthenticated) {
+      console.log('🚫 Utilisateur non connecté, redirection vers /connexion');
+      navigate('/connexion', { replace: true });
       return;
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   // Mettre à jour la référence quand le panier change
   useEffect(() => {

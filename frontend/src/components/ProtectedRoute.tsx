@@ -1,37 +1,44 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { ProtectedRouteProps } from '@/services/types';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const ProtectedRoute = ({ children, requireAuth = false, requireAdmin = false }: ProtectedRouteProps) => {
-  const { isAuthenticated, user, isLoading } = useAuth();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  redirectTo?: string;
+}
 
-  // Afficher un écran de chargement pendant l'initialisation de l'authentification
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  redirectTo = '/connexion' 
+}) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log('🛡️ ProtectedRoute - isAuthenticated:', isAuthenticated);
+    console.log('🛡️ ProtectedRoute - isLoading:', isLoading);
+    
+    if (!isLoading && !isAuthenticated) {
+      console.log('🚫 Accès refusé, redirection vers:', redirectTo);
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate, redirectTo]);
+
+  // Afficher un loader pendant la vérification
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-          <p className="text-white">Chargement...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
       </div>
     );
   }
 
-  // Si requireAuth est false (page de connexion/inscription) et l'utilisateur est connecté
-  if (!requireAuth && isAuthenticated) {
-    return <Navigate to="/" replace />;
+  // Si non authentifié, ne rien afficher (redirection en cours)
+  if (!isAuthenticated) {
+    return null;
   }
 
-  // Si requireAuth est true (page protégée) et l'utilisateur n'est pas connecté
-  if (requireAuth && !isAuthenticated) {
-    return <Navigate to="/connexion" replace />;
-  }
-
-  // Si requireAdmin est true et l'utilisateur n'est pas admin
-  if (requireAdmin && (!user || user.role !== 'admin')) {
-    return <Navigate to="/" replace />;
-  }
-
+  // Si authentifié, afficher le contenu
   return <>{children}</>;
 };
 
