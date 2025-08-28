@@ -46,8 +46,13 @@ const Reservation = () => {
     
     if (!isLoading && !isAuthenticated) {
       console.log('🚫 Utilisateur non connecté, redirection vers /connexion');
-      navigate('/connexion', { replace: true });
-      return;
+      
+      // Utiliser setTimeout pour s'assurer que la redirection se fait après le rendu
+      const redirectTimer = setTimeout(() => {
+        navigate('/connexion', { replace: true });
+      }, 100);
+      
+      return () => clearTimeout(redirectTimer);
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -420,9 +425,41 @@ const Reservation = () => {
     }
   }, []);
 
-  // Si non connecté, ne rien afficher (redirection en cours)
+  // Si en cours de vérification de l'authentification, afficher un loader
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black">
+        <Header activeItem="Réservation" />
+        <div className="pt-24 pb-16">
+          <div className="container mx-auto px-6">
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Si non connecté, afficher un message de redirection
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="min-h-screen bg-black">
+        <Header activeItem="Réservation" />
+        <div className="pt-24 pb-16">
+          <div className="container mx-auto px-6">
+            <div className="flex justify-center items-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+                <p className="text-white text-lg">Redirection vers la page de connexion...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   if (loading) {

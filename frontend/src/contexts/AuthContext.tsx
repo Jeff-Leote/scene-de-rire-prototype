@@ -52,6 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
           },
         });
 
@@ -68,7 +70,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error("Votre session a expiré ou votre compte a été supprimé.");
         logout();
       } finally {
-        setIsLoading(false);
+        // Ajouter un délai pour éviter les flashs en production
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       }
     };
 
