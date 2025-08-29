@@ -24,6 +24,17 @@ CREATE TABLE user (
 );
 
 -- =====================================================
+-- TABLE NEWSLETTER SUBSCRIBERS
+-- =====================================================
+CREATE TABLE newsletter_subscribers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email (email),
+  INDEX idx_subscribed_at (subscribed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
 -- TABLE ARTISTES
 -- =====================================================
 CREATE TABLE artiste (
@@ -52,17 +63,6 @@ CREATE TABLE spectacle (
 );
 
 -- =====================================================
--- TABLE AVIS
--- =====================================================
-CREATE TABLE avis (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  user_id INT NOT NULL,
-  spectacle_id INT NOT NULL,
-  message TEXT NOT NULL,
-  date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- =====================================================
 -- TABLE RÉSERVATIONS
 -- =====================================================
 CREATE TABLE reservation (
@@ -74,9 +74,9 @@ CREATE TABLE reservation (
 );
 
 -- =====================================================
--- TABLE TICKETS (1 ticket/personne)
+-- TABLE TICKETS (1 ticket par personne)
 -- =====================================================
-CREATE TABLE IF NOT EXISTS ticket (
+CREATE TABLE ticket (
   id INT PRIMARY KEY AUTO_INCREMENT,
   reservation_id INT NOT NULL,
   qr_code_path VARCHAR(255) NULL,
@@ -84,7 +84,8 @@ CREATE TABLE IF NOT EXISTS ticket (
   used_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_reservation_id (reservation_id),
-  FOREIGN KEY (reservation_id) REFERENCES reservation(id)
+  INDEX idx_ticket_used (used),
+  INDEX idx_ticket_used_at (used_at)
 );
 
 -- =====================================================
@@ -109,11 +110,22 @@ CREATE TABLE paiement_reservation (
 );
 
 -- =====================================================
+-- TABLE AVIS
+-- =====================================================
+CREATE TABLE avis (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  spectacle_id INT NOT NULL,
+  message TEXT NOT NULL,
+  date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
 -- TABLE LIEU (Images de la galerie)
 -- =====================================================
 CREATE TABLE lieu (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    image_path VARCHAR(512) NOT NULL,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  image_path VARCHAR(512) NOT NULL,
   image_detail_path VARCHAR(512),
   is_main BOOLEAN DEFAULT FALSE
 );
@@ -139,7 +151,7 @@ CREATE TABLE promo_codes (
 -- =====================================================
 -- TABLE PARAMETRES (SETTINGS)
 -- =====================================================
-CREATE TABLE IF NOT EXISTS settings (
+CREATE TABLE settings (
   `key` VARCHAR(100) PRIMARY KEY,
   `value` TEXT,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -148,24 +160,49 @@ CREATE TABLE IF NOT EXISTS settings (
 -- =====================================================
 -- CLÉS ÉTRANGÈRES
 -- =====================================================
-ALTER TABLE avis ADD FOREIGN KEY (user_id) REFERENCES user(id);
-ALTER TABLE avis ADD FOREIGN KEY (spectacle_id) REFERENCES spectacle(id);
+
+-- Clés étrangères pour les spectacles
 ALTER TABLE spectacle ADD FOREIGN KEY (artiste_id) REFERENCES artiste(id);
+
+-- Clés étrangères pour les réservations
 ALTER TABLE reservation ADD FOREIGN KEY (user_id) REFERENCES user(id);
 ALTER TABLE reservation ADD FOREIGN KEY (spectacle_id) REFERENCES spectacle(id);
+
+-- Clés étrangères pour les tickets
+ALTER TABLE ticket ADD FOREIGN KEY (reservation_id) REFERENCES reservation(id);
+
+-- Clés étrangères pour les paiements
 ALTER TABLE paiement_reservation ADD FOREIGN KEY (paiement_id) REFERENCES paiement(id);
 ALTER TABLE paiement_reservation ADD FOREIGN KEY (reservation_id) REFERENCES reservation(id);
+
+-- Clés étrangères pour les avis
+ALTER TABLE avis ADD FOREIGN KEY (user_id) REFERENCES user(id);
+ALTER TABLE avis ADD FOREIGN KEY (spectacle_id) REFERENCES spectacle(id);
 
 -- =====================================================
 -- INDEX POUR OPTIMISATION
 -- =====================================================
+
 -- Index pour les codes promo
 CREATE INDEX idx_promo_codes_active ON promo_codes(is_active);
 CREATE INDEX idx_promo_codes_validity ON promo_codes(valid_from, valid_until);
 
--- Index pour le système de scan de QR codes (désormais au niveau des tickets)
-CREATE INDEX idx_ticket_used ON ticket(used);
-CREATE INDEX idx_ticket_used_at ON ticket(used_at);
+-- Index pour les spectacles
+CREATE INDEX idx_spectacle_date ON spectacle(date_spectacle);
+CREATE INDEX idx_spectacle_artiste ON spectacle(artiste_id);
+
+-- Index pour les réservations
+CREATE INDEX idx_reservation_user ON reservation(user_id);
+CREATE INDEX idx_reservation_spectacle ON reservation(spectacle_id);
+CREATE INDEX idx_reservation_date ON reservation(date);
+
+-- Index pour les paiements
+CREATE INDEX idx_paiement_session ON paiement(session_id);
+CREATE INDEX idx_paiement_date ON paiement(date);
+
+-- Index pour les avis
+CREATE INDEX idx_avis_user ON avis(user_id);
+CREATE INDEX idx_avis_spectacle ON avis(spectacle_id);
 
 -- =====================================================
 -- DONNÉES DE TEST
@@ -221,17 +258,6 @@ INSERT INTO promo_codes (code, type, value, description, is_active, max_uses, va
 INSERT INTO settings (`key`, `value`) VALUES
 ('contact_recipient_email', 'contact@espacecomedia.fr')
 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
-
--- =====================================================
--- TABLE NEWSLETTER SUBSCRIBERS
--- =====================================================
-CREATE TABLE newsletter_subscribers (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_email (email),
-  INDEX idx_subscribed_at (subscribed_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
 -- FIN D'INITIALISATION

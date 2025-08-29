@@ -18,6 +18,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import Header from "@/components/Header";
+import PasswordStrength from "@/components/PasswordStrength";
+import PasswordHelper from "@/components/PasswordHelper";
+import { usePasswordValidation } from "@/hooks/usePasswordValidation";
 
 const formSchema = z.object({
   civility: z.enum(["M.", "Mme.","Non-renseigné"], {
@@ -41,9 +44,12 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Veuillez entrer une adresse email valide",
   }),
-  password: z.string().min(8, {
-    message: "Le mot de passe doit contenir au moins 8 caractères",
-  }),
+  password: z.string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
+    .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
+    .regex(/\d/, "Le mot de passe doit contenir au moins un chiffre")
+    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Le mot de passe doit contenir au moins un caractère spécial"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
@@ -65,6 +71,7 @@ const formSchema = z.object({
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPasswordStrength, setShowPasswordStrength] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -356,10 +363,29 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         placeholder="••••••••" 
                         type="password"
                         className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
-                        {...field} 
+                        {...field}
+                        onFocus={() => setShowPasswordStrength(true)}
+                        onBlur={() => {
+                          if (!field.value) setShowPasswordStrength(false);
+                        }}
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
+                    
+                    {/* Password strength indicator */}
+                    {showPasswordStrength && field.value && (
+                      <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                        <PasswordStrength 
+                          password={field.value} 
+                          confirmPassword={form.watch("confirmPassword")}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Password helper */}
+                    {showPasswordStrength && (
+                      <PasswordHelper />
+                    )}
                   </FormItem>
                 )}
               />
