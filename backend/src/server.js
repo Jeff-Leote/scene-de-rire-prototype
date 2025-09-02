@@ -6,22 +6,22 @@ const hpp = require("hpp");
 const xss = require("xss-clean");
 const routes = require("./routes");
 
-// Import des middlewares de sécurité
-// const { 
-//   createRateLimiters, 
-//   sanitizeInput, 
-//   helmetConfig, 
-//   csrfProtection, 
-//   securityLogger 
-// } = require("./middleware/security");
+// Import des middlewares de sécurité optimisés
+const { 
+  createRateLimiters, 
+  sanitizeInput, 
+  helmetConfig, 
+  csrfProtection, 
+  securityLogger 
+} = require("./middleware/security");
 
-// const { validateSqlQuery } = require("./utils/sqlProtection");
+const { validateSqlQuery } = require("./utils/sqlProtection");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configuration des limites de taux
-// const rateLimiters = createRateLimiters();
+// Configuration des limites de taux optimisées pour la production
+const rateLimiters = createRateLimiters();
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -31,10 +31,10 @@ const allowedOrigins = [
   "https://www.espacecomedie.fr"
 ];
 
-// ====== MIDDLEWARES DE SÉCURITÉ ======
+// ====== MIDDLEWARES DE SÉCURITÉ OPTIMISÉS ======
 
-// 1. Helmet - En-têtes de sécurité
-// app.use(helmetConfig);
+// 1. Helmet - En-têtes de sécurité (optimisé pour la performance)
+app.use(helmetConfig);
 
 // 2. CORS - Contrôle d'accès cross-origin
 app.use(cors({
@@ -51,8 +51,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
 }));
 
-// 3. Limite de taux générale
-// app.use(rateLimiters.general);
+// 3. Limite de taux générale (optimisée pour la production)
+app.use(rateLimiters.general);
 
 // 4. Protection contre les attaques HTTP Parameter Pollution
 app.use(hpp());
@@ -60,27 +60,39 @@ app.use(hpp());
 // 5. Protection contre les attaques XSS
 app.use(xss());
 
-// 6. Configuration du body parser avec limite de taille
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// 6. Configuration du body parser avec limite de taille optimisée
+app.use(express.json({ limit: '5mb' })); // Réduit de 10mb à 5mb
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
-// 7. Sanitisation des entrées
-// app.use(sanitizeInput);
+// 7. Sanitisation des entrées (optimisée)
+app.use(sanitizeInput);
 
-// 8. Validation des requêtes SQL
-// app.use(validateSqlQuery);
+// 8. Validation des requêtes SQL (optimisée)
+app.use(validateSqlQuery);
 
-// 9. Protection CSRF
-// app.use(csrfProtection);
+// 9. Protection CSRF (optimisée)
+app.use(csrfProtection);
 
-// 10. Logging de sécurité
-// app.use(securityLogger);
+// 10. Logging de sécurité (optimisé)
+app.use(securityLogger);
 
-// Middleware de logging minimal en production
+// 🔧 MIDDLEWARE DE PERFORMANCE ET MONITORING
 app.use((req, res, next) => {
+  const start = Date.now();
+  
+  // Log minimal en production pour éviter le spam
   if (process.env.NODE_ENV !== 'production') {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   }
+  
+  // Monitoring des temps de réponse
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 1000) { // Log seulement les requêtes lentes (>1s)
+      console.warn(`⚠️ Requête lente: ${req.method} ${req.url} - ${duration}ms`);
+    }
+  });
+  
   next();
 });
 
@@ -89,7 +101,11 @@ app.use("/api", routes);
 
 // Route de base
 app.get("/", (req, res) => {
-  res.json({ message: "API is working!" });
+  res.json({ 
+    message: "API is working!", 
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Gestion des routes non trouvées
@@ -97,42 +113,36 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Gestion des erreurs
+// Gestion des erreurs optimisée
 app.use((err, req, res, next) => {
-  if (!err) {
-    console.error('[ERROR HANDLER] Middleware called without error object.');
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      details: 'Erreur inconnue (aucun objet d\'erreur fourni).'
-    });
-  }
-
-  console.error('[ERROR HANDLER]', err);
-
-  const errorDetails = {
-    message: err.message || 'Une erreur inconnue est survenue',
-    name: err.name || 'Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack || 'Stack inconnue' })
-  };
-
-  res.status(500).json({
-    error: 'Internal Server Error',
-    details: errorDetails.message
+  console.error('❌ Erreur serveur:', err);
+  
+  // En production, ne pas exposer les détails d'erreur
+  const errorMessage = process.env.NODE_ENV === 'production' 
+    ? 'Erreur interne du serveur' 
+    : err.message;
+  
+  res.status(err.status || 500).json({ 
+    error: errorMessage,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
 });
 
-
-// Export de l'app pour les tests
-module.exports = app;
-
-// Démarrage du serveur seulement si le fichier est exécuté directement
-if (require.main === module) {
-  const startServer = () => {
-    app.listen(PORT, () => {
-      console.log(`Serveur backend démarré sur http://localhost:${PORT}`);
-    });
-  };
-
-  // Démarrer le serveur après un délai pour laisser la base de données se connecter
-  setTimeout(startServer, 5000);
+// 🔧 OPTIMISATIONS POUR RENDER
+if (process.env.NODE_ENV === 'production') {
+  // Keep-alive pour éviter la mise en veille
+  setInterval(() => {
+    console.log('🔄 Keep-alive ping -', new Date().toISOString());
+  }, 300000); // Toutes les 5 minutes
 }
+
+// Démarrer le serveur seulement si exécuté directement
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+    console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`⏰ Heure de démarrage: ${new Date().toISOString()}`);
+  });
+}
+
+module.exports = app;

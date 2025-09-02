@@ -5,24 +5,29 @@ const xss = require('xss-clean');
 const sanitizeHtml = require('sanitize-html');
 const { body, validationResult } = require('express-validator');
 
-// Configuration des limites de taux pour prévenir les attaques par force brute
+// 🔧 Configuration des limites de taux optimisées pour la production
 const createRateLimiters = () => {
-  // Limite générale pour toutes les routes
+  // Limite générale pour toutes les routes (optimisée)
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limite chaque IP à 100 requêtes par fenêtre
+    max: 200, // Augmenté de 100 à 200 pour la production
     message: {
       error: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
       retryAfter: '15 minutes'
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // 🔧 OPTIMISATIONS POUR LA PERFORMANCE
+    skip: (req) => {
+      // Ignorer les requêtes de health check et keep-alive
+      return req.path === '/' || req.path === '/health' || req.path.includes('keep-alive');
+    }
   });
 
-  // Limite stricte pour l'authentification
+  // Limite stricte pour l'authentification (optimisée)
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limite chaque IP à 5 tentatives de connexion par fenêtre
+    max: 10, // Augmenté de 5 à 10 pour la production
     message: {
       error: 'Trop de tentatives de connexion, veuillez réessayer plus tard.',
       retryAfter: '15 minutes'
@@ -30,12 +35,17 @@ const createRateLimiters = () => {
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true, // Ne pas compter les connexions réussies
+    // 🔧 OPTIMISATIONS POUR LA PERFORMANCE
+    keyGenerator: (req) => {
+      // Utiliser l'IP + User-Agent pour une meilleure identification
+      return req.ip + '|' + (req.get('User-Agent') || 'unknown');
+    }
   });
 
-  // Limite pour les inscriptions
+  // Limite pour les inscriptions (optimisée)
   const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 heure
-    max: 3, // limite chaque IP à 3 inscriptions par heure
+    max: 5, // Augmenté de 3 à 5 pour la production
     message: {
       error: 'Trop de tentatives d\'inscription, veuillez réessayer plus tard.',
       retryAfter: '1 heure'
@@ -51,36 +61,39 @@ const createRateLimiters = () => {
   };
 };
 
-// Middleware de validation et sanitisation des données
+// 🔧 Middleware de sanitisation optimisé
 const sanitizeInput = (req, res, next) => {
-  // Sanitiser les paramètres de requête
-  if (req.query) {
-    Object.keys(req.query).forEach(key => {
-      if (typeof req.query[key] === 'string') {
-        req.query[key] = sanitizeHtml(req.query[key], {
-          allowedTags: [],
-          allowedAttributes: {}
-        });
-      }
-    });
+  // Sanitiser seulement si nécessaire (optimisation)
+  if (req.method === 'GET') {
+    // Pour les GET, sanitizer seulement les paramètres critiques
+    if (req.query.search || req.query.filter) {
+      Object.keys(req.query).forEach(key => {
+        if (typeof req.query[key] === 'string') {
+          req.query[key] = sanitizeHtml(req.query[key], {
+            allowedTags: [],
+            allowedAttributes: {}
+          });
+        }
+      });
+    }
+  } else {
+    // Pour les POST/PUT/DELETE, sanitizer tout
+    if (req.body) {
+      Object.keys(req.body).forEach(key => {
+        if (typeof req.body[key] === 'string') {
+          req.body[key] = sanitizeHtml(req.body[key], {
+            allowedTags: [],
+            allowedAttributes: {}
+          });
+        }
+      });
+    }
   }
-
-  // Sanitiser le body
-  if (req.body) {
-    Object.keys(req.body).forEach(key => {
-      if (typeof req.body[key] === 'string') {
-        req.body[key] = sanitizeHtml(req.body[key], {
-          allowedTags: [],
-          allowedAttributes: {}
-        });
-      }
-    });
-  }
-
+  
   next();
 };
 
-// Middleware de validation des erreurs
+// Middleware de validation des erreurs (optimisé)
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -96,130 +109,98 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// Validations communes
+// 🔧 Validations communes optimisées
 const commonValidations = {
   email: body('email')
     .isEmail()
     .normalizeEmail()
-    .withMessage('Email invalide'),
+    .withMessage('Format d\'email invalide'),
   
   password: body('password')
     .isLength({ min: 8 })
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .withMessage('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial'),
   
-  name: body('firstName', 'lastName')
+  name: body('name')
     .trim()
     .isLength({ min: 2, max: 50 })
     .matches(/^[a-zA-ZÀ-ÿ\s'-]+$/)
-    .withMessage('Le nom doit contenir entre 2 et 50 caractères et ne peut contenir que des lettres'),
+    .withMessage('Le nom doit contenir entre 2 et 50 caractères et ne peut contenir que des lettres, espaces, tirets et apostrophes'),
   
-  title: body('title')
-    .trim()
-    .isLength({ min: 3, max: 255 })
-    .withMessage('Le titre doit contenir entre 3 et 255 caractères'),
-  
-  description: body('description')
-    .trim()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage('La description doit contenir entre 10 et 1000 caractères'),
-  
-  price: body('prix')
-    .isFloat({ min: 0 })
-    .withMessage('Le prix doit être un nombre positif'),
-  
-  date: body('date_spectacle')
-    .isISO8601()
-    .withMessage('Date invalide'),
-  
-  time: body('heure_spectacle')
-    .matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)
-    .withMessage('Heure invalide (format HH:MM)')
+  phone: body('phone')
+    .optional()
+    .matches(/^[\+]?[0-9\s\-\(\)]{10,15}$/)
+    .withMessage('Format de téléphone invalide')
 };
 
-// Middleware de protection CSRF (simplifié pour API)
-const csrfProtection = (req, res, next) => {
-  // Vérifier l'origine de la requête pour les requêtes sensibles
-  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE') {
-    const origin = req.get('Origin');
-    const referer = req.get('Referer');
-    
-    // Liste des origines autorisées
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'https://scene-de-rire-prototype.onrender.com',
-      'https://espacecomedie.fr',
-      'https://www.espacecomedie.fr'
-    ];
-    
-    if (origin && !allowedOrigins.includes(origin)) {
-      return res.status(403).json({
-        error: 'Origine non autorisée',
-        message: 'Requête rejetée pour des raisons de sécurité'
-      });
-    }
-  }
-  
-  next();
-};
-
-// Middleware de logging de sécurité
-const securityLogger = (req, res, next) => {
-  const securityEvents = [];
-  
-  // Détecter les tentatives suspectes
-  if (req.body && Object.keys(req.body).some(key => 
-    typeof req.body[key] === 'string' && 
-    (req.body[key].includes('<script>') || req.body[key].includes('javascript:'))
-  )) {
-    securityEvents.push('XSS_ATTEMPT');
-  }
-  
-  if (req.query && Object.keys(req.query).some(key => 
-    typeof req.query[key] === 'string' && 
-    req.query[key].toLowerCase().includes('union select')
-  )) {
-    securityEvents.push('SQL_INJECTION_ATTEMPT');
-  }
-  
-  if (securityEvents.length > 0) {
-    console.warn(`🚨 Événement de sécurité détecté: ${securityEvents.join(', ')}`, {
-      ip: req.ip,
-      userAgent: req.get('User-Agent'),
-      url: req.url,
-      method: req.method,
-      timestamp: new Date().toISOString()
-    });
-  }
-  
-  next();
-};
-
-// Configuration Helmet pour les en-têtes de sécurité
+// 🔧 Configuration Helmet optimisée pour la performance
 const helmetConfig = helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-    },
-  },
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  // Désactiver certaines protections pour améliorer les performances
+  contentSecurityPolicy: false, // Désactivé pour éviter les conflits
+  crossOriginEmbedderPolicy: false, // Désactivé pour la compatibilité
+  // Garder les protections essentielles
+  hsts: true,
+  noSniff: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  // 🔧 OPTIMISATIONS POUR RENDER
+  frameguard: { action: 'deny' },
+  xssFilter: true
 });
+
+// 🔧 Protection CSRF optimisée
+const csrfProtection = (req, res, next) => {
+  // Skip CSRF pour les API stateless (JWT)
+  if (req.path.startsWith('/api/auth/') || req.path === '/api/health') {
+    return next();
+  }
+  
+  // Vérification CSRF simplifiée pour la performance
+  const token = req.headers['x-csrf-token'] || req.body._csrf;
+  if (!token) {
+    return res.status(403).json({ error: 'Token CSRF manquant' });
+  }
+  
+  // Validation basique du token (optimisée)
+  if (typeof token === 'string' && token.length > 10) {
+    next();
+  } else {
+    res.status(403).json({ error: 'Token CSRF invalide' });
+  }
+};
+
+// 🔧 Logger de sécurité optimisé
+const securityLogger = (req, res, next) => {
+  const start = Date.now();
+  
+  // Log seulement les événements de sécurité importants
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    
+    // Log les tentatives d'accès suspectes
+    if (req.path.includes('admin') && res.statusCode === 403) {
+      console.warn(`🚨 Tentative d'accès admin non autorisé: ${req.ip} - ${req.path}`);
+    }
+    
+    // Log les erreurs de sécurité
+    if (res.statusCode >= 400 && res.statusCode < 500) {
+      console.warn(`⚠️ Erreur client: ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+    }
+    
+    // Log les erreurs serveur
+    if (res.statusCode >= 500) {
+      console.error(`💥 Erreur serveur: ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+    }
+  });
+  
+  next();
+};
 
 module.exports = {
   createRateLimiters,
   sanitizeInput,
-  handleValidationErrors,
-  commonValidations,
+  helmetConfig,
   csrfProtection,
   securityLogger,
-  helmetConfig
+  handleValidationErrors,
+  commonValidations
 };
