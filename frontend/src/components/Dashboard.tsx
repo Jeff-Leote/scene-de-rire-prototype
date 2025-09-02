@@ -98,16 +98,10 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
+        const { api } = await import('@/services/api');
 
         // Récupérer les spectacles
-        const spectaclesResponse = await fetch(`${API_URL}/api/admin/spectacles`, { headers });
-        if (!spectaclesResponse.ok) throw new Error('Erreur lors de la récupération des spectacles');
-        const spectaclesData = await spectaclesResponse.json();
+        const spectaclesData = await api.get<Spectacle[]>('/api/admin/spectacles');
         setSpectacles(spectaclesData);
 
         // Charger les disponibilités pour chaque spectacle (jauge)
@@ -115,9 +109,7 @@ const Dashboard = () => {
           const entries = await Promise.all(
             spectaclesData.map(async (s: Spectacle) => {
               try {
-                const r = await fetch(`${API_URL}/api/reservations/availability/${s.id}`);
-                if (!r.ok) return null;
-                const d = await r.json();
+                const d = await api.get<{ places_total: number; places_reservees: number; places_restantes: number }>(`/api/reservations/availability/${s.id}`);
                 return [s.id, { places_total: d.places_total, places_reservees: d.places_reservees, places_restantes: d.places_restantes }] as const;
               } catch {
                 return null;
@@ -132,66 +124,59 @@ const Dashboard = () => {
         }
 
         // Récupérer les artistes
-        const artistsResponse = await fetch(`${API_URL}/api/admin/artistes`, { headers });
-        if (!artistsResponse.ok) throw new Error('Erreur lors de la récupération des artistes');
-        const artistsData = await artistsResponse.json();
+        const artistsData = await api.get<Artist[]>('/api/admin/artistes');
         setArtists(artistsData);
 
         // Récupérer l'artiste à l'affiche
-        const featuredResponse = await fetch(`${API_URL}/api/admin/featured`, { headers });
-        if (featuredResponse.ok) {
-          const featuredData = await featuredResponse.json();
+        try {
+          const featuredData = await api.get<FeaturedArtist>('/api/admin/featured');
           setFeaturedArtist(featuredData);
+        } catch {
+          // Ignorer les erreurs de récupération de l'artiste à l'affiche
         }
 
         // Récupérer les réservations
-        const reservationsResponse = await fetch(`${API_URL}/api/admin/reservations`, { headers });
-        if (!reservationsResponse.ok) throw new Error('Erreur lors de la récupération des réservations');
-        const reservationsData = await reservationsResponse.json();
+        const reservationsData = await api.get<Reservation[]>('/api/admin/reservations');
         setReservations(reservationsData);
 
         // Récupérer les images du lieu
-        fetch(`${API_URL}/api/lieu/images`)
-          .then(res => res.json())
-          .then(data => {
-            if (Array.isArray(data)) setLieuImages(data);
-            else setLieuImages([]);
-          })
-          .catch(() => setLieuImages([]));
+        try {
+          const lieuData = await api.get<LieuImage[]>('/api/lieu/images');
+          if (Array.isArray(lieuData)) setLieuImages(lieuData);
+          else setLieuImages([]);
+        } catch {
+          setLieuImages([]);
+        }
 
         // Récupérer les utilisateurs
-        const usersResponse = await fetch(`${API_URL}/api/admin/users`, { headers });
-        if (!usersResponse.ok) {
-          console.error('Erreur lors de la récupération des utilisateurs:', usersResponse.status, usersResponse.statusText);
-          throw new Error('Erreur lors de la récupération des utilisateurs');
+        try {
+          const usersData = await api.get<User[]>('/api/admin/users');
+          setUsers(usersData);
+        } catch (err) {
+          console.error('Erreur lors de la récupération des utilisateurs:', err);
+          setUsers([]);
         }
-        const usersData = await usersResponse.json();
-        setUsers(usersData);
 
         // Récupérer les codes promo
-        const promoCodesResponse = await fetch(`${API_URL}/api/admin/promo-codes`, { headers });
-        if (!promoCodesResponse.ok) throw new Error('Erreur lors de la récupération des codes promo');
-        const promoCodesData = await promoCodesResponse.json();
-        setPromoCodes(promoCodesData);
+        try {
+          const promoCodesData = await api.get<PromoCode[]>('/api/admin/promo-codes');
+          setPromoCodes(promoCodesData);
+        } catch {
+          setPromoCodes([]);
+        }
 
         // Récupérer les abonnés newsletter
         try {
-          const newsletterResponse = await fetch(`${API_URL}/api/admin/newsletter/subscribers`, { headers });
-          if (newsletterResponse.ok) {
-            const newsletterData = await newsletterResponse.json();
-            setNewsletterSubscribers(newsletterData);
-          }
+          const newsletterData = await api.get<string[]>('/api/admin/newsletter/subscribers');
+          setNewsletterSubscribers(newsletterData);
         } catch {
           // Ignorer les erreurs de récupération des abonnés
         }
 
         // Récupérer l'email de contact
         try {
-          const settingsRes = await fetch(`${API_URL}/api/admin/settings/contact-email`, { headers });
-          if (settingsRes.ok) {
-            const s = await settingsRes.json();
-            setContactEmail(s.email || '');
-          }
+          const s = await api.get<{ email: string }>('/api/admin/settings/contact-email');
+          setContactEmail(s.email || '');
         } catch {
           // Ignorer les erreurs de récupération des paramètres
         }
@@ -213,12 +198,11 @@ const Dashboard = () => {
 
     const tick = async () => {
       try {
+        const { api } = await import('@/services/api');
         const entries = await Promise.all(
           ids.map(async (id) => {
             try {
-              const r = await fetch(`${API_URL}/api/reservations/availability/${id}`);
-              if (!r.ok) return null;
-              const d = await r.json();
+              const d = await api.get<{ places_total: number; places_reservees: number; places_restantes: number }>(`/api/reservations/availability/${id}`);
               return [id, { places_total: d.places_total, places_reservees: d.places_reservees, places_restantes: d.places_restantes }] as const;
             } catch { return null; }
           })

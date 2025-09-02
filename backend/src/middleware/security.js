@@ -147,24 +147,41 @@ const helmetConfig = helmet({
   xssFilter: true
 });
 
-// 🔧 Protection CSRF optimisée
+// 🔧 Protection CSRF optimisée et flexible
 const csrfProtection = (req, res, next) => {
-  // Skip CSRF pour les API stateless (JWT)
-  if (req.path.startsWith('/api/auth/') || req.path === '/api/health') {
+  // Skip CSRF pour les API stateless (JWT) et les routes publiques
+  if (req.path.startsWith('/api/auth/') || 
+      req.path === '/api/health' ||
+      req.path === '/api/spectacles' ||
+      req.path === '/api/artistes' ||
+      req.path === '/api/lieu' ||
+      req.path === '/api/contact') {
     return next();
   }
   
-  // Vérification CSRF simplifiée pour la performance
+  // Vérification CSRF pour les routes protégées
   const token = req.headers['x-csrf-token'] || req.body._csrf;
+  
+  // Si pas de token, vérifier si c'est une requête GET (lecture seule)
+  if (!token && req.method === 'GET') {
+    return next(); // Autoriser les lectures sans CSRF
+  }
+  
   if (!token) {
-    return res.status(403).json({ error: 'Token CSRF manquant' });
+    return res.status(403).json({ 
+      error: 'Token CSRF manquant',
+      message: 'Cette action nécessite une validation de sécurité'
+    });
   }
   
   // Validation basique du token (optimisée)
   if (typeof token === 'string' && token.length > 10) {
     next();
   } else {
-    res.status(403).json({ error: 'Token CSRF invalide' });
+    res.status(403).json({ 
+      error: 'Token CSRF invalide',
+      message: 'Le token de sécurité est invalide'
+    });
   }
 };
 

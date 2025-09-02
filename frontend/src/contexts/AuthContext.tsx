@@ -37,18 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/auth/me`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Session expirée ou utilisateur supprimé");
-        }
-
-        const userData = await response.json();
+        const { api } = await import('@/services/api');
+        const userData = await api.get<User>('/api/auth/me');
         setUser(userData);
       } catch (err) {
         toast.error("Votre session a expiré ou votre compte a été supprimé.");

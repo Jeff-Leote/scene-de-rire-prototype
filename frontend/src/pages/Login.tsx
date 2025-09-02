@@ -35,23 +35,11 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        }),
+      const { api } = await import('@/services/api');
+      const data = await api.post<{ token: string; user: any }>('/api/auth/login', {
+        email: formData.email,
+        password: formData.password
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la connexion");
-      }
 
       // Utiliser le contexte d'authentification pour stocker les informations
       login(data.token, data.user);

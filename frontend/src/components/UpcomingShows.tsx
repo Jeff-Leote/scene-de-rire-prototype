@@ -20,10 +20,8 @@ const UpcomingShows = () => {
   useEffect(() => {
     const fetchSpectacles = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await fetch(`${API_URL}/api/spectacles/upcoming`);
-        if (!res.ok) throw new Error("Erreur lors du chargement des spectacles");
-        const data: Spectacle[] = await res.json();
+        const { api } = await import('@/services/api');
+        const data: Spectacle[] = await api.get('/api/spectacles/upcoming');
 
         const now = new Date();
 
@@ -40,9 +38,7 @@ const UpcomingShows = () => {
           const entries = await Promise.all(
             filtered.map(async (s) => {
               try {
-                const r = await fetch(`${API_URL}/api/reservations/availability/${s.id}`);
-                if (!r.ok) return null;
-                const d = await r.json();
+                const d = await api.get<{ places_restantes: number; places_total: number }>(`/api/reservations/availability/${s.id}`);
                 return [s.id, { places_restantes: d.places_restantes, places_total: d.places_total }] as const;
               } catch {
                 return null;

@@ -23,11 +23,11 @@ const ShowsList = () => {
     const fetchSpectacles = async () => {
       try {
         setLoading(true);
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await fetch(`${API_URL}/api/spectacles?page=${page}&limit=${limit}`);
-        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
-
-        const data = await res.json();
+        const { api } = await import('@/services/api');
+        const data = await api.get<{
+          spectacles: Spectacle[];
+          pagination: { total: number };
+        }>(`/api/spectacles?page=${page}&limit=${limit}`);
 
         if (data.spectacles && Array.isArray(data.spectacles)) {
           const now = new Date();

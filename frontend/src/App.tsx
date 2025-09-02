@@ -27,6 +27,7 @@ import NotFound from './pages/NotFound';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, CartProvider } from './contexts/AuthContext';
+import { CSRFProvider } from './contexts/CSRFContext';
 import AutoLogout from './components/AutoLogout';
 
 // Configuration React Query
@@ -75,11 +76,12 @@ const App = () => (
   <AppErrorBoundary>
     <AuthProvider>
       <CartProvider>
-        <AutoLogout/>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Sonner />
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <CSRFProvider>
+          <AutoLogout/>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <Sonner />
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/spectacles" element={<Shows />} />
@@ -131,6 +133,7 @@ const App = () => (
             </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>
+        </CSRFProvider>
       </CartProvider>
     </AuthProvider>
   </AppErrorBoundary>

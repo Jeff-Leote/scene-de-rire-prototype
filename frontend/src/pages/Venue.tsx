@@ -14,9 +14,8 @@ const Venue = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/lieu/images/gallery`);
-        if (!res.ok) throw new Error("Erreur lors du chargement des images de galerie du lieu");
-        const data: LieuImage[] = await res.json();
+        const { api } = await import('@/services/api');
+        const data: LieuImage[] = await api.get('/api/lieu/images/gallery');
         setImages(data);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";

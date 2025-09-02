@@ -7,7 +7,13 @@
 
 ## 🔧 **Solutions Implémentées**
 
-### **1. Pool de Connexions MySQL Optimisé**
+### **1. Protection CSRF Intelligente et Automatique**
+- **Frontend** : Hook CSRF global avec génération automatique de tokens
+- **Service API** : Intégration automatique des tokens CSRF dans toutes les requêtes
+- **Backend** : Protection CSRF flexible (routes publiques autorisées, routes protégées sécurisées)
+- **Performance** : Tokens générés à la demande, rafraîchis automatiquement
+
+### **2. Pool de Connexions MySQL Optimisé**
 ```javascript
 // backend/src/db.js - Configuration optimisée
 const pool = mysql.createPool({
@@ -25,7 +31,7 @@ const pool = mysql.createPool({
 });
 ```
 
-### **2. Middlewares de Sécurité Optimisés**
+### **3. Middlewares de Sécurité Optimisés**
 ```javascript
 // backend/src/server.js - Middlewares activés et optimisés
 app.use(helmetConfig);              // En-têtes de sécurité
@@ -36,13 +42,21 @@ app.use(csrfProtection);            // Protection CSRF
 app.use(securityLogger);            // Logging de sécurité
 ```
 
-### **3. Script de Keep-Alive**
+### **4. Script de Keep-Alive**
 ```bash
 # Démarrer le script de keep-alive
 node backend/keep-alive.js
 ```
 
 ## 🚀 **Déploiement en Production**
+
+### **Étape 0 : Test de la Protection CSRF**
+```bash
+# Tester que la protection CSRF fonctionne
+node test-csrf.js
+
+# Vérifier que les routes publiques passent et les routes protégées sont sécurisées
+```
 
 ### **Étape 1 : Variables d'Environnement Render**
 

@@ -39,10 +39,8 @@ const SpectacleDetail = () => {
   useEffect(() => {
     const fetchSpectacle = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await fetch(`${API_URL}/api/spectacles/${id}`);
-        if (!res.ok) throw new Error("Erreur lors du chargement du spectacle");
-        const data = await res.json();
+        const { api } = await import('@/services/api');
+        const data = await api.get<Spectacle>(`/api/spectacles/${id}`);
         setSpectacle(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
@@ -58,11 +56,9 @@ const SpectacleDetail = () => {
   useEffect(() => {
     const fetchAvailability = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL;
+        const { api } = await import('@/services/api');
         if (!id) return;
-        const r = await fetch(`${API_URL}/api/reservations/availability/${id}`);
-        if (!r.ok) return;
-        const d = await r.json();
+        const d = await api.get<AvailabilityResponse>(`/api/reservations/availability/${id}`);
         setAvailability(d);
       } catch {
         // silencieux

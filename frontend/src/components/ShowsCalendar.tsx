@@ -31,12 +31,8 @@ const ShowsCalendar = () => {
   useEffect(() => {
     const fetchSpectacles = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await fetch(`${API_URL}/api/spectacles/all`);
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        const data = await res.json();
+        const { api } = await import('@/services/api');
+        const data = await api.get('/api/spectacles/all');
         if (Array.isArray(data)) {
           setSpectacles(data);
         } else {

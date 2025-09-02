@@ -49,16 +49,8 @@ const Contact = () => {
     }
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL;
-      const res = await fetch(`${API_URL}/api/contact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'Erreur lors de l\'envoi du message');
-      }
+      const { api } = await import('@/services/api');
+      const json = await api.post('/api/contact', data);
       toast.success("Message envoyé ! Merci pour votre message, nous reviendrons vers vous rapidement.");
       reset();
       setPrivacyAccepted(false); // Réinitialiser la case à cocher après envoi
