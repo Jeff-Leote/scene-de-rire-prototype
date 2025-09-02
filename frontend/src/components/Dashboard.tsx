@@ -239,12 +239,38 @@ const Dashboard = () => {
 
   const handleEditSpectacleClick = (spectacle: Spectacle) => {
     setSelectedSpectacle(spectacle);
+    
+    // Debug: afficher le format de date reçu
+    console.log('🔍 Date reçue du spectacle:', {
+      original: spectacle.date_spectacle,
+      type: typeof spectacle.date_spectacle,
+      heure: spectacle.heure_spectacle
+    });
+    
+    // Formater la date pour l'input HTML (YYYY-MM-DD)
+    const formatDateForInput = (dateString: string) => {
+      if (!dateString) return '';
+      // Si la date contient un T (format ISO), on prend juste la partie date
+      const dateOnly = dateString.split('T')[0];
+      console.log('📅 Date formatée:', { original: dateString, formatted: dateOnly });
+      return dateOnly;
+    };
+
+    // Formater l'heure pour l'input HTML (HH:mm)
+    const formatTimeForInput = (timeString: string) => {
+      if (!timeString) return '';
+      // Si l'heure contient des secondes, on ne garde que HH:mm
+      const timeOnly = timeString.split(':').slice(0, 2).join(':');
+      console.log('⏰ Heure formatée:', { original: timeString, formatted: timeOnly });
+      return timeOnly;
+    };
+
     setSpectacleFormData({
       title: spectacle.title,
       img: spectacle.img,
       description: spectacle.description,
-      date_spectacle: spectacle.date_spectacle,
-      heure_spectacle: spectacle.heure_spectacle,
+      date_spectacle: formatDateForInput(spectacle.date_spectacle),
+      heure_spectacle: formatTimeForInput(spectacle.heure_spectacle),
       prix: spectacle.prix.toString(),
       artiste_id: spectacle.artiste_id.toString(),
       lieu: spectacle.lieu,
@@ -1444,9 +1470,8 @@ const handleDeleteLieu = async (id: number) => {
                     <div className="p-4">
                       <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {img.image_path}</p>
                       <p className="text-gray-400 mb-2"><b>Type:</b> {img.is_main ? <span className="text-green-400 font-bold">Principale</span> : <span className="text-blue-400">Galerie</span>}</p>
-                      <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                        <button onClick={() => handleEditLieuClick(img)} className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
-                        <button onClick={() => handleDeleteClick('lieu' as const, img.id)} className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Supprimer</button>
+                      <div className="flex justify-center mt-2">
+                        <button onClick={() => handleEditLieuClick(img)} className="w-full bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
                       </div>
                     </div>
                   </div>

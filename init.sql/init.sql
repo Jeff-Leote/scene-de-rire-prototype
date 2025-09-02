@@ -246,7 +246,12 @@ INSERT INTO paiement_reservation (paiement_id, reservation_id, montant) VALUES
 INSERT INTO lieu (image_path, is_main) VALUES
 ('bar.webp', TRUE),
 ('bar1.webp', FALSE),
-('bar2.webp', FALSE);
+('bar2.webp', FALSE),
+('bar3.webp', FALSE),
+('bar4.webp', FALSE),
+('bar5.webp', FALSE),
+('bar6.webp', FALSE);
+
 
 -- 9. Codes promo de test
 INSERT INTO promo_codes (code, type, value, description, is_active, max_uses, valid_from, valid_until) VALUES
