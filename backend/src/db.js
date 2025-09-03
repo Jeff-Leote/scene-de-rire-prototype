@@ -9,18 +9,18 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || "espace_comedie",
   
   // 🚀 OPTIMISATIONS POUR LA PRODUCTION - PERFORMANCE MAXIMALE
-  waitForConnections: false,        // Ne pas attendre les connexions
-  connectionLimit: process.env.NODE_ENV === 'production' ? 3 : 5, // Optimal pour Render
-  queueLimit: process.env.NODE_ENV === 'production' ? 5 : 10,    // Limiter la file d'attente
+  waitForConnections: true,        // Attendre les connexions disponibles
+  connectionLimit: process.env.NODE_ENV === 'production' ? 20 : 5, // AUGMENTÉ À 20 pour la production
+  queueLimit: process.env.NODE_ENV === 'production' ? 50 : 10,    // AUGMENTÉ À 50 pour la production
   
   // ⚡ OPTIMISATIONS DE PERFORMANCE AVANCÉES
-  acquireTimeout: process.env.NODE_ENV === 'production' ? 30000 : 60000, // 30s en prod
-  timeout: process.env.NODE_ENV === 'production' ? 30000 : 60000,        // 30s en prod
+  acquireTimeout: process.env.NODE_ENV === 'production' ? 60000 : 60000, // 60s en prod (plus tolérant)
+  timeout: process.env.NODE_ENV === 'production' ? 60000 : 60000,        // 60s en prod (plus tolérant)
   reconnect: true,                  // Reconnecter automatiquement
   
   // 🔧 OPTIMISATIONS SPÉCIFIQUES RENDER
   enableKeepAlive: true,           // Maintenir les connexions actives
-  keepAliveInitialDelay: 5000,     // Keep-alive toutes les 5s (plus agressif)
+  keepAliveInitialDelay: 10000,    // Keep-alive toutes les 10s (moins agressif)
   
   // 📊 OPTIMISATIONS MYSQL2
   multipleStatements: false,        // Sécurité
@@ -29,8 +29,8 @@ const pool = mysql.createPool({
   bigNumberStrings: true,          // Grands nombres en string
   
   // 🎯 OPTIMISATIONS DE POOL
-  maxIdle: 10000,                  // Fermer les connexions inactives après 10s
-  idleTimeout: 10000,              // Timeout pour les connexions inactives
+  maxIdle: 30000,                  // Fermer les connexions inactives après 30s (plus tolérant)
+  idleTimeout: 30000,              // Timeout pour les connexions inactives (plus tolérant)
 });
 
 // Test de la connexion avec retry optimisé
@@ -51,8 +51,37 @@ const testConnection = (retries = 3, delay = 1000) => {
   });
 };
 
-// Démarrer le test de connexion immédiatement (pas de délai)
+// 🔧 PRÉ-ÉTABLIR DES CONNEXIONS POUR LA PRODUCTION
+const preEstablishConnections = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🚀 Pré-établissement des connexions DB pour la production...');
+    
+    try {
+      // Pré-établir 5 connexions
+      const connections = [];
+      for (let i = 0; i < 5; i++) {
+        const connection = await pool.promise().getConnection();
+        connections.push(connection);
+        console.log(`🔌 Connexion ${i + 1} pré-établie`);
+      }
+      
+      // Libérer les connexions après 2 secondes
+      setTimeout(() => {
+        connections.forEach(conn => conn.release());
+        console.log('✅ Connexions pré-établies libérées');
+      }, 2000);
+      
+    } catch (error) {
+      console.warn('⚠️ Erreur lors du pré-établissement des connexions:', error.message);
+    }
+  }
+};
+
+// Démarrer le test de connexion immédiatement
 testConnection();
+
+// Pré-établir les connexions en production
+preEstablishConnections();
 
 // 🔧 Gestion des événements du pool pour le monitoring
 pool.on('connection', (connection) => {

@@ -112,6 +112,43 @@ app.get('/api/rate-limit-test', (req, res) => {
   });
 });
 
+// 🔧 Endpoint de santé pour vérifier la DB et les performances
+app.get('/api/health', async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    // Test de la base de données
+    const db = require('./db');
+    await db.query('SELECT 1 as health_check');
+    
+    const duration = Date.now() - startTime;
+    
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      responseTime: `${duration}ms`,
+      environment: process.env.NODE_ENV || 'development',
+      uptime: process.uptime(),
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
+      }
+    });
+    
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    
+    res.status(500).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message,
+      responseTime: `${duration}ms`
+    });
+  }
+});
+
 // Routes API
 app.use("/api", routes);
 
@@ -146,7 +183,7 @@ app.use((err, req, res, next) => {
 
 // 🚀 OPTIMISATIONS POUR RENDER - PERFORMANCE MAXIMALE
 if (process.env.NODE_ENV === 'production') {
-  // Keep-alive agressif pour éviter la mise en veille
+  // Keep-alive optimisé pour éviter la mise en veille
   setInterval(() => {
     console.log('🔄 Keep-alive ping -', new Date().toISOString());
     
@@ -156,7 +193,7 @@ if (process.env.NODE_ENV === 'production') {
       .then(() => console.log('✅ DB: OK'))
       .catch(err => console.warn('⚠️ DB: Erreur -', err.message));
       
-  }, 4 * 60 * 1000); // Toutes les 4 minutes (ultra-agressif)
+  }, 8 * 60 * 1000); // Toutes les 8 minutes (moins agressif)
   
   // Optimisation de la mémoire
   setInterval(() => {
@@ -164,7 +201,7 @@ if (process.env.NODE_ENV === 'production') {
       global.gc();
       console.log('🧹 Garbage collection effectuée');
     }
-  }, 30 * 60 * 1000); // Toutes les 30 minutes
+  }, 60 * 60 * 1000); // Toutes les 60 minutes (moins agressif)
 }
 
 // Démarrer le serveur seulement si exécuté directement
