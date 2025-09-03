@@ -29,21 +29,25 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, CartProvider } from './contexts/AuthContext';
 import { CSRFProvider } from './contexts/CSRFContext';
 import AutoLogout from './components/AutoLogout';
+import { usePreloadData } from './hooks/usePreloadData';
 
-// 🚀 Configuration React Query optimisée pour la production
+// 🚀 Configuration React Query ultra-optimisée pour la production
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // ⚡ Optimisations de performance
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: true,
+      // ⚡ OPTIMISATIONS AGGRESSIVES POUR LA PRODUCTION
+      staleTime: 10 * 60 * 1000, // 10 minutes - données fraîches plus longtemps
+      retry: 5,                   // 5 tentatives pour éviter les échecs
+      retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000), // Max 5s
+      refetchOnWindowFocus: false, // Pas de refetch automatique
+      refetchOnMount: false,       // Pas de refetch au montage si en cache
+      refetchOnReconnect: false,   // Pas de refetch à la reconnexion
       
-      // 🔧 Cache intelligent
-      gcTime: 10 * 60 * 1000,   // 10 minutes
+      // 🔧 CACHE ULTRA-INTELLIGENT
+      gcTime: 30 * 60 * 1000,     // 30 minutes - garder en cache très longtemps
+      
+      // 🎯 FALLBACKS POUR ÉVITER LES COMPOSANTS VIDES
+      placeholderData: (previousData) => previousData, // Garder les anciennes données
       
       // 📊 Monitoring des performances (en développement seulement)
       ...(process.env.NODE_ENV === 'development' && {
@@ -57,7 +61,7 @@ const queryClient = new QueryClient({
     },
     mutations: {
       // 🔄 Optimisations des mutations
-      retry: 1,
+      retry: 3,                   // 3 tentatives pour les mutations
       retryDelay: 1000,
       onSuccess: (data, variables, context) => {
         if (process.env.NODE_ENV === 'development') {
@@ -69,7 +73,6 @@ const queryClient = new QueryClient({
 });
 
 // Petit Error Boundary pour éviter les écrans blancs
-
 class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }>{
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -100,6 +103,65 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
   }
 }
 
+// Composant principal avec préchargement
+const AppContent = () => {
+  // 🚀 Préchargement global des données critiques
+  usePreloadData();
+  
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/spectacles" element={<Shows />} />
+        <Route path="/spectacles/:id" element={<SpectacleDetail />} />
+        <Route path="/le-lieu" element={<Venue />} />
+        <Route path="/reservation" element={<Reservation />} />
+        <Route path="/reservation/informations" element={<ReservationInformations />} />
+        <Route path="/reservation/paiement" element={<ReservationPaiement />} />
+        <Route path="/payment-status" element={<PaymentStatus />} />
+        <Route path="/validate-ticket/:reservationId" element={<ValidateTicket />} />
+
+        <Route path="/artistes" element={<Artists />} />
+        <Route 
+          path="/connexion" 
+          element={
+            <ProtectedRoute>
+              <Login />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/inscription" 
+          element={
+            <ProtectedRoute>
+              <Register />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/mon-compte" 
+          element={
+            <ProtectedRoute requireAuth>
+              <MyAccount />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute requireAuth requireAdmin>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/unsubscribe" element={<Unsubscribe />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
 const App = () => (
   <AppErrorBoundary>
     <AuthProvider>
@@ -109,58 +171,9 @@ const App = () => (
           <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <Sonner />
-              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/spectacles" element={<Shows />} />
-                <Route path="/spectacles/:id" element={<SpectacleDetail />} />
-                <Route path="/le-lieu" element={<Venue />} />
-                <Route path="/reservation" element={<Reservation />} />
-                <Route path="/reservation/informations" element={<ReservationInformations />} />
-                <Route path="/reservation/paiement" element={<ReservationPaiement />} />
-                <Route path="/payment-status" element={<PaymentStatus />} />
-                <Route path="/validate-ticket/:reservationId" element={<ValidateTicket />} />
-
-                <Route path="/artistes" element={<Artists />} />
-                <Route 
-                  path="/connexion" 
-                  element={
-                    <ProtectedRoute>
-                      <Login />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/inscription" 
-                  element={
-                    <ProtectedRoute>
-                      <Register />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/mon-compte" 
-                  element={
-                    <ProtectedRoute requireAuth>
-                      <MyAccount />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute requireAuth requireAdmin>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/unsubscribe" element={<Unsubscribe />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </QueryClientProvider>
+              <AppContent />
+            </TooltipProvider>
+          </QueryClientProvider>
         </CSRFProvider>
       </CartProvider>
     </AuthProvider>

@@ -140,7 +140,7 @@ if (process.env.NODE_ENV === 'production') {
       .then(() => console.log('✅ DB: OK'))
       .catch(err => console.warn('⚠️ DB: Erreur -', err.message));
       
-  }, 8 * 60 * 1000); // Toutes les 8 minutes (plus agressif)
+  }, 4 * 60 * 1000); // Toutes les 4 minutes (ultra-agressif)
   
   // Optimisation de la mémoire
   setInterval(() => {
