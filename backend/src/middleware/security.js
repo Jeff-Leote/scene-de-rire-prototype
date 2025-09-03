@@ -5,12 +5,12 @@ const xss = require('xss-clean');
 const sanitizeHtml = require('sanitize-html');
 const { body, validationResult } = require('express-validator');
 
-// 🔧 Configuration des limites de taux optimisées pour la production
+// 🔧 Configuration des limites de taux ULTRA-PERMISSIVE pour la production
 const createRateLimiters = () => {
-  // Limite générale pour toutes les routes (optimisée)
+  // Limite générale pour toutes les routes (ULTRA-PERMISSIVE)
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200, // Augmenté de 100 à 200 pour la production
+    max: 1000, // AUGMENTÉ À 1000 pour la production (était 200)
     message: {
       error: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
       retryAfter: '15 minutes'
@@ -19,15 +19,21 @@ const createRateLimiters = () => {
     legacyHeaders: false,
     // 🔧 OPTIMISATIONS POUR LA PERFORMANCE
     skip: (req) => {
-      // Ignorer les requêtes de health check et keep-alive
-      return req.path === '/' || req.path === '/health' || req.path.includes('keep-alive');
+      // Ignorer les requêtes de health check, keep-alive ET routes publiques
+      return req.path === '/' || 
+             req.path === '/health' || 
+             req.path.includes('keep-alive') ||
+             req.path.startsWith('/api/spectacles') ||
+             req.path.startsWith('/api/artistes') ||
+             req.path.startsWith('/api/lieu') ||
+             req.path.startsWith('/api/contact');
     }
   });
 
-  // Limite stricte pour l'authentification (optimisée)
+  // Limite PERMISSIVE pour l'authentification (production)
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Augmenté de 5 à 10 pour la production
+    max: 50, // AUGMENTÉ À 50 pour la production (était 10)
     message: {
       error: 'Trop de tentatives de connexion, veuillez réessayer plus tard.',
       retryAfter: '15 minutes'
@@ -42,10 +48,10 @@ const createRateLimiters = () => {
     }
   });
 
-  // Limite pour les inscriptions (optimisée)
+  // Limite PERMISSIVE pour les inscriptions (production)
   const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 heure
-    max: 5, // Augmenté de 3 à 5 pour la production
+    max: 20, // AUGMENTÉ À 20 pour la production (était 5)
     message: {
       error: 'Trop de tentatives d\'inscription, veuillez réessayer plus tard.',
       retryAfter: '1 heure'
@@ -54,10 +60,30 @@ const createRateLimiters = () => {
     legacyHeaders: false,
   });
 
+  // 🔧 Rate limiter ULTRA-PERMISSIF pour les routes publiques
+  const publicRoutesLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5000, // 5000 requêtes par 15 minutes pour les routes publiques
+    message: {
+      error: 'Limite de requêtes atteinte pour les routes publiques.',
+      retryAfter: '15 minutes'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    // 🔧 APPLIQUER SEULEMENT aux routes publiques
+    skip: (req) => {
+      return !req.path.startsWith('/api/spectacles') && 
+             !req.path.startsWith('/api/artistes') && 
+             !req.path.startsWith('/api/lieu') && 
+             !req.path.startsWith('/api/contact');
+    }
+  });
+
   return {
     general: generalLimiter,
     auth: authLimiter,
-    register: registerLimiter
+    register: registerLimiter,
+    publicRoutes: publicRoutesLimiter
   };
 };
 

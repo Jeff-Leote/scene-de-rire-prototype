@@ -51,8 +51,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
 }));
 
-// 3. Limite de taux générale (optimisée pour la production)
-app.use(rateLimiters.general);
+// 3. Rate limiters optimisés pour la production
+app.use(rateLimiters.publicRoutes); // ULTRA-PERMISSIF pour les routes publiques
+app.use(rateLimiters.general);      // Général pour les autres routes
 
 // 4. Protection contre les attaques HTTP Parameter Pollution
 app.use(hpp());
@@ -94,6 +95,21 @@ app.use((req, res, next) => {
   });
   
   next();
+});
+
+// 🔧 Endpoint de test pour vérifier le rate limiting
+app.get('/api/rate-limit-test', (req, res) => {
+  res.json({
+    message: 'Rate limiting test réussi !',
+    timestamp: new Date().toISOString(),
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    rateLimitInfo: {
+      remaining: req.headers['x-ratelimit-remaining'],
+      reset: req.headers['x-ratelimit-reset'],
+      limit: req.headers['x-ratelimit-limit']
+    }
+  });
 });
 
 // Routes API
