@@ -14,7 +14,8 @@
     "security:fix": "npm audit fix",
     "performance:check": "node -e \"console.log('Vérification des performances...'); console.log('Mémoire:', Math.round(process.memoryUsage().heapUsed / 1024 / 1024), 'MB');\"",
     "diagnostic": "node diagnostic.js",
-    "test:performance": "node test-performance.js"
+    "test:performance": "node test-performance.js",
+    "test:cors": "node test-cors.js"
   },
   "keywords": [],
   "author": "",

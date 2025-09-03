@@ -28,7 +28,10 @@ const allowedOrigins = [
   "https://scene-de-rire-prototype.onrender.com",
   "https://scene-de-rire-prototype-1.onrender.com",
   "https://espacecomedie.fr",
-  "https://www.espacecomedie.fr"
+  "https://www.espacecomedie.fr",
+  // 🔧 DOMAINES ADDITIONNELS POUR LA PRODUCTION
+  "https://espacecomedie.com",
+  "https://www.espacecomedie.com"
 ];
 
 // ====== MIDDLEWARES DE SÉCURITÉ OPTIMISÉS ======
@@ -36,24 +39,80 @@ const allowedOrigins = [
 // 1. Helmet - En-têtes de sécurité (optimisé pour la performance)
 app.use(helmetConfig);
 
-// 2. CORS - Contrôle d'accès cross-origin
+// 2. CORS - Contrôle d'accès cross-origin (PRODUCTION)
 app.use(cors({
   origin: function(origin, callback){
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
-      return callback(new Error(msg), false);
+    // 🔧 LOGGING POUR DÉBOGUER LES PROBLÈMES CORS
+    console.log(`🌍 CORS - Origine demandée: ${origin}`);
+    
+    if (!origin) {
+      console.log('✅ CORS - Pas d\'origine (requête locale)');
+      return callback(null, true);
     }
-    return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log(`✅ CORS - Origine autorisée: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // 🔧 VÉRIFICATION DES SOUS-DOMAINES
+    const isSubdomain = allowedOrigins.some(allowed => {
+      if (allowed.includes('espacecomedie')) {
+        return origin.includes('espacecomedie');
+      }
+      return false;
+    });
+    
+    if (isSubdomain) {
+      console.log(`✅ CORS - Sous-domaine autorisé: ${origin}`);
+      return callback(null, true);
+    }
+    
+    console.warn(`❌ CORS - Origine non autorisée: ${origin}`);
+    console.log(`📋 Origines autorisées:`, allowedOrigins);
+    
+    const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
+    return callback(new Error(msg), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'X-CSRF-Token',
+    'Origin',
+    'Accept'
+  ],
+  // 🔧 OPTIONS POUR LA PRODUCTION
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // 3. Rate limiters optimisés pour la production
 app.use(rateLimiters.publicRoutes); // ULTRA-PERMISSIF pour les routes publiques
 app.use(rateLimiters.general);      // Général pour les autres routes
+
+// 🔧 MIDDLEWARE CORS DE FALLBACK POUR LA PRODUCTION
+app.use((req, res, next) => {
+  // Ajouter les headers CORS manquants si nécessaire
+  const origin = req.headers.origin;
+  
+  if (origin && (origin.includes('espacecomedie') || origin.includes('localhost'))) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token, Origin, Accept');
+  }
+  
+  // Gérer les requêtes OPTIONS (preflight)
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  
+  next();
+});
 
 // 4. Protection contre les attaques HTTP Parameter Pollution
 app.use(hpp());
