@@ -30,14 +30,42 @@ import { AuthProvider, CartProvider } from './contexts/AuthContext';
 import { CSRFProvider } from './contexts/CSRFContext';
 import AutoLogout from './components/AutoLogout';
 
-// Configuration React Query
+// 🚀 Configuration React Query optimisée pour la production
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      // ⚡ Optimisations de performance
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: true,
+      
+      // 🔧 Cache intelligent
+      gcTime: 10 * 60 * 1000,   // 10 minutes
+      
+      // 📊 Monitoring des performances (en développement seulement)
+      ...(process.env.NODE_ENV === 'development' && {
+        onSuccess: (data, query) => {
+          console.log(`✅ Query réussie: ${query.queryKey.join(' -> ')}`);
+        },
+        onError: (error, query) => {
+          console.error(`❌ Query échouée: ${query.queryKey.join(' -> ')}`, error);
+        }
+      })
     },
-  },
+    mutations: {
+      // 🔄 Optimisations des mutations
+      retry: 1,
+      retryDelay: 1000,
+      onSuccess: (data, variables, context) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`✅ Mutation réussie`);
+        }
+      }
+    }
+  }
 });
 
 // Petit Error Boundary pour éviter les écrans blancs

@@ -8,20 +8,29 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || "root",
   database: process.env.DB_NAME || "espace_comedie",
   
-  // 🔧 OPTIMISATIONS POUR LA PRODUCTION
+  // 🚀 OPTIMISATIONS POUR LA PRODUCTION - PERFORMANCE MAXIMALE
   waitForConnections: false,        // Ne pas attendre les connexions
-  connectionLimit: 5,               // Réduire le nombre de connexions (optimal pour Render)
-  queueLimit: 10,                   // Limiter la file d'attente
+  connectionLimit: process.env.NODE_ENV === 'production' ? 3 : 5, // Optimal pour Render
+  queueLimit: process.env.NODE_ENV === 'production' ? 5 : 10,    // Limiter la file d'attente
   
-  // ⚡ OPTIMISATIONS DE PERFORMANCE
-  acquireTimeout: 60000,            // 60s max pour acquérir une connexion
-  timeout: 60000,                   // 60s max pour les requêtes
+  // ⚡ OPTIMISATIONS DE PERFORMANCE AVANCÉES
+  acquireTimeout: process.env.NODE_ENV === 'production' ? 30000 : 60000, // 30s en prod
+  timeout: process.env.NODE_ENV === 'production' ? 30000 : 60000,        // 30s en prod
   reconnect: true,                  // Reconnecter automatiquement
-  keepAliveInitialDelay: 10000,    // Keep-alive toutes les 10s
   
-  // 🚀 OPTIMISATIONS SPÉCIFIQUES RENDER
+  // 🔧 OPTIMISATIONS SPÉCIFIQUES RENDER
   enableKeepAlive: true,           // Maintenir les connexions actives
-  keepAliveInitialDelay: 10000,    // Délai initial du keep-alive
+  keepAliveInitialDelay: 5000,     // Keep-alive toutes les 5s (plus agressif)
+  
+  // 📊 OPTIMISATIONS MYSQL2
+  multipleStatements: false,        // Sécurité
+  dateStrings: true,               // Dates en format string pour éviter les conversions
+  supportBigNumbers: true,         // Support des grands nombres
+  bigNumberStrings: true,          // Grands nombres en string
+  
+  // 🎯 OPTIMISATIONS DE POOL
+  maxIdle: 10000,                  // Fermer les connexions inactives après 10s
+  idleTimeout: 10000,              // Timeout pour les connexions inactives
 });
 
 // Test de la connexion avec retry optimisé

@@ -128,12 +128,27 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 🔧 OPTIMISATIONS POUR RENDER
+// 🚀 OPTIMISATIONS POUR RENDER - PERFORMANCE MAXIMALE
 if (process.env.NODE_ENV === 'production') {
-  // Keep-alive pour éviter la mise en veille
+  // Keep-alive agressif pour éviter la mise en veille
   setInterval(() => {
     console.log('🔄 Keep-alive ping -', new Date().toISOString());
-  }, 300000); // Toutes les 5 minutes
+    
+    // Vérification de la base de données
+    const db = require('./db');
+    db.query('SELECT 1 as health_check')
+      .then(() => console.log('✅ DB: OK'))
+      .catch(err => console.warn('⚠️ DB: Erreur -', err.message));
+      
+  }, 8 * 60 * 1000); // Toutes les 8 minutes (plus agressif)
+  
+  // Optimisation de la mémoire
+  setInterval(() => {
+    if (global.gc) {
+      global.gc();
+      console.log('🧹 Garbage collection effectuée');
+    }
+  }, 30 * 60 * 1000); // Toutes les 30 minutes
 }
 
 // Démarrer le serveur seulement si exécuté directement

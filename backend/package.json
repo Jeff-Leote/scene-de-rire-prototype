@@ -5,12 +5,14 @@
   "main": "server.js",
   "scripts": {
     "start": "node src/server.js",
+    "start:prod": "node start-production.js",
     "dev": "nodemon src/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "security:audit": "npm audit",
-    "security:fix": "npm audit fix"
+    "security:fix": "npm audit fix",
+    "performance:check": "node -e \"console.log('Vérification des performances...'); console.log('Mémoire:', Math.round(process.memoryUsage().heapUsed / 1024 / 1024), 'MB');\""
   },
   "keywords": [],
   "author": "",

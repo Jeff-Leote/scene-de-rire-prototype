@@ -4,9 +4,9 @@
 const https = require('https');
 const http = require('http');
 
-// Configuration
-const KEEP_ALIVE_INTERVAL = 14 * 60 * 1000; // 14 minutes (avant les 15min de Render)
-const HEALTH_CHECK_INTERVAL = 5 * 60 * 1000;  // 5 minutes
+// 🚀 Configuration optimisée pour la performance maximale
+const KEEP_ALIVE_INTERVAL = 10 * 60 * 1000; // 10 minutes (plus agressif que les 15min de Render)
+const HEALTH_CHECK_INTERVAL = 3 * 60 * 1000;  // 3 minutes (vérification plus fréquente)
 
 // URLs à maintenir actives
 const urls = [
