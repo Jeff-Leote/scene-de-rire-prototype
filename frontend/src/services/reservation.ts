@@ -20,7 +20,7 @@ export async function createReservationCheckout(data: {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/checkout`, {
+const res = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://scene-de-rire-prototype.onrender.com')}/api/reservations/checkout`, {
     method: "POST",
     headers,
     body: JSON.stringify(data),
@@ -32,7 +32,7 @@ const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rir
 export async function checkPaymentStatus(sessionId: string): Promise<PaymentStatusResponse> {
   console.log('🔍 Vérification du statut de paiement pour session:', sessionId);
   
-  const url = `${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/status/${sessionId}`;
+  const url = `${import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://scene-de-rire-prototype.onrender.com')}/api/reservations/status/${sessionId}`;
   console.log('🌐 URL de l\'API:', url);
   
   try {
@@ -59,7 +59,7 @@ export async function checkPaymentStatus(sessionId: string): Promise<PaymentStat
 }
 
 export async function getUserReservations(userId: number) {
-const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/user/${userId}`, {
+const res = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://scene-de-rire-prototype.onrender.com')}/api/reservations/user/${userId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -74,7 +74,7 @@ export async function getReservationQRCode(reservationId: number, token?: string
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/${reservationId}/qrcode`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://scene-de-rire-prototype.onrender.com')}/api/reservations/${reservationId}/qrcode`, {
     method: "GET",
     headers,
   });
@@ -85,7 +85,7 @@ export async function getReservationQRCode(reservationId: number, token?: string
 
 // Nouvelle fonction pour vérifier la disponibilité d'un spectacle
 export async function checkSpectacleAvailability(spectacleId: number) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/availability/${spectacleId}`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://scene-de-rire-prototype.onrender.com')}/api/reservations/availability/${spectacleId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -96,7 +96,7 @@ export async function checkSpectacleAvailability(spectacleId: number) {
 
 // Fonction pour valider un ticket
 export async function validateTicket(reservationId: string) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com'}/api/reservations/validate/${reservationId}`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://scene-de-rire-prototype.onrender.com')}/api/reservations/validate/${reservationId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });

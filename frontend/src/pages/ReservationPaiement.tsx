@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -14,16 +14,18 @@ const ReservationPaiement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Protection de la page
-  if (!isAuthenticated) {
-    navigate("/connexion");
-    return null;
-  }
+  // Protection de la page avec useEffect
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/connexion");
+      return;
+    }
 
-  if (!cart.length) {
-    navigate("/reservation");
-    return null;
-  }
+    if (!cart.length) {
+      navigate("/reservation");
+      return;
+    }
+  }, [isAuthenticated, cart.length, navigate]);
 
   const handlePayer = async () => {
     setLoading(true);
@@ -53,6 +55,11 @@ const ReservationPaiement = () => {
       setLoading(false);
     }
   };
+
+  // Ne pas rendre le composant si les conditions ne sont pas remplies
+  if (!isAuthenticated || !cart.length) {
+    return null;
+  }
 
   const totalPanier = cart.reduce((sum, item) => sum + (item.prix * (nbBillets[item.id] || 1)), 0);
 

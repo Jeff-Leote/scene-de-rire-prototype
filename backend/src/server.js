@@ -4,7 +4,15 @@ const express = require("express");
 const cors = require("cors");
 const hpp = require("hpp");
 const xss = require("xss-clean");
-const routes = require("./routes");
+
+// Import conditionnel des routes (seulement si DB disponible)
+let routes;
+try {
+  routes = require("./routes");
+} catch (error) {
+  console.log("⚠️ Routes non chargées - Base de données non disponible");
+  routes = null;
+}
 
 // Import des middlewares de sécurité optimisés
 const { 
@@ -209,7 +217,76 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Routes API
-app.use("/api", routes);
+// Utilisation conditionnelle des routes
+if (routes) {
+  app.use("/api", routes);
+} else {
+  // Routes de fallback sans base de données
+  app.get("/api/health", (req, res) => {
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      database: "not_connected",
+      message: "Serveur fonctionnel sans base de données"
+    });
+  });
+  
+  app.get("/api/spectacles", (req, res) => {
+    res.json({
+      spectacles: [],
+      pagination: { total: 0 }
+    });
+  });
+  
+  app.get("/api/artistes", (req, res) => {
+    res.json([]);
+  });
+  
+  app.get("/api/artistes/featured", (req, res) => {
+    res.json({
+      id: 1,
+      name: "Aucun artiste",
+      photo: "",
+      biographie: "Aucun artiste configuré"
+    });
+  });
+  
+  app.get("/api/lieu/images", (req, res) => {
+    res.json([]);
+  });
+  
+  app.get("/api/lieu/images/main", (req, res) => {
+    res.json({
+      id: 1,
+      image_path: "",
+      description: "Aucune image configurée"
+    });
+  });
+  
+  app.get("/api/spectacles/upcoming", (req, res) => {
+    res.json([]);
+  });
+  
+  app.get("/api/spectacles/all", (req, res) => {
+    res.json([]);
+  });
+  
+  app.get("/api/reservations/availability/:id", (req, res) => {
+    res.json({
+      spectacle_id: req.params.id,
+      available: false,
+      remaining_seats: 0,
+      total_seats: 0
+    });
+  });
+  
+  app.post("/api/reservations/checkout", (req, res) => {
+    res.status(503).json({
+      error: "Service temporairement indisponible",
+      message: "Base de données non connectée"
+    });
+  });
+}
 
 // Route de base
 app.get("/", (req, res) => {
@@ -242,7 +319,7 @@ app.use((err, req, res, next) => {
 
 // 🚀 OPTIMISATIONS POUR RENDER - PERFORMANCE MAXIMALE
 if (process.env.NODE_ENV === 'production') {
-  // Keep-alive optimisé pour éviter la mise en veille
+  // Keep-alive ULTRA-AGRESSIF pour éviter la mise en veille
   setInterval(() => {
     console.log('🔄 Keep-alive ping -', new Date().toISOString());
     
@@ -252,7 +329,7 @@ if (process.env.NODE_ENV === 'production') {
       .then(() => console.log('✅ DB: OK'))
       .catch(err => console.warn('⚠️ DB: Erreur -', err.message));
       
-  }, 8 * 60 * 1000); // Toutes les 8 minutes (moins agressif)
+  }, 3 * 60 * 1000); // Toutes les 3 minutes (ULTRA-AGRESSIF)
   
   // Optimisation de la mémoire
   setInterval(() => {

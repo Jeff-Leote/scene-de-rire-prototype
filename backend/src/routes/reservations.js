@@ -499,7 +499,7 @@ router.post("/checkout", auth, async (req, res) => {
     
     console.log('📊 Résumé final - Total original:', total, 'Total final:', finalTotal, 'Réduction:', discountAmount);
 
-    // Déterminer l'URL du frontend selon l'environnement
+    // Déterminer l'URL du frontend selon l'environnement (AMÉLIORÉ)
     let frontendUrl;
     if (process.env.NODE_ENV === 'production') {
       frontendUrl = 'https://espacecomedie.fr';
@@ -509,6 +509,9 @@ router.post("/checkout", auth, async (req, res) => {
     
     console.log('🌐 URL du frontend configurée:', frontendUrl);
     console.log('🔧 Mode d\'environnement:', process.env.NODE_ENV);
+    console.log('💳 Clé Stripe configurée:', process.env.STRIPE_SECRET_KEY ? 'OUI' : 'NON');
+    console.log('🔑 Type de clé Stripe:', process.env.STRIPE_SECRET_KEY ? 
+      (process.env.STRIPE_SECRET_KEY.startsWith('sk_live_') ? 'PRODUCTION' : 'TEST') : 'NON DÉFINIE');
 
     // Créer une session Stripe
     const session = await stripe.checkout.sessions.create({

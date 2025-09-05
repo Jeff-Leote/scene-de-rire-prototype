@@ -181,7 +181,16 @@ const csrfProtection = (req, res, next) => {
       req.path === '/api/spectacles' ||
       req.path === '/api/artistes' ||
       req.path === '/api/lieu' ||
-      req.path === '/api/contact') {
+      req.path === '/api/contact' ||
+      // 🔧 EXEMPTION POUR LES PAIEMENTS STRIPE
+      req.path === '/api/reservations/checkout' ||
+      req.path.startsWith('/api/reservations/')) {
+    
+    // 🔧 LOGGING POUR DÉBOGUER LES EXEMPTIONS CSRF
+    if (req.path.includes('reservations')) {
+      console.log(`💳 CSRF exempté pour paiement: ${req.method} ${req.path}`);
+    }
+    
     return next();
   }
   

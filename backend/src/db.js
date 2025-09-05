@@ -57,23 +57,49 @@ const preEstablishConnections = async () => {
     console.log('🚀 Pré-établissement des connexions DB pour la production...');
     
     try {
-      // Pré-établir 5 connexions
+      // Pré-établir 10 connexions (plus agressif)
       const connections = [];
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         const connection = await pool.promise().getConnection();
         connections.push(connection);
         console.log(`🔌 Connexion ${i + 1} pré-établie`);
       }
       
-      // Libérer les connexions après 2 secondes
+      // Libérer les connexions après 5 secondes (plus long)
       setTimeout(() => {
         connections.forEach(conn => conn.release());
         console.log('✅ Connexions pré-établies libérées');
-      }, 2000);
+      }, 5000);
       
     } catch (error) {
       console.warn('⚠️ Erreur lors du pré-établissement des connexions:', error.message);
     }
+  }
+};
+
+// 🔧 PRÉCHAUFFAGE CONTINU DES CONNEXIONS
+const continuousWarmup = () => {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🔥 Démarrage du préchauffage continu des connexions...');
+    
+    setInterval(async () => {
+      try {
+        // Maintenir 3 connexions actives en permanence
+        const connections = [];
+        for (let i = 0; i < 3; i++) {
+          const connection = await pool.promise().getConnection();
+          connections.push(connection);
+        }
+        
+        // Libérer après 1 seconde
+        setTimeout(() => {
+          connections.forEach(conn => conn.release());
+        }, 1000);
+        
+      } catch (error) {
+        console.warn('⚠️ Erreur préchauffage continu:', error.message);
+      }
+    }, 30 * 1000); // Toutes les 30 secondes
   }
 };
 
@@ -82,6 +108,9 @@ testConnection();
 
 // Pré-établir les connexions en production
 preEstablishConnections();
+
+// Démarrer le préchauffage continu
+continuousWarmup();
 
 // 🔧 Gestion des événements du pool pour le monitoring
 pool.on('connection', (connection) => {
