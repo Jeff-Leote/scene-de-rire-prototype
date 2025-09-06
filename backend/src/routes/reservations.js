@@ -882,7 +882,8 @@ router.get("/user/:userId", async (req, res) => {
       LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
       LEFT JOIN paiement p ON pr.paiement_id = p.id
       WHERE r.user_id = ?
-      ORDER BY r.date DESC
+      ORDER BY r.id DESC
+      LIMIT 50
     `, [userId]);
 
     // Récupérer les tickets pour toutes les réservations
@@ -975,7 +976,6 @@ router.get("/validate/:reservationId", async (req, res) => {
         r.id as reservation_id,
         r.nb_places,
         r.date as reservation_date,
-        r.qr_code_path,
         s.id as spectacle_id,
         s.title,
         s.description,

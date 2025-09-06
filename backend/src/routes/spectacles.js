@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
         artiste.photo AS artiste_photo
       FROM spectacle
       JOIN artiste ON spectacle.artiste_id = artiste.id
-      WHERE CONCAT(spectacle.date_spectacle, ' ', spectacle.heure_spectacle) >= NOW()
+      WHERE spectacle.date_spectacle >= CURDATE()
       ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
@@ -32,7 +32,7 @@ router.get("/", async (req, res) => {
     const [[{ total }]] = await pool.query(`
       SELECT COUNT(*) as total 
       FROM spectacle 
-      WHERE CONCAT(date_spectacle, ' ', heure_spectacle) >= NOW()
+      WHERE date_spectacle >= CURDATE()
     `);
 
     res.json({
@@ -71,7 +71,7 @@ router.get("/upcoming", async (req, res) => {
         artiste.photo AS artiste_photo
       FROM spectacle
       JOIN artiste ON spectacle.artiste_id = artiste.id
-      WHERE CONCAT(spectacle.date_spectacle, ' ', spectacle.heure_spectacle) >= NOW()
+      WHERE spectacle.date_spectacle >= CURDATE()
       ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ?
     `, [limit]);

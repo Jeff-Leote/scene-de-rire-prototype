@@ -8,8 +8,7 @@ router.get('/', async (req, res) => {
     const [artistes] = await db.query(`
       SELECT a.*, COUNT(s.id) as upcoming_shows
       FROM artiste a
-      LEFT JOIN spectacle s ON a.id = s.artiste_id
-      WHERE CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
+      LEFT JOIN spectacle s ON a.id = s.artiste_id AND s.date_spectacle >= CURDATE()
       GROUP BY a.id
       ORDER BY a.created_at DESC
     `);
@@ -28,7 +27,7 @@ router.get('/featured', async (req, res) => {
       SELECT a.*, s.id as next_show_id, s.title as next_show_title, s.date_spectacle as next_show_date, s.heure_spectacle as next_show_time
       FROM spectacle s
       JOIN artiste a ON s.artiste_id = a.id
-      WHERE TIMESTAMP(s.date_spectacle, s.heure_spectacle) >= CONVERT_TZ(NOW(), 'UTC', 'Europe/Paris')
+      WHERE s.date_spectacle >= CURDATE()
       ORDER BY s.date_spectacle ASC, s.heure_spectacle ASC
       LIMIT 1
     `);

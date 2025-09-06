@@ -8,32 +8,24 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || "root",
   database: process.env.DB_NAME || "espace_comedie",
   
-  // 🚀 OPTIMISATIONS POUR LA PRODUCTION - PERFORMANCE MAXIMALE
-  waitForConnections: true,        // Attendre les connexions disponibles
-  connectionLimit: process.env.NODE_ENV === 'production' ? 20 : 5, // AUGMENTÉ À 20 pour la production
-  queueLimit: process.env.NODE_ENV === 'production' ? 50 : 10,    // AUGMENTÉ À 50 pour la production
+  // Optimisations de base
+  waitForConnections: true,
+  connectionLimit: process.env.NODE_ENV === 'production' ? 10 : 5,
+  queueLimit: process.env.NODE_ENV === 'production' ? 20 : 10,
+  acquireTimeout: process.env.NODE_ENV === 'production' ? 60000 : 30000,
   
-  // ⚡ OPTIMISATIONS DE PERFORMANCE AVANCÉES
-  acquireTimeout: process.env.NODE_ENV === 'production' ? 60000 : 60000, // 60s en prod (plus tolérant)
-  timeout: process.env.NODE_ENV === 'production' ? 60000 : 60000,        // 60s en prod (plus tolérant)
-  reconnect: true,                  // Reconnecter automatiquement
+  // Keep-alive pour éviter les déconnexions
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
   
-  // 🔧 OPTIMISATIONS SPÉCIFIQUES RENDER
-  enableKeepAlive: true,           // Maintenir les connexions actives
-  keepAliveInitialDelay: 10000,    // Keep-alive toutes les 10s (moins agressif)
-  
-  // 📊 OPTIMISATIONS MYSQL2
-  multipleStatements: false,        // Sécurité
-  dateStrings: true,               // Dates en format string pour éviter les conversions
-  supportBigNumbers: true,         // Support des grands nombres
-  bigNumberStrings: true,          // Grands nombres en string
-  
-  // 🎯 OPTIMISATIONS DE POOL
-  maxIdle: 30000,                  // Fermer les connexions inactives après 30s (plus tolérant)
-  idleTimeout: 30000,              // Timeout pour les connexions inactives (plus tolérant)
+  // Optimisations MySQL2
+  multipleStatements: false,
+  dateStrings: true,
+  supportBigNumbers: true,
+  bigNumberStrings: true,
 });
 
-// Test de la connexion avec retry optimisé
+// Test de la connexion
 const testConnection = (retries = 3, delay = 1000) => {
   pool.getConnection((err, connection) => {
     if (err) {
@@ -51,82 +43,34 @@ const testConnection = (retries = 3, delay = 1000) => {
   });
 };
 
-// 🔧 PRÉ-ÉTABLIR DES CONNEXIONS POUR LA PRODUCTION
-const preEstablishConnections = async () => {
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🚀 Pré-établissement des connexions DB pour la production...');
-    
-    try {
-      // Pré-établir 10 connexions (plus agressif)
-      const connections = [];
-      for (let i = 0; i < 10; i++) {
-        const connection = await pool.promise().getConnection();
-        connections.push(connection);
-        console.log(`🔌 Connexion ${i + 1} pré-établie`);
-      }
-      
-      // Libérer les connexions après 5 secondes (plus long)
-      setTimeout(() => {
-        connections.forEach(conn => conn.release());
-        console.log('✅ Connexions pré-établies libérées');
-      }, 5000);
-      
-    } catch (error) {
-      console.warn('⚠️ Erreur lors du pré-établissement des connexions:', error.message);
-    }
-  }
-};
-
-// 🔧 PRÉCHAUFFAGE CONTINU DES CONNEXIONS
-const continuousWarmup = () => {
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🔥 Démarrage du préchauffage continu des connexions...');
-    
-    setInterval(async () => {
-      try {
-        // Maintenir 3 connexions actives en permanence
-        const connections = [];
-        for (let i = 0; i < 3; i++) {
-          const connection = await pool.promise().getConnection();
-          connections.push(connection);
-        }
-        
-        // Libérer après 1 seconde
-        setTimeout(() => {
-          connections.forEach(conn => conn.release());
-        }, 1000);
-        
-      } catch (error) {
-        console.warn('⚠️ Erreur préchauffage continu:', error.message);
-      }
-    }, 30 * 1000); // Toutes les 30 secondes
-  }
-};
-
-// Démarrer le test de connexion immédiatement
+// Démarrer le test de connexion
 testConnection();
 
-// Pré-établir les connexions en production
-preEstablishConnections();
+// Ping continu pour maintenir la connexion active (Railway)
+const keepAlivePing = () => {
+  pool.getConnection((err, connection) => {
+    if (err) {
+      console.error('❌ Erreur ping DB:', err.message);
+      return;
+    }
+    
+    connection.ping((pingErr) => {
+      connection.release();
+      if (pingErr) {
+        console.error('❌ Ping DB échoué:', pingErr.message);
+      } else {
+        console.log('🏓 Ping DB réussi - Connexion maintenue active');
+      }
+    });
+  });
+};
 
-// Démarrer le préchauffage continu
-continuousWarmup();
+// Ping toutes les 30 secondes pour maintenir la connexion Railway active
+setInterval(keepAlivePing, 30000);
 
-// 🔧 Gestion des événements du pool pour le monitoring
-pool.on('connection', (connection) => {
-  console.log('🔌 Nouvelle connexion MySQL établie');
-});
+// Ping initial après 5 secondes
+setTimeout(keepAlivePing, 5000);
 
-pool.on('acquire', (connection) => {
-  console.log('📥 Connexion MySQL acquise');
-});
-
-pool.on('release', (connection) => {
-  console.log('📤 Connexion MySQL libérée');
-});
-
-pool.on('enqueue', () => {
-  console.log('⏳ Requête en attente dans la file MySQL');
-});
+console.log('🔄 Ping automatique activé - Connexion DB maintenue active');
 
 module.exports = pool.promise();

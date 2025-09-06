@@ -110,55 +110,55 @@ const AppContent = () => {
   
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/spectacles" element={<Shows />} />
-        <Route path="/spectacles/:id" element={<SpectacleDetail />} />
-        <Route path="/le-lieu" element={<Venue />} />
-        <Route path="/reservation" element={<Reservation />} />
-        <Route path="/reservation/informations" element={<ReservationInformations />} />
-        <Route path="/reservation/paiement" element={<ReservationPaiement />} />
-        <Route path="/payment-status" element={<PaymentStatus />} />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/spectacles" element={<Shows />} />
+            <Route path="/spectacles/:id" element={<SpectacleDetail />} />
+            <Route path="/le-lieu" element={<Venue />} />
+            <Route path="/reservation" element={<Reservation />} />
+            <Route path="/reservation/informations" element={<ReservationInformations />} />
+            <Route path="/reservation/paiement" element={<ReservationPaiement />} />
+            <Route path="/payment-status" element={<PaymentStatus />} />
         <Route path="/validate-ticket/:reservationId" element={<ValidateTicket />} />
 
-        <Route path="/artistes" element={<Artists />} />
-        <Route 
-          path="/connexion" 
-          element={
-            <ProtectedRoute>
-              <Login />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/inscription" 
-          element={
-            <ProtectedRoute>
-              <Register />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/mon-compte" 
-          element={
-            <ProtectedRoute requireAuth>
-              <MyAccount />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute requireAuth requireAdmin>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="/contact" element={<Contact />} />
+            <Route path="/artistes" element={<Artists />} />
+            <Route 
+              path="/connexion" 
+              element={
+                <ProtectedRoute>
+                  <Login />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inscription" 
+              element={
+                <ProtectedRoute>
+                  <Register />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/mon-compte" 
+              element={
+                <ProtectedRoute requireAuth>
+                  <MyAccount />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute requireAuth requireAdmin>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/contact" element={<Contact />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
   );
 };
 
@@ -172,11 +172,11 @@ const App = () => (
             <TooltipProvider>
               <Sonner />
               <AppContent />
-            </TooltipProvider>
-          </QueryClientProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
         </CSRFProvider>
       </CartProvider>
-    </AuthProvider>
+  </AuthProvider>
   </AppErrorBoundary>
 );
 

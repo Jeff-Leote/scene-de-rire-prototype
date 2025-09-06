@@ -57,13 +57,36 @@ try {
   process.exit(1);
 }
 
-// 3. Vérification de la base de données
+// 3. Vérification et préchauffage de la base de données
 console.log('🔌 Test de connexion à la base de données...');
 try {
   // Test simple de connexion
   const db = await import('./src/db.js');
   await db.default.query('SELECT 1 as health_check');
   console.log('✅ Connexion à la base de données réussie');
+  
+  // Préchauffage de la base de données en production
+  if (env === 'production') {
+    console.log('🔥 Préchauffage de la base de données...');
+    try {
+      const { spawn } = await import('child_process');
+      const warmup = spawn('node', ['db-warmup.js'], {
+        stdio: 'inherit',
+        env: envVars,
+        cwd: __dirname
+      });
+      
+      warmup.on('exit', (code) => {
+        if (code === 0) {
+          console.log('✅ Préchauffage de la base de données terminé');
+        } else {
+          console.warn('⚠️ Préchauffage de la base de données échoué, mais le serveur continuera');
+        }
+      });
+    } catch (warmupError) {
+      console.warn('⚠️ Erreur lors du préchauffage:', warmupError.message);
+    }
+  }
 } catch (error) {
   console.error('❌ Erreur de connexion à la base de données:', error.message);
   console.error('💡 Vérifiez vos paramètres de connexion DB');
@@ -103,18 +126,18 @@ server.on('exit', (code) => {
   }
 });
 
-// 5. Démarrage du script de keep-alive en production
+// 5. Démarrage du script de keep-alive agressif en production
 if (env === 'production') {
-  console.log('🔄 Démarrage du script de keep-alive...');
+  console.log('🔄 Démarrage du script de keep-alive agressif...');
   
-  const keepAlive = spawn('node', ['keep-alive.js'], {
+  const keepAlive = spawn('node', ['keep-alive-aggressive.js'], {
     stdio: 'inherit',
     env: envVars,
     cwd: __dirname
   });
   
   keepAlive.on('error', (error) => {
-    console.warn('⚠️ Erreur lors du démarrage du keep-alive:', error.message);
+    console.warn('⚠️ Erreur lors du démarrage du keep-alive agressif:', error.message);
     console.warn('💡 Le serveur principal continuera de fonctionner');
   });
   

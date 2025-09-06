@@ -189,6 +189,7 @@ CREATE INDEX idx_promo_codes_validity ON promo_codes(valid_from, valid_until);
 
 -- Index pour les spectacles
 CREATE INDEX idx_spectacle_date ON spectacle(date_spectacle);
+CREATE INDEX idx_spectacle_date_heure ON spectacle(date_spectacle, heure_spectacle);
 CREATE INDEX idx_spectacle_artiste ON spectacle(artiste_id);
 
 -- Index pour les réservations
@@ -199,10 +200,17 @@ CREATE INDEX idx_reservation_date ON reservation(date);
 -- Index pour les paiements
 CREATE INDEX idx_paiement_session ON paiement(session_id);
 CREATE INDEX idx_paiement_date ON paiement(date);
+CREATE INDEX idx_paiement_reservation ON paiement_reservation(reservation_id);
+CREATE INDEX idx_paiement_reservation_paiement ON paiement_reservation(paiement_id);
 
 -- Index pour les avis
 CREATE INDEX idx_avis_user ON avis(user_id);
 CREATE INDEX idx_avis_spectacle ON avis(spectacle_id);
+
+-- Index supplémentaires pour l'optimisation
+CREATE INDEX idx_artiste_created ON artiste(created_at);
+CREATE INDEX idx_user_email ON user(email);
+CREATE INDEX idx_promo_code ON promo_codes(code);
 
 -- =====================================================
 -- DONNÉES DE TEST

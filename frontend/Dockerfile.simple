@@ -11,8 +11,8 @@ COPY package.json ./
 # Installer les dépendances
 RUN npm install --legacy-peer-deps
 
-# Copier le code source (sans les fichiers de config)
-COPY src/ ./src/
+# Copier tous les fichiers nécessaires
+COPY . .
 
 EXPOSE 5173
 
