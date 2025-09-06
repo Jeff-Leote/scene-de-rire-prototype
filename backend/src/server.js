@@ -317,27 +317,54 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 🚀 OPTIMISATIONS POUR RENDER - PERFORMANCE MAXIMALE
+// 🚀 OPTIMISATIONS POUR RAILWAY - PERFORMANCE MAXIMALE
 if (process.env.NODE_ENV === 'production') {
-  // Keep-alive ULTRA-AGRESSIF pour éviter la mise en veille
+  console.log('🚀 MODE PRODUCTION DÉTECTÉ - Keep-alive activé');
+  
+  // Keep-alive ULTRA-AGRESSIF pour éviter la mise en veille Railway
   setInterval(() => {
-    console.log('🔄 Keep-alive ping -', new Date().toISOString());
+    const timestamp = new Date().toISOString();
+    console.log('🔄 RAILWAY KEEP-ALIVE PING -', timestamp);
+    console.log('📊 Mémoire utilisée:', Math.round(process.memoryUsage().heapUsed / 1024 / 1024), 'MB');
     
     // Vérification de la base de données
     const db = require('./db');
     db.query('SELECT 1 as health_check')
-      .then(() => console.log('✅ DB: OK'))
-      .catch(err => console.warn('⚠️ DB: Erreur -', err.message));
+      .then(() => {
+        console.log('✅ RAILWAY DB PING RÉUSSI -', timestamp);
+      })
+      .catch(err => {
+        console.error('❌ RAILWAY DB PING ÉCHOUÉ -', err.message, '-', timestamp);
+      });
       
-  }, 3 * 60 * 1000); // Toutes les 3 minutes (ULTRA-AGRESSIF)
+  }, 30 * 1000); // Toutes les 30 secondes (ULTRA-AGRESSIF pour Railway)
+  
+  // Ping externe pour maintenir l'instance active
+  setInterval(() => {
+    const https = require('https');
+    const url = process.env.RAILWAY_PUBLIC_DOMAIN || 'https://scene-de-rire-prototype.onrender.com';
+    const timestamp = new Date().toISOString();
+    
+    console.log('🌐 RAILWAY PING EXTERNE DÉMARRÉ -', timestamp);
+    
+    https.get(`${url}/api/health`, (res) => {
+      console.log('✅ RAILWAY PING EXTERNE RÉUSSI -', res.statusCode, '-', timestamp);
+    }).on('error', (err) => {
+      console.error('❌ RAILWAY PING EXTERNE ÉCHOUÉ -', err.message, '-', timestamp);
+    });
+  }, 45 * 1000); // Toutes les 45 secondes
   
   // Optimisation de la mémoire
   setInterval(() => {
     if (global.gc) {
       global.gc();
-      console.log('🧹 Garbage collection effectuée');
+      console.log('🧹 RAILWAY GARBAGE COLLECTION -', new Date().toISOString());
     }
-  }, 60 * 60 * 1000); // Toutes les 60 minutes (moins agressif)
+  }, 60 * 60 * 1000); // Toutes les 60 minutes
+  
+  console.log('✅ RAILWAY KEEP-ALIVE SYSTÈME ACTIVÉ - Ping toutes les 30s');
+} else {
+  console.log('🔧 MODE DÉVELOPPEMENT - Keep-alive désactivé');
 }
 
 // Démarrer le serveur seulement si exécuté directement

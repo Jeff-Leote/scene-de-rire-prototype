@@ -20,7 +20,9 @@
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "clean": "npm run clean:backend && npm run clean:frontend",
     "clean:backend": "cd backend && npm run clean",
-    "clean:frontend": "cd frontend && npm run clean"
+    "clean:frontend": "cd frontend && npm run clean",
+    "ping:railway": "node railway-ping.js",
+    "ping:local": "node local-ping.js"
   },
   "keywords": [
     "comedy",

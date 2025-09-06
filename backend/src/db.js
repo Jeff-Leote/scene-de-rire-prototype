@@ -48,29 +48,30 @@ testConnection();
 
 // Ping continu pour maintenir la connexion active (Railway)
 const keepAlivePing = () => {
+  const timestamp = new Date().toISOString();
   pool.getConnection((err, connection) => {
     if (err) {
-      console.error('❌ Erreur ping DB:', err.message);
+      console.error('❌ RAILWAY DB CONNECTION ERROR:', err.message, '-', timestamp);
       return;
     }
     
     connection.ping((pingErr) => {
       connection.release();
       if (pingErr) {
-        console.error('❌ Ping DB échoué:', pingErr.message);
+        console.error('❌ RAILWAY DB PING FAILED:', pingErr.message, '-', timestamp);
       } else {
-        console.log('🏓 Ping DB réussi - Connexion maintenue active');
+        console.log('✅ RAILWAY DB PING SUCCESS - Connexion maintenue active -', timestamp);
       }
     });
   });
 };
 
-// Ping toutes les 30 secondes pour maintenir la connexion Railway active
-setInterval(keepAlivePing, 30000);
+// Ping toutes les 20 secondes pour maintenir la connexion Railway active
+setInterval(keepAlivePing, 20000);
 
-// Ping initial après 5 secondes
-setTimeout(keepAlivePing, 5000);
+// Ping initial après 3 secondes
+setTimeout(keepAlivePing, 3000);
 
-console.log('🔄 Ping automatique activé - Connexion DB maintenue active');
+console.log('🔄 RAILWAY DB PING AUTOMATIQUE ACTIVÉ - Ping toutes les 20 secondes');
 
 module.exports = pool.promise();
