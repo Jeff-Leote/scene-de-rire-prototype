@@ -288,18 +288,26 @@ if (routes) {
   });
 }
 
-// Route de base
+// 🎯 SERVIR LES FICHIERS STATIQUES DU FRONTEND (SPA)
+const path = require('path');
+
+// Servir les fichiers statiques du frontend buildé
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+
+// Route de base - rediriger vers le frontend
 app.get("/", (req, res) => {
-  res.json({ 
-    message: "API is working!", 
-    environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
-  });
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
-// Gestion des routes non trouvées
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+// 🎯 ROUTING SPA - Toutes les routes non-API redirigent vers index.html
+app.get('*', (req, res) => {
+  // Si c'est une route API, laisser passer
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  
+  // Pour toutes les autres routes, servir le fichier index.html (SPA routing)
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
 // Gestion des erreurs optimisée
