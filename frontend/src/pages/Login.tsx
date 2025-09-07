@@ -122,12 +122,16 @@ const Login = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="current-password"
                 className="w-full bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
                 placeholder="••••••••"
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setShowPassword(v => !v)}
+                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                aria-pressed={showPassword}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
               >
                 {showPassword ? (

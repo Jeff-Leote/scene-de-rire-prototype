@@ -365,16 +365,21 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         <Input 
                           placeholder="••••••••" 
                           type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
                           className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
                           {...field}
                           onFocus={() => setShowPasswordStrength(true)}
-                          onBlur={() => {
+                          onBlur={(e) => {
+                            field.onBlur();
                             if (!field.value) setShowPasswordStrength(false);
                           }}
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPassword(!showPassword)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => setShowPassword(v => !v)}
+                          aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                          aria-pressed={showPassword}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                         >
                           {showPassword ? (
@@ -417,12 +422,16 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         <Input 
                           placeholder="••••••••" 
                           type={showConfirmPassword ? "text" : "password"}
+                          autoComplete="new-password"
                           className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
                           {...field} 
                         />
                         <button
                           type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => setShowConfirmPassword(v => !v)}
+                          aria-label={showConfirmPassword ? "Masquer la confirmation du mot de passe" : "Afficher la confirmation du mot de passe"}
+                          aria-pressed={showConfirmPassword}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                         >
                           {showConfirmPassword ? (
