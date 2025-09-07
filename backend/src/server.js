@@ -291,6 +291,25 @@ if (routes) {
 // 🎯 SERVIR LES FICHIERS STATIQUES DU FRONTEND (SPA)
 const path = require('path');
 
+// Éviter les 404 bruitées sur des ressources communes
+app.get('/favicon.ico', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.status(204).end();
+});
+app.get('/robots.txt', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.status(204).end();
+});
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.status(204).end();
+});
+// Vite uniquement en dev; en prod l'asset est fingerprinté
+app.get('/vite.svg', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.status(204).end();
+});
+
 // Servir les fichiers statiques du frontend buildé
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 
