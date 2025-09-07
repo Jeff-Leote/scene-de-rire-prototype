@@ -175,25 +175,28 @@ const helmetConfig = helmet({
 
 // 🔧 Protection CSRF optimisée et flexible
 const csrfProtection = (req, res, next) => {
+  // Construire un chemin complet pour les middlewares montés (ex: baseUrl=/api)
+  const fullPath = `${req.baseUrl || ''}${req.path}`;
+
   // Skip CSRF pour les requêtes GET (lecture seule)
   if (req.method === 'GET') {
     return next();
   }
   
   // Skip CSRF pour les API stateless (JWT) et les routes publiques
-  if (req.path.startsWith('/api/auth/') || 
-      req.path === '/api/health' ||
-      req.path === '/api/spectacles' ||
-      req.path === '/api/artistes' ||
-      req.path === '/api/lieu' ||
-      req.path === '/api/contact' ||
+  if (fullPath.startsWith('/api/auth/') || 
+      fullPath === '/api/health' ||
+      fullPath === '/api/spectacles' ||
+      fullPath === '/api/artistes' ||
+      fullPath === '/api/lieu' ||
+      fullPath === '/api/contact' ||
       // 🔧 EXEMPTION POUR LES PAIEMENTS STRIPE
-      req.path === '/api/reservations/checkout' ||
-      req.path.startsWith('/api/reservations/')) {
+      fullPath === '/api/reservations/checkout' ||
+      fullPath.startsWith('/api/reservations/')) {
     
     // 🔧 LOGGING POUR DÉBOGUER LES EXEMPTIONS CSRF
-    if (req.path.includes('reservations')) {
-      console.log(`💳 CSRF exempté pour paiement: ${req.method} ${req.path}`);
+    if (fullPath.includes('reservations')) {
+      console.log(`💳 CSRF exempté pour paiement: ${req.method} ${fullPath}`);
     }
     
     return next();

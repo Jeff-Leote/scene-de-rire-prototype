@@ -1,6 +1,26 @@
 import { getCSRFToken } from '@/utils/security';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://scene-de-rire-prototype.onrender.com';
+// Base URL déduite intelligemment:
+// - En production: utiliser VITE_API_URL si défini
+// - En développement (vite, localhost/lan): cibler automatiquement le backend sur :5000
+const getDefaultBaseUrl = (): string => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL as string;
+  }
+
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname } = window.location;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('172.');
+    if (isLocal) {
+      return `${protocol}//localhost:5000`;
+    }
+  }
+
+  // Fallback production
+  return 'https://scene-de-rire-prototype.onrender.com';
+};
+
+const API_BASE_URL = getDefaultBaseUrl();
 
 /**
  * Service API centralisé avec gestion automatique des tokens CSRF
