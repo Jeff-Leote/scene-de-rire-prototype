@@ -103,40 +103,61 @@ const Hero = () => {
             onError={onImgErrorSwap}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-          <div className="absolute bottom-0 left-0 p-8 w-full md:w-2/3">
-            <div className="flex items-center mb-4">
-              <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold uppercase">À l'affiche</span>
+          <div className="absolute bottom-0 left-0 p-4 sm:p-6 lg:p-8 w-full">
+            {/* Badge "À l'affiche" et informations de date/heure */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+              <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold uppercase w-fit">
+                À l'affiche
+              </span>
               {featuredArtist.next_show && (
-                <span className="ml-3 text-white text-sm">
-                  {new Date(featuredArtist.next_show.date).toLocaleDateString('fr-FR', { 
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })} · {formatTime(featuredArtist.next_show.time)}
-                </span>
-              )}
-              {nextShowAvailability && nextShowAvailability.places_restantes <= 0 && (
-                <span className="ml-3 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">Complet</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-white text-sm sm:text-base">
+                    {new Date(featuredArtist.next_show.date).toLocaleDateString('fr-FR', { 
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </span>
+                  <span className="text-yellow-400 text-sm sm:text-base font-medium">
+                    {formatTime(featuredArtist.next_show.time)}
+                  </span>
+                  {nextShowAvailability && nextShowAvailability.places_restantes <= 0 && (
+                    <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold w-fit">
+                      Complet
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-              {featuredArtist.name}: <span className="text-yellow-400">{featuredArtist.next_show?.title || 'Prochain spectacle'}</span>
-            </h1>
-            <div className="flex flex-wrap gap-4">
+
+            {/* Titre principal avec meilleure hiérarchie */}
+            <div className="mb-6">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-2">
+                {featuredArtist.name}
+              </h1>
+              {featuredArtist.next_show?.title && (
+                <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-yellow-400 leading-tight">
+                  {featuredArtist.next_show.title}
+                </h2>
+              )}
+            </div>
+
+            {/* Boutons d'action avec responsive amélioré */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               {featuredArtist.next_show && (
                 <Link 
                   to={`/spectacles/${featuredArtist.next_show.id}`}
-                  className="bg-yellow-400 text-black px-6 py-3 rounded hover:bg-yellow-300 transition duration-300 flex items-center"
+                  className="bg-yellow-400 text-black px-4 sm:px-6 py-3 rounded hover:bg-yellow-300 transition duration-300 flex items-center justify-center sm:justify-start font-medium"
                 >
-                <i className="fa-solid fa-ticket-alt mr-2"></i>
-                Réserver maintenant
+                  <i className="fa-solid fa-ticket-alt mr-2"></i>
+                  Réserver maintenant
                 </Link>
               )}
               {featuredArtist.next_show && (
                 <Link 
                   to={`/spectacles/${featuredArtist.next_show.id}`}
-                  className="border border-yellow-400 text-yellow-400 px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300 flex items-center"
+                  className="border border-yellow-400 text-yellow-400 px-4 sm:px-6 py-3 rounded hover:bg-yellow-400 hover:text-black transition duration-300 flex items-center justify-center sm:justify-start font-medium"
                 >
                   <i className="fa-solid fa-circle-info mr-2"></i>
                   Plus d'infos
