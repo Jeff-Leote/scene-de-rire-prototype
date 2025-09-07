@@ -175,6 +175,11 @@ const helmetConfig = helmet({
 
 // 🔧 Protection CSRF optimisée et flexible
 const csrfProtection = (req, res, next) => {
+  // Skip CSRF pour les requêtes GET (lecture seule)
+  if (req.method === 'GET') {
+    return next();
+  }
+  
   // Skip CSRF pour les API stateless (JWT) et les routes publiques
   if (req.path.startsWith('/api/auth/') || 
       req.path === '/api/health' ||

@@ -138,10 +138,7 @@ app.use(sanitizeInput);
 // 8. Validation des requêtes SQL (optimisée)
 app.use(validateSqlQuery);
 
-// 9. Protection CSRF (optimisée)
-app.use(csrfProtection);
-
-// 10. Logging de sécurité (optimisé)
+// 9. Logging de sécurité (optimisé)
 app.use(securityLogger);
 
 // 🔧 MIDDLEWARE DE PERFORMANCE ET MONITORING
@@ -219,6 +216,8 @@ app.get('/api/health', async (req, res) => {
 // Routes API
 // Utilisation conditionnelle des routes
 if (routes) {
+  // Protection CSRF pour les routes API seulement
+  app.use("/api", csrfProtection);
   app.use("/api", routes);
 } else {
   // Routes de fallback sans base de données
