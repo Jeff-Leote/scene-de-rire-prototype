@@ -4,6 +4,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 
+// Import du rate limiter pour la protection force brute
+const { createRateLimiters } = require('../middleware/security');
+const { loginFailure } = createRateLimiters();
+
 // Middleware d'authentification
 const auth = async (req, res, next) => {
   try {
@@ -40,8 +44,8 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Auth routes are working!' });
 });
 
-// Login route
-router.post('/login', async (req, res) => {
+// Login route avec protection force brute
+router.post('/login', loginFailure, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {

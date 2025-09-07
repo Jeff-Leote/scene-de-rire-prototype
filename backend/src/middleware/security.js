@@ -30,21 +30,48 @@ const createRateLimiters = () => {
     }
   });
 
-  // Limite PERMISSIVE pour l'authentification (production)
+  // Limite STRICTE pour l'authentification avec protection force brute
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // AUGMENTÉ À 50 pour la production (était 10)
-    message: {
-      error: 'Trop de tentatives de connexion, veuillez réessayer plus tard.',
-      retryAfter: '15 minutes'
-    },
+    max: 5, // 5 tentatives par 15 minutes
     standardHeaders: true,
     legacyHeaders: false,
-    skipSuccessfulRequests: true, // Ne pas compter les connexions réussies
     // 🔧 OPTIMISATIONS POUR LA PERFORMANCE
     keyGenerator: (req) => {
       // Utiliser l'IP + User-Agent pour une meilleure identification
       return req.ip + '|' + (req.get('User-Agent') || 'unknown');
+    },
+    // Log des tentatives bloquées (nouvelle syntaxe)
+    handler: (req, res) => {
+      console.log(`🚨 TENTATIVE FORCE BRUTE BLOQUÉE - IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
+      res.status(429).json({
+        error: 'Trop de tentatives de connexion. Veuillez attendre 15 minutes avant de réessayer.',
+        retryAfter: '15 minutes',
+        blocked: true
+      });
+    }
+  });
+
+  // Limite ULTRA-STRICTE pour les échecs de connexion (5 minutes de blocage après 3 échecs)
+  const loginFailureLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 3, // 3 échecs par 5 minutes
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+      // Utiliser l'email + IP pour cibler les attaques par email
+      const email = req.body?.email || 'unknown';
+      return email + '|' + req.ip;
+    },
+    // Log des blocages d'email (nouvelle syntaxe)
+    handler: (req, res) => {
+      const email = req.body?.email || 'unknown';
+      console.log(`🚨 ÉCHECS CONNEXION BLOQUÉS - Email: ${email}, IP: ${req.ip}`);
+      res.status(429).json({
+        error: 'Trop d\'échecs de connexion. Compte temporairement bloqué pendant 5 minutes.',
+        retryAfter: '5 minutes',
+        blocked: true
+      });
     }
   });
 
@@ -82,6 +109,7 @@ const createRateLimiters = () => {
   return {
     general: generalLimiter,
     auth: authLimiter,
+    loginFailure: loginFailureLimiter,
     register: registerLimiter,
     publicRoutes: publicRoutesLimiter
   };

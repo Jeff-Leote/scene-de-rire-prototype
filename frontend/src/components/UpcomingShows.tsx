@@ -85,7 +85,7 @@ const UpcomingShows = () => {
             className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300"
             onClick={() => navigate('/spectacles')}
           >
-            Voir le calendrier complet
+            Voir les prochains spectacles
             <i className="fa-solid fa-arrow-right ml-2"></i>
           </span>
         </div>
