@@ -289,7 +289,6 @@ if (routes) {
 
 // 🎯 SERVIR LES FICHIERS STATIQUES DU FRONTEND (SPA)
 const path = require('path');
-const fs = require('fs');
 
 // Éviter les 404 bruitées sur des ressources communes
 app.get('/favicon.ico', (req, res) => {
@@ -310,21 +309,12 @@ app.get('/vite.svg', (req, res) => {
   return res.status(204).end();
 });
 
-// Déterminer dynamiquement le dossier dist à servir (prod Render vs local)
-const distCandidates = [
-  path.join(__dirname, '../dist'),                 // backend/dist (copie en prod)
-  path.join(__dirname, '../../frontend/dist')      // frontend/dist (dev/local)
-];
-const distDir = distCandidates.find(p => {
-  try { return fs.existsSync(p); } catch { return false; }
-}) || distCandidates[0];
-
 // Servir les fichiers statiques du frontend buildé
-app.use(express.static(distDir));
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 
 // Route de base - rediriger vers le frontend
 app.get("/", (req, res) => {
-  res.sendFile(path.join(distDir, 'index.html'));
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
 // 🎯 ROUTING SPA - Toutes les routes non-API redirigent vers index.html
@@ -335,7 +325,7 @@ app.get('*', (req, res) => {
   }
   
   // Pour toutes les autres routes, servir le fichier index.html (SPA routing)
-  res.sendFile(path.join(distDir, 'index.html'));
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
 // Gestion des erreurs optimisée
