@@ -1,1 +1,22 @@
- 
+FROM node:24-alpine3.20
+
+WORKDIR /app
+
+# Créer un utilisateur non-root et définir les permissions
+RUN chown -R node:node /app
+USER node
+
+# Copier les fichiers de dépendances
+COPY --chown=node:node package*.json ./
+
+# Installer les dépendances
+RUN npm ci
+
+# Copier le code source
+COPY --chown=node:node . .
+
+# Exposer le port
+EXPOSE 5000
+
+# Commande de démarrage
+CMD ["npm", "start"]
