@@ -79,28 +79,38 @@ const UpcomingShows = () => {
   return (
     <section id="upcoming-shows" className="bg-black py-12">
       <div className="container mx-auto px-6">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-white">Prochains spectacles</h2>
-          <span 
-            className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300"
-            onClick={() => navigate('/spectacles')}
-          >
-            Voir les prochains spectacles
-            <i className="fa-solid fa-arrow-right ml-2"></i>
-          </span>
+        {/* En-tête avec hiérarchie améliorée */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+              Prochains spectacles
+            </h2>
+            <div className="flex items-center">
+              <span 
+                className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300 text-sm sm:text-base font-medium"
+                onClick={() => navigate('/spectacles')}
+              >
+                Voir tous les spectacles
+                <i className="fa-solid fa-arrow-right ml-2"></i>
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
+        {/* Grille des spectacles avec responsive amélioré */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {spectacles.length === 0 && (
-            <p className="text-gray-400 col-span-full text-center">
-              Aucun spectacle à venir pour le moment.
-            </p>
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-400 text-lg">
+                Aucun spectacle à venir pour le moment.
+              </p>
+            </div>
           )}
 
           {spectacles.map((spectacle) => (
             <div
               key={spectacle.id}
-              className="w-full max-w-[300px] bg-gray-900 rounded-lg overflow-hidden hover:scale-[1.02] transition duration-300 cursor-pointer"
+              className="w-full bg-gray-900 rounded-lg overflow-hidden hover:scale-[1.02] transition duration-300 cursor-pointer shadow-lg hover:shadow-xl"
               onClick={() => navigate(`/spectacles/${spectacle.id}`)}
             >
               <div className="relative h-64">
@@ -119,31 +129,45 @@ const UpcomingShows = () => {
                   </div>
                 )}
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
-                <p className="text-gray-400 mb-4">{spectacle.description}</p>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="flex items-center">
-                      <i className="fa-regular fa-calendar mr-2 text-yellow-400"></i>
-                      <span className="text-gray-300">
-                        {format(new Date(spectacle.date_spectacle), "d MMMM yyyy", { locale: fr })}
-                      </span>
-                    </div>
-                    <div className="flex items-center mt-1">
-                      <i className="fa-regular fa-clock mr-2 text-yellow-400"></i>
-                      <span className="text-gray-300">{formatHeure(spectacle.heure_spectacle)}</span>
-                    </div>
-                    <div className="mt-1 text-gray-300">
-                      <i className="fa-solid fa-location-dot mr-2 text-yellow-400"></i>
-                      <span>{spectacle.lieu || "Lieu non précisé"}</span>
-                    </div>
+              <div className="p-4 sm:p-6">
+                {/* Titre du spectacle */}
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
+                  {spectacle.title}
+                </h3>
+                
+                {/* Description */}
+                <p className="text-gray-400 mb-4 text-sm sm:text-base line-clamp-2">
+                  {spectacle.description}
+                </p>
+                
+                {/* Informations du spectacle */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm sm:text-base">
+                    <i className="fa-regular fa-calendar mr-2 text-yellow-400 w-4"></i>
+                    <span className="text-gray-300">
+                      {format(new Date(spectacle.date_spectacle), "d MMMM yyyy", { locale: fr })}
+                    </span>
                   </div>
-                  <span className="text-white font-bold text-lg">{spectacle.prix}€</span>
+                  <div className="flex items-center text-sm sm:text-base">
+                    <i className="fa-regular fa-clock mr-2 text-yellow-400 w-4"></i>
+                    <span className="text-gray-300">{formatHeure(spectacle.heure_spectacle)}</span>
+                  </div>
+                  <div className="flex items-center text-sm sm:text-base">
+                    <i className="fa-solid fa-location-dot mr-2 text-yellow-400 w-4"></i>
+                    <span className="text-gray-300 truncate">
+                      {spectacle.lieu || "Lieu non précisé"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300">
-                    Réserver <i className="fa-solid fa-arrow-right ml-2"></i>
+                
+                {/* Prix et bouton de réservation */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-700">
+                  <span className="text-white font-bold text-lg sm:text-xl">
+                    {spectacle.prix}€
+                  </span>
+                  <span className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300 text-sm sm:text-base font-medium">
+                    Réserver 
+                    <i className="fa-solid fa-arrow-right ml-2"></i>
                   </span>
                 </div>
               </div>
