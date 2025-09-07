@@ -1,1 +1,18 @@
- 
+FROM node:24-alpine3.20
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+
+# Installer les dépendances
+RUN npm ci
+
+# Copier le code source
+COPY . .
+
+# Exposer le port
+EXPOSE 5000
+
+# Commande de démarrage
+CMD ["npm", "start"]

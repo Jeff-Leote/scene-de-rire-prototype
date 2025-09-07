@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Mic, Lightbulb, Mail } from "lucide-react";
+import { ArrowLeft, Mic, Lightbulb, Mail, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,8 @@ const formSchema = z.object({
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -359,16 +361,29 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                   <FormItem>
                     <FormLabel className="text-gray-300">Mot de passe</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="••••••••" 
-                        type="password"
-                        className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
-                        {...field}
-                        onFocus={() => setShowPasswordStrength(true)}
-                        onBlur={() => {
-                          if (!field.value) setShowPasswordStrength(false);
-                        }}
-                      />
+                      <div className="relative">
+                        <Input 
+                          placeholder="••••••••" 
+                          type={showPassword ? "text" : "password"}
+                          className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
+                          {...field}
+                          onFocus={() => setShowPasswordStrength(true)}
+                          onBlur={() => {
+                            if (!field.value) setShowPasswordStrength(false);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage className="text-red-400" />
                     
@@ -398,12 +413,25 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                   <FormItem>
                     <FormLabel className="text-gray-300">Confirmer le mot de passe</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="••••••••" 
-                        type="password"
-                        className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
-                        {...field} 
-                      />
+                      <div className="relative">
+                        <Input 
+                          placeholder="••••••••" 
+                          type={showConfirmPassword ? "text" : "password"}
+                          className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
+                          {...field} 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage className="text-red-400" />
                   </FormItem>

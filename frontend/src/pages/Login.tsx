@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 import { ArrowLeft, Mic, Lightbulb, Mail, Loader2 } from "lucide-react";
 
 const Login = () => {
@@ -12,6 +13,7 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -113,15 +115,28 @@ const Login = () => {
           {/* Password field */}
           <div className="mb-5">
             <label htmlFor="password" className="block text-gray-300 mb-2">Mot de passe</label>
-            <Input 
-              type="password" 
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <Input 
+                type={showPassword ? "text" : "password"} 
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
           
           {/* Remember me checkbox */}
