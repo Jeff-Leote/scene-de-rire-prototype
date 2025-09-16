@@ -20,11 +20,63 @@ type Slide = {
   nextTime: string; // HH:mm:ss
 };
 
+// ---- Helpers de parsing sûrs (évite `any`) ----
+const isObject = (val: unknown): val is Record<string, unknown> => (
+  typeof val === 'object' && val !== null
+);
+
+const toNumber = (val: unknown): number | null => {
+  if (typeof val === 'number' && Number.isFinite(val)) return val;
+  const num = Number(val);
+  return Number.isFinite(num) ? num : null;
+};
+
+const toStringSafe = (val: unknown, fallback = ''): string => {
+  if (val == null) return fallback;
+  if (typeof val === 'string') return val;
+  return String(val);
+};
+
+const extractItems = (payload: unknown): unknown[] => {
+  if (Array.isArray(payload)) return payload;
+  if (isObject(payload)) {
+    const spectacles = payload.spectacles;
+    const data = (payload as Record<string, unknown>).data;
+    if (Array.isArray(spectacles)) return spectacles as unknown[];
+    if (isObject(spectacles) && Array.isArray((spectacles as Record<string, unknown>).data)) {
+      return (spectacles as Record<string, unknown>).data as unknown[];
+    }
+    if (Array.isArray(data)) return data as unknown[];
+  }
+  return [];
+};
+
+const extractPagination = (payload: unknown): { totalPages: number; limit: number; page: number } => {
+  let totalPages = 1;
+  let limit = 6;
+  let page = 1;
+  if (isObject(payload) && isObject(payload.pagination)) {
+    const p = payload.pagination as Record<string, unknown>;
+    totalPages = toNumber(p.totalPages) ?? totalPages;
+    limit = toNumber(p.limit) ?? limit;
+    page = toNumber(p.page) ?? page;
+  }
+  return { totalPages, limit, page };
+};
+
+const getTitleFromUnknown = (val: unknown): string => {
+  if (!isObject(val)) return '';
+  return toStringSafe(val.title ?? val.nom ?? val.name ?? '');
+};
+
 const Hero = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [index, setIndex] = useState(0);
+  const MAX_SLIDES = 10;
+  const CACHE_KEY = 'heroSlides:v1';
+  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   const formatTime = (time: string) => {
     return time.split(':').slice(0, 2).join(':');
@@ -36,49 +88,79 @@ const Hero = () => {
         setLoading(true);
         setError(null);
         const { api } = await import('@/services/api');
-        // 1) Essayer d'agréger plusieurs pages de /api/spectacles pour obtenir plusieurs titres distincts
-        const aggregate: any[] = [];
-        try {
-          const first: any = await api.get<any>('/api/spectacles');
-          const firstItems: any[] = Array.isArray(first) ? first : (Array.isArray(first?.spectacles) ? first.spectacles : (Array.isArray(first?.data) ? first.data : (Array.isArray(first?.spectacles?.data) ? first.spectacles.data : [])));
-          const totalPages: number = parseInt(first?.pagination?.totalPages ?? '1', 10) || 1;
-          const limit: number = parseInt(first?.pagination?.limit ?? '6', 10) || 6;
-          let page = parseInt(first?.pagination?.page ?? '1', 10) || 1;
-          aggregate.push(...firstItems);
+        const startedAt = Date.now();
 
-          const getDistinctCount = (arr: any[]) => new Set(arr.map(x => x.title)).size;
-          while (page < totalPages && getDistinctCount(aggregate) < 10) {
-            page += 1;
-            const next: any = await api.get<any>(`/api/spectacles?page=${page}&limit=${limit}`);
-            const nextItems: any[] = Array.isArray(next) ? next : (Array.isArray(next?.spectacles) ? next.spectacles : (Array.isArray(next?.data) ? next.data : (Array.isArray(next?.spectacles?.data) ? next.spectacles.data : [])));
-            if (!Array.isArray(nextItems) || nextItems.length === 0) break;
-            aggregate.push(...nextItems);
+        // 0) Cache: essayer d'utiliser une version en cache récente
+        try {
+          const cachedRaw = sessionStorage.getItem(CACHE_KEY);
+          if (cachedRaw) {
+            const cached = JSON.parse(cachedRaw) as { ts: number; slides: Slide[] };
+            if (cached && Array.isArray(cached.slides) && (startedAt - cached.ts) < CACHE_TTL_MS) {
+              setSlides(cached.slides.slice(0, MAX_SLIDES));
+              setIndex(0);
+              setLoading(false);
+              return;
+            }
           }
         } catch {}
+        // 1) Essayer d'agréger plusieurs pages de /api/spectacles pour obtenir plusieurs titres distincts
+        const aggregate: unknown[] = [];
+        try {
+          const first = await api.get('/api/spectacles');
+          const firstItems = extractItems(first);
+          const { totalPages, limit } = extractPagination(first);
+          const { page: firstPage } = extractPagination(first);
+          aggregate.push(...firstItems);
 
-        let rawList: any[] = aggregate;
+          // 1.b) Récupérer les autres pages en parallèle (borne supérieure pour éviter surfetch)
+          const pagesToFetch: number[] = [];
+          const maxPages = Math.min(totalPages, firstPage + 4); // au plus 5 pages au total
+          for (let p = firstPage + 1; p <= maxPages; p++) pagesToFetch.push(p);
+
+          if (pagesToFetch.length > 0) {
+            const results = await Promise.allSettled(
+              pagesToFetch.map(p => api.get(`/api/spectacles?page=${p}&limit=${limit}`))
+            );
+            for (const r of results) {
+              if (r.status === 'fulfilled') {
+                const items = extractItems(r.value);
+                if (Array.isArray(items) && items.length > 0) aggregate.push(...items);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Pagination aggregation failed, will try upcoming fallback.', e);
+        }
+
+        let rawList: unknown[] = aggregate;
         if (!Array.isArray(rawList) || rawList.length === 0) {
           // 2) Fallback sur upcoming si l'agrégation a échoué
-          const up: any = await api.get<any>('/api/spectacles/upcoming');
-          if (Array.isArray(up)) rawList = up;
-          else if (Array.isArray(up?.spectacles)) rawList = up.spectacles;
-          else if (Array.isArray(up?.data)) rawList = up.data;
-          else if (Array.isArray(up?.spectacles?.data)) rawList = up.spectacles.data;
-          else rawList = [];
+          const up = await api.get('/api/spectacles/upcoming');
+          rawList = extractItems(up);
         }
         if (!Array.isArray(rawList) || rawList.length === 0) { setSlides([]); return; }
 
         // Normaliser pour tolérer champs manquants/incohérents
-        const normalized: SpectacleItem[] = rawList.map((it: any) => {
-          const id = it.id ?? it.spectacle_id ?? it._id;
-          const title = it.title ?? it.nom ?? it.name ?? '';
-          const img = it.img ?? it.image ?? it.photo ?? '';
-          const date_spectacle = (it.date_spectacle ?? it.date ?? it.dateSpectacle ?? '').toString();
-          const heure_spectacle = (it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00').toString();
-          const lieu = it.lieu ?? it.venue ?? '';
-          const lien_spectacle = it.lien_spectacle ?? it.link ?? it.bookingUrl ?? '';
-          return { id, title, img, date_spectacle, heure_spectacle, lieu, lien_spectacle } as SpectacleItem;
-        }).filter((it: SpectacleItem) => it.id && it.title && it.date_spectacle);
+        const normalized: SpectacleItem[] = rawList.map((val: unknown) => {
+          const it = isObject(val) ? val : {};
+          const idCandidate = it.id ?? it.spectacle_id ?? it._id;
+          const idNum = toNumber(idCandidate);
+          const title = toStringSafe(it.title ?? it.nom ?? it.name ?? '');
+          const img = toStringSafe(it.img ?? it.image ?? it.photo ?? '');
+          const date_spectacle = toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? '');
+          const heure_spectacle = toStringSafe(it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00');
+          const lieu = toStringSafe(it.lieu ?? it.venue ?? '');
+          const lien_spectacle = toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? '');
+          return {
+            id: idNum ?? -1,
+            title,
+            img,
+            date_spectacle,
+            heure_spectacle,
+            lieu,
+            lien_spectacle,
+          };
+        }).filter((it: SpectacleItem) => Number.isFinite(it.id) && it.id > 0 && !!it.title && !!it.date_spectacle);
         if (normalized.length === 0) { setSlides([]); return; }
 
         const now = new Date();
@@ -124,9 +206,21 @@ const Hero = () => {
         }
 
         // Respect strict: 1 slide par spectacle (ordre DB), prochaine date disponible
-        setSlides(perShowNext);
+        const finalSlides = perShowNext.slice(0, MAX_SLIDES);
+        setSlides(prev => {
+          // éviter update si identique (minimise re-render)
+          const sameLength = prev.length === finalSlides.length;
+          const same = sameLength && prev.every((s, i) =>
+            s.id === finalSlides[i].id && s.title === finalSlides[i].title && s.img === finalSlides[i].img && s.nextDate === finalSlides[i].nextDate && s.nextTime === finalSlides[i].nextTime
+          );
+          return same ? prev : finalSlides;
+        });
         setIndex(0);
-        setIndex(0);
+
+        // 5) Écrire en cache
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), slides: finalSlides }));
+        } catch {}
       } catch (error) {
         console.error('Erreur lors du chargement des spectacles:', error);
         setError(error instanceof Error ? error.message : 'Une erreur est survenue');
@@ -135,7 +229,10 @@ const Hero = () => {
       }
     };
 
-    fetchSlides();
+    // Abort si démontage pour éviter setState après unmount
+    let alive = true;
+    (async () => { if (alive) await fetchSlides(); })();
+    return () => { alive = false; };
   }, []);
 
   // Auto-advance
