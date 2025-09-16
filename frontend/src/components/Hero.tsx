@@ -77,6 +77,8 @@ const Hero = () => {
   const MAX_SLIDES = 10;
   const CACHE_KEY = 'heroSlides:v1';
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const PAGE_FETCH_CAP = 5; // au plus 5 pages
+  const FAST_FALLBACK_MS = 1800; // si >1.8s, basculer sur fallback/upcoming
 
   const formatTime = (time: string) => {
     return time.split(':').slice(0, 2).join(':');
@@ -106,7 +108,54 @@ const Hero = () => {
         // 1) Essayer d'agréger plusieurs pages de /api/spectacles pour obtenir plusieurs titres distincts
         const aggregate: unknown[] = [];
         try {
-          const first = await api.get('/api/spectacles');
+          // Course entre la 1ère page et un timeout pour réduire le ressenti
+          const timeout = new Promise<unknown>((_, rej) => setTimeout(() => rej(new Error('first_page_timeout')), FAST_FALLBACK_MS));
+          const first = await Promise.race([api.get('/api/spectacles'), timeout]).catch(async (e) => {
+            if ((e as Error)?.message === 'first_page_timeout') {
+              // si timeout, tenter directement upcoming pour affichage immédiat
+              const upFast = await api.get('/api/spectacles/upcoming');
+              const upItemsFast = extractItems(upFast);
+              if (upItemsFast.length) {
+                const fastNormalized: SpectacleItem[] = upItemsFast.map((val: unknown) => {
+                  const it = isObject(val) ? val : {};
+                  const idCandidate = it.id ?? it.spectacle_id ?? it._id;
+                  const idNum = toNumber(idCandidate) ?? -1;
+                  return {
+                    id: idNum,
+                    title: toStringSafe(it.title ?? it.nom ?? it.name ?? ''),
+                    img: toStringSafe(it.img ?? it.image ?? it.photo ?? ''),
+                    date_spectacle: toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? ''),
+                    heure_spectacle: toStringSafe(it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00'),
+                    lieu: toStringSafe(it.lieu ?? it.venue ?? ''),
+                    lien_spectacle: toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? ''),
+                  };
+                }).filter(it => it.id > 0 && it.title && it.date_spectacle);
+
+                const order: string[] = [];
+                const groups = new Map<string, SpectacleItem[]>();
+                for (const s of fastNormalized) {
+                  if (!groups.has(s.title)) order.push(s.title);
+                  groups.set(s.title, [...(groups.get(s.title) || []), s]);
+                }
+                const nowFast = new Date();
+                const perShowNextFast: Slide[] = [];
+                for (const title of order) {
+                  const items = (groups.get(title) || []).map(it => ({ ...it, dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`) }));
+                  items.sort((a, b) => a.dt.getTime() - b.dt.getTime());
+                  const next = items.find(it => it.dt >= nowFast) || items[0];
+                  if (next) perShowNextFast.push({ id: next.id, title: next.title, img: next.img, nextDate: next.date_spectacle, nextTime: next.heure_spectacle });
+                }
+                const fastSlides = perShowNextFast.slice(0, MAX_SLIDES);
+                if (fastSlides.length) {
+                  setSlides(fastSlides);
+                  setIndex(0);
+                }
+              }
+              // continuer ensuite avec l’agrégation normale en arrière-plan
+              return api.get('/api/spectacles');
+            }
+            throw e;
+          });
           const firstItems = extractItems(first);
           const { totalPages, limit } = extractPagination(first);
           const { page: firstPage } = extractPagination(first);
@@ -114,7 +163,7 @@ const Hero = () => {
 
           // 1.b) Récupérer les autres pages en parallèle (borne supérieure pour éviter surfetch)
           const pagesToFetch: number[] = [];
-          const maxPages = Math.min(totalPages, firstPage + 4); // au plus 5 pages au total
+          const maxPages = Math.min(totalPages, firstPage + (PAGE_FETCH_CAP - 1)); // au plus PAGE_FETCH_CAP pages
           for (let p = firstPage + 1; p <= maxPages; p++) pagesToFetch.push(p);
 
           if (pagesToFetch.length > 0) {
@@ -283,6 +332,9 @@ const Hero = () => {
           <img
             className="absolute inset-0 w-full h-full object-cover"
             src={buildImgSrc('spectacles', slides[index].img)}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             alt={slides[index].title}
             onError={onImgErrorSwap}
           />
