@@ -245,8 +245,7 @@ app.use("/api", routes);
     res.json({
       id: 1,
       name: "Aucun artiste",
-      photo: "",
-      biographie: "Aucun artiste configuré"
+      photo: ""
     });
   });
   

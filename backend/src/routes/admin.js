@@ -3,9 +3,74 @@ const router = express.Router();
 const db = require('../db');
 const { auth, isAdmin } = require('./auth');
 const { sendBulkEmails } = require('../services/emailService');
+const path = require('path');
+const fs = require('fs');
+let multer, sharp; // lazy require to avoid crash if not installed in some envs
 
 // Middleware pour protéger toutes les routes admin
 router.use(auth, isAdmin);
+// ====== Upload d'image spectacle (WEBP) ======
+// Sauvegarde dans frontend/public/assets/img/spectacles et renvoie le chemin relatif
+try {
+  multer = require('multer');
+  sharp = require('sharp');
+} catch (_) {
+  // Les dépendances seront nécessaires en production: npm i multer sharp
+}
+
+if (multer && sharp) {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 Mo
+    fileFilter: (req, file, cb) => {
+      const ok = /^image\/(png|jpeg|jpg|webp)$/i.test(file.mimetype);
+      if (!ok) return cb(new Error('Type de fichier non autorisé'));
+      cb(null, true);
+    }
+  });
+
+  router.post('/upload/spectacle-image', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
+      // Ecrire dans le dossier monté par docker-compose (bind mount)
+      const targetDir = process.env.SPECTACLE_UPLOAD_DIR || path.resolve('/app/frontend_public_assets/spectacles');
+      console.log('📁 Upload spectacle → targetDir =', targetDir, '| mimetype =', req.file.mimetype, '| size =', req.file.size);
+      await fs.promises.mkdir(targetDir, { recursive: true });
+
+      // Construire un nom basé sur le nom original, sécurisé et unique
+      const original = (req.file.originalname || 'image').toString();
+      const parsed = path.parse(original);
+      const baseRaw = (parsed.name || 'image').toLowerCase();
+      const baseSanitized = baseRaw
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s._-]/g, '')
+        .replace(/[\s]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
+
+      let targetName = `${baseSanitized}.webp`;
+      let targetAbs = path.join(targetDir, targetName);
+      let suffix = 1;
+      while (fs.existsSync(targetAbs)) {
+        targetName = `${baseSanitized}-${suffix}.webp`;
+        targetAbs = path.join(targetDir, targetName);
+        suffix += 1;
+      }
+      const relativePath = `/assets/img/spectacles/${targetName}`;
+
+      // Convertir en WEBP pour uniformiser
+      await sharp(req.file.buffer).webp({ quality: 85 }).toFile(targetAbs);
+      console.log('✅ Upload spectacle écrit:', targetAbs);
+
+      return res.json({ path: relativePath });
+    } catch (error) {
+      console.error('Erreur upload image:', error);
+      return res.status(500).json({ error: 'Erreur serveur lors de l\'upload' });
+    }
+  });
+}
+
 
 // ====== Newsletter ======
 // Récupérer tous les abonnés newsletter
@@ -177,33 +242,75 @@ router.post('/spectacles', async (req, res) => {
       return res.status(400).json({ error: 'Corps de la requête manquant' });
     }
 
-    const { title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle } = req.body;
+    const { title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, recurrence } = req.body;
 
-    if (!title || !img || !description || !date_spectacle || !heure_spectacle || !lieu) {
+    if (!title || !img || !description || !lieu) {
       return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
 
     try {
-      const [result] = await db.query(
-          'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle || null]
+      // Si pas de récurrence: insertion simple
+      if (!recurrence || !recurrence.enabled) {
+        if (!date_spectacle || !heure_spectacle) {
+          return res.status(400).json({ error: 'date_spectacle et heure_spectacle requis pour un ajout simple' });
+        }
+        const [result] = await db.query(
+            'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle || null]
+        );
+      
+      const [newSpectacle] = await db.query(
+        'SELECT * FROM spectacle WHERE id = ?',
+        [result.insertId]
       );
-    
-    const [newSpectacle] = await db.query(
-      'SELECT * FROM spectacle WHERE id = ?',
-      [result.insertId]
-    );
 
 
-    res.status(201).json(newSpectacle[0]);
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout du spectacle:', error);
-      res.status(500).json({ 
-        message: 'Erreur serveur',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      });
-    }
+      return res.status(201).json(newSpectacle[0]);
+      }
+
+      // Récurrence hebdomadaire
+      const { weekday, time, startDate, endDate } = recurrence || {};
+      if (typeof weekday !== 'number' || !time || !startDate || !endDate) {
+        return res.status(400).json({ error: 'Paramètres de récurrence invalides' });
+      }
+
+      const start = new Date(startDate + 'T00:00:00');
+      const end = new Date(endDate + 'T23:59:59');
+      const dates = [];
+      let d = new Date(start);
+      while (d.getDay() !== weekday) {
+        d.setDate(d.getDate() + 1);
+      }
+      while (d <= end) {
+        dates.push(new Date(d));
+        d = new Date(d);
+        d.setDate(d.getDate() + 7);
+      }
+      if (dates.length === 0) {
+        return res.status(400).json({ error: 'Aucune occurrence dans l\'intervalle' });
+      }
+      const values = dates.map(dt => [
+        title,
+        img,
+        description,
+        dt.toISOString().slice(0,10),
+        time.length === 'HH:mm'.length ? time + ':00' : time,
+        lieu,
+        lien_spectacle || null,
+      ]);
+      await db.query(
+        'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle) VALUES ?',
+        [values]
+      );
+      return res.status(201).json({ success: true, inserted: values.length });
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du spectacle:', error);
+        res.status(500).json({ 
+          message: 'Erreur serveur',
+          details: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+      }
   } catch (error) {
     console.error('Erreur générale:', error);
     res.status(500).json({ 
@@ -266,109 +373,11 @@ router.delete('/spectacles/:id', async (req, res) => {
 
     const spectacle = spectacleInfo[0];
 
-    // 2. Récupérer tous les utilisateurs qui ont réservé des billets pour ce spectacle
-    const [reservations] = await db.query(`
-      SELECT 
-        u.id as user_id,
-        u.civility,
-        u.prenom,
-        u.nom,
-        u.email,
-        r.id as reservation_id,
-        r.nb_places,
-        r.date as reservation_date,
-        SUM(pr.montant) as montant_paye,
-        p.statut as paiement_statut
-      FROM reservation r
-      JOIN user u ON r.user_id = u.id
-      LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
-      LEFT JOIN paiement p ON pr.paiement_id = p.id
-      WHERE r.spectacle_id = ? AND p.statut = true
-      GROUP BY u.id, r.id, u.civility, u.prenom, u.nom, u.email, r.nb_places, r.date, p.statut
-    `, [id]);
+    // 2. Supprimer uniquement le spectacle (pas d'appels à reservation/paiement)
+    await db.query('DELETE FROM spectacle WHERE id = ?', [id]);
 
-    // 3. Envoyer des emails d'annulation à tous les utilisateurs concernés
-    if (reservations.length > 0) {
-      try {
-        const { sendEmail } = require('../services/emailService');
-        
-        for (const reservation of reservations) {
-          const messageHtml = `
-            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-              <div style="background:#f8f9fa;padding:20px;border-radius:12px;margin-bottom:20px">
-                <h2 style="color:#dc3545;margin:0 0 16px 0;font-size:24px">🚫 Spectacle Annulé</h2>
-                <p style="margin:0 0 16px 0;color:#111;font-size:16px">Bonjour ${reservation.prenom} ${reservation.nom},</p>
-                <p style="margin:0 0 16px 0;color:#374151;line-height:1.6">
-                  Nous sommes désolés de vous informer que le spectacle <strong>"${spectacle.title}"</strong> 
-                  prévu le <strong>${spectacle.date_spectacle}</strong> à <strong>${spectacle.heure_spectacle}</strong> 
-                  au <strong>${spectacle.lieu}</strong> a été annulé.
-                </p>
-                <div style="background:#fff;padding:16px;border-radius:8px;border-left:4px solid #dc3545;margin:16px 0">
-                  <h3 style="margin:0 0 12px 0;color:#111;font-size:18px">Détails de votre réservation :</h3>
-                  <ul style="margin:0;padding-left:20px;color:#374151">
-                    <li><strong>Spectacle :</strong> ${spectacle.title}</li>
-                    <li><strong>Artiste :</strong> ${spectacle.artiste_name}</li>
-                    <li><strong>Date :</strong> ${spectacle.date_spectacle}</li>
-                    <li><strong>Heure :</strong> ${spectacle.heure_spectacle}</li>
-                    <li><strong>Lieu :</strong> ${spectacle.lieu}</li>
-                    <li><strong>Nombre de places :</strong> ${reservation.nb_places}</li>
-                    <li><strong>Montant payé :</strong> ${reservation.montant_paye}€</li>
-                  </ul>
-                </div>
-                <p style="margin:16px 0;color:#374151;line-height:1.6">
-                  <strong>Remboursement :</strong> Un remboursement automatique sera effectué dans les 5 à 10 jours ouvrés 
-                  sur le moyen de paiement utilisé lors de votre réservation.
-                </p>
-                <p style="margin:16px 0;color:#374151;line-height:1.6">
-                  Pour toute question concernant votre remboursement, n'hésitez pas à nous contacter.
-                </p>
-                <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb">
-                  <p style="margin:0;color:#6b7280;font-size:14px">
-                    Cordialement,<br>
-                    L'équipe Espace Comédie
-                  </p>
-                </div>
-              </div>
-            </div>
-          `;
-
-          await sendEmail(
-            reservation.email,
-            `Annulation - ${spectacle.title}`,
-            messageHtml,
-            [], // pas d'attachments
-            false // pas de lien de désabonnement
-          );
-        }
-
-        console.log(`✅ Emails d'annulation envoyés à ${reservations.length} utilisateur(s) pour le spectacle "${spectacle.title}"`);
-      } catch (emailError) {
-        console.error('❌ Erreur lors de l\'envoi des emails d\'annulation:', emailError);
-        // On continue même si l'envoi d'emails échoue
-      }
-    }
-
-    // 4. Supprimer les réservations associées (et leurs tickets) avant de supprimer le spectacle
-    if (reservations.length > 0) {
-      const reservationIds = reservations.map(r => r.reservation_id);
-      
-      // Supprimer d'abord les tickets associés
-      await db.query('DELETE FROM ticket WHERE reservation_id IN (?)', [reservationIds]);
-      
-      // Supprimer les liens paiement-réservation
-      await db.query('DELETE FROM paiement_reservation WHERE reservation_id IN (?)', [reservationIds]);
-      
-      // Supprimer les réservations
-      await db.query('DELETE FROM reservation WHERE id IN (?)', [reservationIds]);
-    }
-    
-    // 5. Maintenant supprimer le spectacle
-    const [result] = await db.query('DELETE FROM spectacle WHERE id = ?', [id]);
-    
     res.json({ 
       message: 'Spectacle supprimé avec succès',
-      emailsEnvoyes: reservations.length,
-      reservationsSupprimees: reservations.length,
       spectacleSupprime: spectacle.title
     });
   } catch (error) {
@@ -452,16 +461,16 @@ router.delete('/reservations/:id', async (req, res) => {
 // Modifier un artiste
 router.put('/artistes/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, photo, biographie } = req.body;
+  const { name, photo } = req.body;
 
-  if (!name || !photo || !biographie) {
+  if (!name || !photo) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
     await db.query(
-      'UPDATE artiste SET name = ?, photo = ?, biographie = ? WHERE id = ?',
-      [name, photo, biographie, id]
+      'UPDATE artiste SET name = ?, photo = ? WHERE id = ?',
+      [name, photo, id]
     );
 
     const [updatedArtist] = await db.query(
@@ -509,16 +518,16 @@ router.delete('/artistes/:id', async (req, res) => {
 
 // Ajouter un nouvel artiste
 router.post('/artiste', async (req, res) => {
-  const { name, photo, photo_featured, biographie } = req.body;
+  const { name, photo, photo_featured } = req.body;
 
-  if (!name || !photo || !photo_featured || !biographie) {
+  if (!name || !photo || !photo_featured) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
     const [result] = await db.query(
-      'INSERT INTO artiste (name, photo, photo_featured, biographie) VALUES (?, ?, ?, ?)',
-      [name, photo, photo_featured, biographie]
+      'INSERT INTO artiste (name, photo, photo_featured) VALUES (?, ?, ?)',
+      [name, photo, photo_featured]
     );
 
     const [newArtist] = await db.query(
