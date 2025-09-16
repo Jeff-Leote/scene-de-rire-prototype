@@ -3,7 +3,7 @@ import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
-import { Spectacle, Artist, ArtistFormData, Reservation, SpectacleFormData, FeaturedArtist, User, PromoCode, PromoCodeFormData } from '../services/types';
+import { Spectacle, Artist, ArtistFormData, FeaturedArtist, User } from '../services/types';
 
 interface LieuImage {
   id: number;
@@ -12,19 +12,15 @@ interface LieuImage {
   is_main: boolean;
 }
 
-interface AvailabilityData {
-  places_total: number;
-  places_reservees: number;
-  places_restantes: number;
-}
+// Availability, reservations, promo codes removed
 
 const Dashboard = () => {
   const { user } = useAuth();
   const API_URL = import.meta.env.VITE_API_URL;
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'reservations' | 'lieu' | 'users' | 'promocodes' | 'newsletter' | 'settings'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'lieu' | 'users' | 'photos' | 'newsletter' | 'settings' | 'maintenance'>('spectacles');
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean>(false);
   const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,22 +31,19 @@ const Dashboard = () => {
   const [selectedSpectacle, setSelectedSpectacle] = useState<Spectacle | null>(null);
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user' | 'promocode', id: number } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user', id: number } | null>(null);
   const [spectacleFormData, setSpectacleFormData] = useState({
     title: '',
     img: '',
     description: '',
     date_spectacle: '',
     heure_spectacle: '',
-    prix: '',
-    artiste_id: '',
     lieu: '',
-    places_disponibles: ''
+    lien_spectacle: ''
   });
   const [artistFormData, setArtistFormData] = useState({
     name: '',
     photo: '',
-    photo_featured: '',
     biographie: ''
   });
   const [featuredArtist, setFeaturedArtist] = useState<FeaturedArtist | null>(null);
@@ -58,8 +51,7 @@ const Dashboard = () => {
   const [newArtist, setNewArtist] = useState<ArtistFormData>({
     name: '',
     biographie: '',
-    photo: '',
-    photo_featured: ''
+    photo: ''
   });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -67,23 +59,14 @@ const Dashboard = () => {
   const [isLieuModalOpen, setIsLieuModalOpen] = useState(false);
 
   const [selectedLieu, setSelectedLieu] = useState<LieuImage | null>(null);
-  const [lieuFormData, setLieuFormData] = useState({ image_path: '', image_detail_path: '', is_main: false });
+  const [lieuFormData, setLieuFormData] = useState({ image_path: '', is_main: false });
   const [users, setUsers] = useState<User[]>([]);
-  const [availability, setAvailability] = useState<Record<number, AvailabilityData>>({});
-  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
-  const [isPromoCodeModalOpen, setIsPromoCodeModalOpen] = useState(false);
-  const [isAddingPromoCode, setIsAddingPromoCode] = useState(false);
-  const [selectedPromoCode, setSelectedPromoCode] = useState<PromoCode | null>(null);
-  const [promoCodeFormData, setPromoCodeFormData] = useState<PromoCodeFormData>({
-    code: '',
-    type: 'percentage',
-    value: '',
-    description: '',
-    is_active: true,
-    max_uses: '',
-    valid_from: '',
-    valid_until: ''
-  });
+  
+  // Photos additionnels (admin)
+  const [photosSpectacleId, setPhotosSpectacleId] = useState<string>('');
+  const [spectaclePhotos, setSpectaclePhotos] = useState<Array<{ id: number; image_path: string; sort_order: number | null }>>([]);
+  const [newPhotoPath, setNewPhotoPath] = useState<string>('');
+  const [newPhotoOrder, setNewPhotoOrder] = useState<string>('');
 
   // Newsletter et emails
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<string[]>([]);
@@ -104,24 +87,7 @@ const Dashboard = () => {
         const spectaclesData = await api.get<Spectacle[]>('/api/admin/spectacles');
         setSpectacles(spectaclesData);
 
-        // Charger les disponibilités pour chaque spectacle (jauge)
-        try {
-          const entries = await Promise.all(
-            spectaclesData.map(async (s: Spectacle) => {
-              try {
-                const d = await api.get<{ places_total: number; places_reservees: number; places_restantes: number }>(`/api/reservations/availability/${s.id}`);
-                return [s.id, { places_total: d.places_total, places_reservees: d.places_reservees, places_restantes: d.places_restantes }] as const;
-              } catch {
-                return null;
-              }
-            })
-          );
-          const map: Record<number, AvailabilityData> = {};
-          entries.forEach((e) => { if (e) map[e[0]] = e[1]; });
-          setAvailability(map);
-        } catch {
-          setAvailability({});
-        }
+        // Disponibilités supprimées
 
         // Récupérer les artistes
         const artistsData = await api.get<Artist[]>('/api/admin/artistes');
@@ -135,15 +101,13 @@ const Dashboard = () => {
           // Ignorer les erreurs de récupération de l'artiste à l'affiche
         }
 
-        // Récupérer les réservations
-        const reservationsData = await api.get<Reservation[]>('/api/admin/reservations');
-        setReservations(reservationsData);
+        // Réservations supprimées
 
         // Récupérer les images du lieu
         try {
           const lieuData = await api.get<LieuImage[]>('/api/lieu/images');
           if (Array.isArray(lieuData)) setLieuImages(lieuData);
-          else setLieuImages([]);
+            else setLieuImages([]);
         } catch {
           setLieuImages([]);
         }
@@ -157,13 +121,7 @@ const Dashboard = () => {
           setUsers([]);
         }
 
-        // Récupérer les codes promo
-        try {
-          const promoCodesData = await api.get<PromoCode[]>('/api/admin/promo-codes');
-          setPromoCodes(promoCodesData);
-        } catch {
-          setPromoCodes([]);
-        }
+        // Codes promo supprimés
 
         // Récupérer les abonnés newsletter
         try {
@@ -181,6 +139,12 @@ const Dashboard = () => {
           // Ignorer les erreurs de récupération des paramètres
         }
 
+        // Récupérer l'état maintenance (public)
+        try {
+          const m = await api.get<{ maintenance_enabled: boolean }>('/api/settings/maintenance');
+          setMaintenanceEnabled(Boolean(m.maintenance_enabled));
+        } catch {}
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -191,35 +155,7 @@ const Dashboard = () => {
     fetchData();
   }, [API_URL]);
 
-  // Polling: rafraîchir périodiquement les jauges sur l'onglet Spectacles
-  useEffect(() => {
-    if (activeTab !== 'spectacles' || spectacles.length === 0) return;
-    const ids = spectacles.map(s => s.id);
-
-    const tick = async () => {
-      try {
-        const { api } = await import('@/services/api');
-        const entries = await Promise.all(
-          ids.map(async (id) => {
-            try {
-              const d = await api.get<{ places_total: number; places_reservees: number; places_restantes: number }>(`/api/reservations/availability/${id}`);
-              return [id, { places_total: d.places_total, places_reservees: d.places_reservees, places_restantes: d.places_restantes }] as const;
-            } catch { return null; }
-          })
-        );
-        const map: Record<number, { places_total: number; places_reservees: number; places_restantes: number }> = {};
-        entries.forEach((e) => { if (e) map[e[0]] = e[1]; });
-        setAvailability((prev) => ({ ...prev, ...map }));
-      } catch {
-        // Ignorer les erreurs de polling
-      }
-    };
-
-    const interval = setInterval(tick, 10000);
-    // Premier tick immédiat
-    tick();
-    return () => clearInterval(interval);
-  }, [activeTab, spectacles, API_URL]);
+  // Polling disponibilités supprimé
 
   const handleEditSpectacleClick = (spectacle: Spectacle) => {
     setSelectedSpectacle(spectacle);
@@ -255,10 +191,8 @@ const Dashboard = () => {
       description: spectacle.description,
       date_spectacle: formatDateForInput(spectacle.date_spectacle),
       heure_spectacle: formatTimeForInput(spectacle.heure_spectacle),
-      prix: spectacle.prix.toString(),
-      artiste_id: spectacle.artiste_id.toString(),
       lieu: spectacle.lieu,
-      places_disponibles: spectacle.places_disponibles != null ? String(spectacle.places_disponibles) : ''
+      lien_spectacle: spectacle.lien_spectacle || ''
     });
     setIsSpectacleModalOpen(true);
   };
@@ -268,7 +202,6 @@ const Dashboard = () => {
     setArtistFormData({
       name: artist.name,
       photo: artist.photo,
-      photo_featured: artist.photo_featured,
       biographie: artist.biographie
     });
     setIsArtistModalOpen(true);
@@ -299,10 +232,8 @@ const Dashboard = () => {
       description: '',
       date_spectacle: '',
       heure_spectacle: '',
-      prix: '',
-      artiste_id: '',
       lieu: '',
-      places_disponibles: ''
+      lien_spectacle: ''
     });
     setIsSpectacleModalOpen(true);
   };
@@ -313,7 +244,6 @@ const Dashboard = () => {
     setArtistFormData({
       name: '',
       photo: '',
-      photo_featured: '',
       biographie: ''
     });
     setIsArtistModalOpen(true);
@@ -329,10 +259,7 @@ const Dashboard = () => {
         : `${API_URL}/api/admin/spectacles/${selectedSpectacle?.id}`;
       
       const requestBody = {
-        ...spectacleFormData,
-        prix: parseFloat(spectacleFormData.prix),
-        artiste_id: parseInt(spectacleFormData.artiste_id),
-        places_disponibles: spectacleFormData.places_disponibles ? parseInt(spectacleFormData.places_disponibles) : undefined
+        ...spectacleFormData
       };
 
 // Avoid logging credentials in plain text.
@@ -363,25 +290,7 @@ console.debug('Spectacle request:', {
       } else {
         setSpectacles(prev => prev.map(s => s.id === updatedSpectacle.id ? updatedSpectacle : s));
       }
-      // Rafraîchir la jauge du spectacle créé/modifié
-      if (updatedSpectacle?.id) {
-        try {
-          const r = await fetch(`${API_URL}/api/reservations/availability/${updatedSpectacle.id}`);
-          if (r.ok) {
-            const d = await r.json();
-            setAvailability(prev => ({
-              ...prev,
-              [updatedSpectacle.id]: {
-                places_total: d.places_total,
-                places_reservees: d.places_reservees,
-                places_restantes: d.places_restantes,
-              }
-            }));
-          }
-        } catch {
-          // Ignorer les erreurs de mise à jour des disponibilités
-        }
-      }
+      // Disponibilités supprimées
       setIsSpectacleModalOpen(false);
       setIsAddingSpectacle(false);
       toast.success(isAddingSpectacle ? 'Spectacle ajouté avec succès' : 'Spectacle modifié avec succès');
@@ -400,10 +309,8 @@ console.debug('Spectacle request:', {
         return;
       }
 
-      // S'assurer que photo_featured a une valeur
       const artistData = {
-        ...artistFormData,
-        photo_featured: artistFormData.photo_featured || artistFormData.photo
+        ...artistFormData
       };
 
       const url = isAddingArtist 
@@ -475,9 +382,6 @@ console.debug('Spectacle request:', {
         case 'user':
           url = `${API_URL}/api/admin/users/${itemToDelete.id}`;
           break;
-        case 'promocode':
-          url = `${API_URL}/api/admin/promo-codes/${itemToDelete.id}`;
-          break;
         default:
           throw new Error('Type d\'élément non reconnu');
       }
@@ -505,12 +409,9 @@ console.debug('Spectacle request:', {
         case 'user':
           setUsers(prev => prev.filter(u => u.id !== itemToDelete.id));
           break;
-        case 'promocode':
-          setPromoCodes(prev => prev.filter(pc => pc.id !== itemToDelete.id));
-          break;
       }
 
-      toast.success(`${itemToDelete.type === 'spectacle' ? 'Spectacle' : itemToDelete.type === 'artist' ? 'Artiste' : itemToDelete.type === 'promocode' ? 'Code promo' : 'Utilisateur'} supprimé avec succès`);
+      toast.success(`${itemToDelete.type === 'spectacle' ? 'Spectacle' : itemToDelete.type === 'artist' ? 'Artiste' : 'Utilisateur'} supprimé avec succès`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -568,10 +469,8 @@ console.debug('Spectacle request:', {
         return;
       }
 
-      // Utiliser la même photo pour photo_featured si non spécifiée
       const artistData = {
-        ...newArtist,
-        photo_featured: newArtist.photo_featured || newArtist.photo
+        ...newArtist
       };
 
       const response = await fetch(`${API_URL}/api/admin/artiste`, {
@@ -594,7 +493,7 @@ console.debug('Spectacle request:', {
       }
 
       setArtists([...artists, data]);
-      setNewArtist({ name: '', biographie: '', photo: '', photo_featured: '' });
+      setNewArtist({ name: '', biographie: '', photo: '' });
       setIsAddModalOpen(false);
       toast.success('Artiste ajouté avec succès');
     } catch (err) {
@@ -614,13 +513,8 @@ console.debug('Spectacle request:', {
       
       // Gestion des photos
       const photoInput = document.querySelector('input[name="photo"]') as HTMLInputElement;
-      const photoFeaturedInput = document.querySelector('input[name="photo_featured"]') as HTMLInputElement;
-      
       if (photoInput?.files?.[0]) {
         formData.append('photo', photoInput.files[0]);
-      }
-      if (photoFeaturedInput?.files?.[0]) {
-        formData.append('photo_featured', photoFeaturedInput.files[0]);
       }
 
       const token = localStorage.getItem('token');
@@ -662,7 +556,6 @@ const handleEditLieuClick = (img: LieuImage) => {
   setSelectedLieu(img);
   setLieuFormData({
     image_path: img.image_path,
-    image_detail_path: img.image_detail_path,
     is_main: img.is_main,
   });
   setIsLieuModalOpen(true);
@@ -697,9 +590,9 @@ const handleLieuSubmit = async (e: React.FormEvent) => {
     if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
     const data = await response.json();
 
-    setLieuImages(prev =>
-      prev.map(img => (img.id === data.id ? data : img))
-    );
+      setLieuImages(prev =>
+        prev.map(img => (img.id === data.id ? data : img))
+      );
 
     setIsLieuModalOpen(false);
     toast.success('Image enregistrée');
@@ -779,139 +672,74 @@ const handleDeleteLieu = async (id: number) => {
     }
   };
 
-  const handleAddPromoCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!promoCodeFormData.code || !promoCodeFormData.value || !promoCodeFormData.valid_from || !promoCodeFormData.valid_until) {
-      toast.error('Tous les champs sont requis');
-      return;
-    }
-
+  // ====== Admin Photos logic ======
+  const loadSpectaclePhotos = async (spectacleId: number) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
+      const res = await fetch(`${API_URL}/api/photos/admin/spectacle/${spectacleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur chargement photos');
+      setSpectaclePhotos(data);
+    } catch (e) {
+      setSpectaclePhotos([]);
+      toast.error(e instanceof Error ? e.message : 'Erreur');
+    }
+  };
+
+  const handleAddPhoto = async () => {
+    try {
+      const spectacleIdNum = parseInt(photosSpectacleId);
+      if (!spectacleIdNum || !newPhotoPath) {
+        toast.error('Sélectionnez un spectacle et indiquez image_path');
         return;
       }
-
-      const response = await fetch(`${API_URL}/api/admin/promo-codes`, {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/photos/admin`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(promoCodeFormData)
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ spectacle_id: spectacleIdNum, image_path: newPhotoPath, sort_order: newPhotoOrder ? parseInt(newPhotoOrder) : null })
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || data.details || 'Erreur lors de l\'ajout du code promo');
-      }
-
-      setPromoCodes([...promoCodes, data]);
-      setPromoCodeFormData({
-        code: '',
-        type: 'percentage',
-        value: '',
-        description: '',
-        is_active: true,
-        max_uses: '',
-        valid_from: '',
-        valid_until: ''
-      });
-      setIsPromoCodeModalOpen(false);
-      toast.success('Code promo ajouté avec succès');
-    } catch (err) {
-      console.error('Erreur complète:', err);
-      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur ajout photo');
+      setNewPhotoPath('');
+      setNewPhotoOrder('');
+      await loadSpectaclePhotos(spectacleIdNum);
+      toast.success('Photo ajoutée');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erreur');
     }
   };
 
-  const handleEditPromoCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPromoCode) return;
-
+  const handleDeletePhoto = async (photoId: number) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/api/admin/promo-codes/${selectedPromoCode.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(promoCodeFormData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || 'Erreur lors de la modification du code promo');
-      }
-
-      setPromoCodes(promoCodes.map(pc => pc.id === selectedPromoCode.id ? data : pc));
-      setSelectedPromoCode(null);
-      setIsEditModalOpen(false);
-      toast.success('Code promo modifié avec succès');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+      const res = await fetch(`${API_URL}/api/photos/admin/${photoId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur suppression photo');
+      if (photosSpectacleId) await loadSpectaclePhotos(parseInt(photosSpectacleId));
+      toast.success('Photo supprimée');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erreur');
     }
   };
 
-  const handlePromoCodeInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setPromoCodeFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // Promo codes supprimés
 
-  const handlePromoCodeTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPromoCodeFormData(prev => ({
-      ...prev,
-      type: e.target.value as PromoCode['type']
-    }));
-  };
+  // Promo codes supprimés
 
-  const handlePromoCodeStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPromoCodeFormData(prev => ({
-      ...prev,
-      is_active: e.target.checked
-    }));
-  };
+  // Promo codes supprimés
 
-  const handlePromoCodeMaxUsesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPromoCodeFormData(prev => ({
-      ...prev,
-      max_uses: e.target.value
-    }));
-  };
+  // Promo codes supprimés
 
-  const handlePromoCodeValidFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPromoCodeFormData(prev => ({
-      ...prev,
-      valid_from: e.target.value
-    }));
-  };
+  // Promo codes supprimés
 
-  const handlePromoCodeValidUntilChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPromoCodeFormData(prev => ({
-      ...prev,
-      valid_until: e.target.value
-    }));
-  };
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
+  // Promo codes supprimés
 
   // Fonctions pour la newsletter et emails
   const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -966,51 +794,9 @@ const handleDeleteLieu = async (id: number) => {
     }
   };
 
-  const handleEditPromoCodeClick = (promoCode: PromoCode) => {
-    setSelectedPromoCode(promoCode);
-    setPromoCodeFormData({
-      code: promoCode.code,
-      type: promoCode.type,
-      value: promoCode.value.toString(),
-      description: promoCode.description,
-      is_active: promoCode.is_active,
-      max_uses: promoCode.max_uses?.toString() || '',
-      valid_from: promoCode.valid_from || '',
-      valid_until: promoCode.valid_until || ''
-    });
-    setIsPromoCodeModalOpen(true);
-    setIsAddingPromoCode(false);
-  };
+  // Codes promo supprimés
 
-  const handleDeletePromoCode = async (id: number) => {
-    if (!window.confirm('Supprimer ce code promo ?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-
-      const response = await fetch(
-        `${API_URL}/api/admin/promo-codes/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) throw new Error('Erreur lors de la suppression');
-      setPromoCodes(prev => prev.filter(pc => pc.id !== id));
-      toast.success('Code promo supprimé');
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Une erreur est survenue'
-      );
-    }
-  };
+  // Codes promo supprimés
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -1095,7 +881,7 @@ const handleDeleteLieu = async (id: number) => {
           <h1 className="text-3xl font-bold text-white">Dashboard Administrateur</h1>
           <Link 
             to="/" 
-            className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 flex items-center space-x-2 w-full sm:w-auto justify-center"
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 flex items-center space-x-2 w-full sm:w-auto justify-center"
           >
             <i className="fa-solid fa-arrow-left"></i>
             <span>Retour au site</span>
@@ -1109,7 +895,7 @@ const handleDeleteLieu = async (id: number) => {
               onClick={() => setActiveTab('spectacles')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'spectacles'
-                  ? 'bg-yellow-400 text-black'
+                  ? 'bg-red-500 text-white'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
@@ -1119,7 +905,7 @@ const handleDeleteLieu = async (id: number) => {
               onClick={() => setActiveTab('artists')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'artists'
-                  ? 'bg-yellow-400 text-black'
+                  ? 'bg-red-500 text-white'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
@@ -1129,49 +915,37 @@ const handleDeleteLieu = async (id: number) => {
               onClick={() => setActiveTab('featured')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'featured'
-                  ? 'bg-yellow-400 text-black'
+                  ? 'bg-red-500 text-white'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
               L'affiche
             </button>
-            <button
-              onClick={() => setActiveTab('reservations')}
-              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'reservations'
-                  ? 'bg-yellow-400 text-black'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
-              } transition duration-300`}
-            >
-              Réservations
-            </button>
+            {/* Onglet Réservations supprimé */}
             <button
               onClick={() => setActiveTab('lieu')}
-              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${activeTab === 'lieu' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${activeTab === 'lieu' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
             >
               Lieu
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${activeTab === 'users' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${activeTab === 'users' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
             >
               Utilisateurs
             </button>
             <button
-              onClick={() => setActiveTab('promocodes')}
-              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'promocodes'
-                  ? 'bg-yellow-400 text-black'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
-              } transition duration-300`}
+              onClick={() => setActiveTab('photos')}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${activeTab === 'photos' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'} transition duration-300`}
             >
-              Codes Promo
+              Photos
             </button>
+            {/* Onglet Codes Promo supprimé */}
             <button
               onClick={() => setActiveTab('newsletter')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'newsletter'
-                  ? 'bg-yellow-400 text-black'
+                  ? 'bg-red-500 text-white'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
@@ -1181,11 +955,21 @@ const handleDeleteLieu = async (id: number) => {
               onClick={() => setActiveTab('settings')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
                 activeTab === 'settings'
-                  ? 'bg-yellow-400 text-black'
+                  ? 'bg-red-500 text-white'
                   : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
               Paramètres
+            </button>
+            <button
+              onClick={() => setActiveTab('maintenance')}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
+                activeTab === 'maintenance'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              } transition duration-300`}
+            >
+              Maintenance
             </button>
           </div>
                       {/* Boutons d'ajout selon l'onglet actif */}
@@ -1207,29 +991,7 @@ const handleDeleteLieu = async (id: number) => {
                 <span>Ajouter un artiste</span>
               </button>
             )}
-            {activeTab === 'promocodes' && (
-              <button
-                onClick={() => {
-                  setSelectedPromoCode(null);
-                  setPromoCodeFormData({
-                    code: '',
-                    type: 'percentage',
-                    value: '',
-                    description: '',
-                    is_active: true,
-                    max_uses: '',
-                    valid_from: '',
-                    valid_until: ''
-                  });
-                  setIsPromoCodeModalOpen(true);
-                  setIsAddingPromoCode(true);
-                }}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
-              >
-                <i className="fa-solid fa-plus"></i>
-                <span>Ajouter un code promo</span>
-            </button>
-          )}
+            {/* Bouton codes promo supprimé */}
             {activeTab === 'newsletter' && (
               <button
                 onClick={() => {
@@ -1264,7 +1026,7 @@ const handleDeleteLieu = async (id: number) => {
                   <h3 className="text-xl font-bold text-white mb-2">{featuredArtist.name}</h3>
                   <p className="text-gray-400 mb-4">{featuredArtist.biographie}</p>
                   {featuredArtist.next_show && (
-                    <div className="mt-2 text-sm text-yellow-400">
+                    <div className="mt-2 text-sm text-red-500">
                       Prochain spectacle : {featuredArtist.next_show.title} le {new Date(featuredArtist.next_show.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {featuredArtist.next_show.time?.slice(0,5)}
                     </div>
                   )}
@@ -1288,35 +1050,14 @@ const handleDeleteLieu = async (id: number) => {
                   <img src={buildImgSrc('spectacles', spectacle.img)} alt={spectacle.title} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
-                    <p className="text-gray-400 mb-2">Artiste: {spectacle.artiste_name}</p>
                     <p className="text-gray-400 mb-2">
                         Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
                     </p>
-                    <p className="text-gray-400 mb-2">Prix: {spectacle.prix}€</p>
-                    {/* Jauge de places restantes */}
-                    {availability[spectacle.id] && (
-                      <div className="mb-4">
-                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                          <span>Places restantes</span>
-                          <span>{availability[spectacle.id].places_restantes}/{availability[spectacle.id].places_total}</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded h-2 overflow-hidden">
-                          <div
-                            className={`h-2 ${availability[spectacle.id].places_restantes > 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                            style={{ width: `${Math.max(0, Math.min(100, (availability[spectacle.id].places_restantes / Math.max(1, availability[spectacle.id].places_total)) * 100))}%` }}
-                          />
-                        </div>
-                        {availability[spectacle.id].places_restantes <= 0 && (
-                          <div className="mt-2">
-                            <span className="inline-block bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full">Complet</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Prix et jauge de disponibilités supprimés */}
                     <div className="flex flex-col sm:flex-row gap-2">
                       <button 
                         onClick={() => handleEditSpectacleClick(spectacle)}
-                        className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                        className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
                         Modifier
                       </button>
@@ -1344,14 +1085,11 @@ const handleDeleteLieu = async (id: number) => {
                   <img src={buildImgSrc('photo_artiste', artist.photo)} alt={artist.name} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
-                    <p className="text-gray-400 mb-2">
-                      {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
-                    </p>
                     <p className="text-gray-400 mb-4 line-clamp-3">{artist.biographie}</p>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <button 
                         onClick={() => handleEditArtistClick(artist)}
-                        className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                        className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
                         Modifier
                       </button>
@@ -1369,72 +1107,7 @@ const handleDeleteLieu = async (id: number) => {
           )
         )}
 
-        {activeTab === 'reservations' && (
-          reservations.length === 0 ? (
-            <p className="text-gray-400 text-center">Aucune réservation</p>
-          ) : (
-            <div className="space-y-4">
-              {reservations.map((reservation) => (
-                <div key={reservation.reservation_id} className="bg-gray-800 rounded-lg p-6">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-2">{reservation.title}</h3>
-                      <p className="text-gray-400 mb-1">Artiste: {reservation.artiste_name}</p>
-                      <p className="text-gray-400 mb-1">
-                        Date: {formatDate(reservation.date_spectacle)} à {formatTime(reservation.heure_spectacle)}
-                      </p>
-                      <p className="text-gray-400 mb-1">Lieu: {reservation.lieu}</p>
-                    </div>
-                    <div className="text-right">
-                      {getStatusBadge(reservation.paiement_statut, reservation.montant_paye || 0)}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div className="bg-gray-700 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Client</p>
-                      <p className="text-white font-semibold">
-                        Réservation #{reservation.reservation_id}
-                      </p>
-                      <p className="text-gray-400 text-sm">ID: {reservation.reservation_id}</p>
-                    </div>
-                    <div className="bg-gray-700 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Places réservées</p>
-                      <p className="text-white font-semibold text-lg">{reservation.nb_places}</p>
-                    </div>
-                    <div className="bg-gray-700 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Prix unitaire</p>
-                      <p className="text-white font-semibold">{reservation.prix}€</p>
-                    </div>
-                    <div className="bg-gray-700 rounded-lg p-3">
-                      <p className="text-gray-400 text-sm">Montant total</p>
-                      <p className={`font-semibold text-lg ${
-                        reservation.paiement_statut ? 'text-yellow-400' : 'text-red-400'
-                      }`}>
-                        {reservation.montant_paye || reservation.prix * reservation.nb_places}€
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-                    <div className="text-sm text-gray-400">
-                      <p>Réservé le: {formatDate(reservation.reservation_date)}</p>
-                      {reservation.date_paiement && (
-                        <p>Payé le: {formatDate(reservation.date_paiement)}</p>
-                      )}
-                    </div>
-                    <button 
-                      onClick={() => handleDeleteReservation(reservation.reservation_id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
+        {/* Bloc Réservations supprimé */}
 
         {activeTab === 'lieu' && (
           <div className="bg-gray-800 rounded-lg p-6">
@@ -1455,7 +1128,7 @@ const handleDeleteLieu = async (id: number) => {
                       <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {img.image_path}</p>
                       <p className="text-gray-400 mb-2"><b>Type:</b> {img.is_main ? <span className="text-green-400 font-bold">Principale</span> : <span className="text-blue-400">Galerie</span>}</p>
                       <div className="flex justify-center mt-2">
-                        <button onClick={() => handleEditLieuClick(img)} className="w-full bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Modifier</button>
+                        <button onClick={() => handleEditLieuClick(img)} className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Modifier</button>
                       </div>
                     </div>
                   </div>
@@ -1470,18 +1143,18 @@ const handleDeleteLieu = async (id: number) => {
             <h2 className="text-2xl font-bold text-white mb-6">Gestion des utilisateurs</h2>
             {users.length === 0 ? (
               <p className="text-gray-400 text-center">Aucun utilisateur</p>
-            ) : (
-              <div className="space-y-4">
+          ) : (
+            <div className="space-y-4">
                 {users.map((user) => (
                   <div key={user.id} className="bg-gray-900 rounded-lg p-6">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-                      <div>
+                    <div>
                         <h3 className="text-xl font-bold text-white mb-2">
                           {user.civility} {user.firstName} {user.lastName}
                         </h3>
                         <p className="text-gray-400 mb-1">Email: {user.email}</p>
-                        <p className="text-gray-400 mb-1">
-                          Rôle: <span className={`font-semibold ${user.role === 'admin' ? 'text-yellow-400' : 'text-blue-400'}`}>
+                      <p className="text-gray-400 mb-1">
+                          Rôle: <span className={`font-semibold ${user.role === 'admin' ? 'text-red-500' : 'text-blue-400'}`}>
                             {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
                           </span>
                         </p>
@@ -1490,37 +1163,37 @@ const handleDeleteLieu = async (id: number) => {
                             {user.isActive !== false ? 'Actif' : 'Suspendu'}
                           </span>
                         </p>
-                      </div>
                     </div>
-                    
+                  </div>
+                  
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="bg-gray-700 rounded-lg p-3">
+                    <div className="bg-gray-700 rounded-lg p-3">
                         <p className="text-gray-400 text-sm">ID Utilisateur</p>
                         <p className="text-white font-semibold">{user.id}</p>
-                      </div>
-                      <div className="bg-gray-700 rounded-lg p-3">
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-3">
                         <p className="text-gray-400 text-sm">Civilité</p>
                         <p className="text-white font-semibold">{user.civility}</p>
-                      </div>
-                      <div className="bg-gray-700 rounded-lg p-3">
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-3">
                         <p className="text-gray-400 text-sm">Date de création</p>
                         <p className="text-white font-semibold">
                           {user.createdAt ? formatDate(user.createdAt) : 'Non disponible'}
-                        </p>
-                      </div>
+                      </p>
                     </div>
-                    
-                    <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-                      <div className="text-sm text-gray-400">
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-4 border-t border-gray-700">
+                    <div className="text-sm text-gray-400">
                         <p>Dernière connexion: {user.lastLogin ? formatDate(user.lastLogin) : 'Jamais connecté'}</p>
-                      </div>
+                    </div>
                       {user.role === 'admin' ? (
-                        <span className="text-yellow-400 text-sm font-semibold">
+                        <span className="text-red-500 text-sm font-semibold">
                           ⚠️ Impossible de supprimer un administrateur
                         </span>
                       ) : (
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <button
+                    <button 
                             onClick={() => handleToggleUserStatus(user)}
                             className={`w-full sm:w-auto px-4 py-2 rounded text-sm transition duration-300 ${
                               user.isActive !== false 
@@ -1533,81 +1206,82 @@ const handleDeleteLieu = async (id: number) => {
                           <button 
                             onClick={() => handleDeleteClick('user', user.id)}
                             className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                          >
-                            Supprimer
-                          </button>
+                    >
+                      Supprimer
+                    </button>
                         </div>
                       )}
-                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
             )}
           </div>
         )}
 
-        {activeTab === 'promocodes' && (
+        {activeTab === 'photos' && (
           <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Gestion des codes promo</h2>
-            {promoCodes.length === 0 ? (
-              <p className="text-gray-400 text-center">Aucun code promo</p>
-            ) : (
-              <div className="space-y-4">
-                {promoCodes.map((promoCode) => (
-                  <div key={promoCode.id} className="bg-gray-900 rounded-lg p-6">
-                    <div className="mb-4">
-                      <div>
-                         <h3 className="text-xl font-bold text-white mb-2">Code: {promoCode.code}</h3>
-                         <p className="text-gray-400 mb-1">
-                           Type: <span className="text-yellow-400 font-semibold">
-                             {promoCode.type === 'percentage' ? 'Pourcentage' : 
-                              promoCode.type === 'fixed' ? 'Montant fixe' : 'Ticket gratuit'}
-                           </span>
-                         </p>
-                         <p className="text-gray-400 mb-1">
-                           Valeur: <span className="text-green-400 font-semibold">
-                             {promoCode.type === 'percentage' ? `${promoCode.value}%` : 
-                              promoCode.type === 'fixed' ? `${promoCode.value}€` : `${promoCode.value} ticket(s)`}
-                           </span>
-                         </p>
-                         <p className="text-gray-400 mb-1">Description: {promoCode.description}</p>
-                         <p className="text-gray-400 mb-1">
-                           Statut: <span className={`font-semibold ${promoCode.is_active ? 'text-green-400' : 'text-red-400'}`}>
-                             {promoCode.is_active ? 'Actif' : 'Inactif'}
-                           </span>
-                         </p>
-                         <p className="text-gray-400 mb-1">
-                           Utilisations: <span className="text-blue-400 font-semibold">
-                             {promoCode.current_uses} / {promoCode.max_uses ? promoCode.max_uses : '∞'}
-                           </span>
-                         </p>
-                         <p className="text-gray-400 mb-1">
-                           Validité: {promoCode.valid_from ? formatDate(promoCode.valid_from) : 'Non définie'} - {promoCode.valid_until ? formatDate(promoCode.valid_until) : 'Non définie'}
-                         </p>
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t border-gray-700 flex justify-end">
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <button
-                          onClick={() => handleEditPromoCodeClick(promoCode)}
-                          className="w-full sm:w-auto bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => handleDeletePromoCode(promoCode.id)}
-                          className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                        >
-                          Supprimer
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <h2 className="text-2xl font-bold text-white mb-6">Photos additionnels des spectacles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-white mb-2">Spectacle</label>
+                <select
+                  value={photosSpectacleId}
+                  onChange={(e) => {
+                    setPhotosSpectacleId(e.target.value);
+                    const v = parseInt(e.target.value);
+                    if (v) loadSpectaclePhotos(v);
+                    else setSpectaclePhotos([]);
+                  }}
+                  className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                >
+                  <option value="">Sélectionner</option>
+                  {spectacles.map(s => (
+                    <option key={s.id} value={s.id}>{s.title}</option>
+                  ))}
+                </select>
               </div>
-            )}
+              <div>
+                <label className="block text-white mb-2">image_path</label>
+                <input
+                  type="text"
+                  value={newPhotoPath}
+                  onChange={(e) => setNewPhotoPath(e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                  placeholder="ex: photo1.webp"
+                />
+              </div>
+              <div>
+                <label className="block text-white mb-2">Ordre (optionnel)</label>
+                <input
+                  type="number"
+                  value={newPhotoOrder}
+                  onChange={(e) => setNewPhotoOrder(e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                  min="0"
+                />
+              </div>
+            </div>
+            <div className="mb-6">
+              <button onClick={handleAddPhoto} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Ajouter la photo</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {spectaclePhotos.length === 0 ? (
+                <p className="text-gray-400">Aucune photo pour ce spectacle.</p>
+              ) : spectaclePhotos.map(p => (
+                <div key={p.id} className="bg-gray-900 rounded-lg overflow-hidden">
+                  <img src={buildImgSrc('spectacles', p.image_path)} alt="photo" className="w-full h-40 object-cover" onError={onImgErrorSwap} />
+                  <div className="p-3 flex items-center justify-between">
+                    <span className="text-gray-300 text-sm truncate">{p.image_path}</span>
+                    <button onClick={() => handleDeletePhoto(p.id)} className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Supprimer</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        {/* Bloc Codes Promo supprimé */}
 
         {activeTab === 'newsletter' && (
           <div className="bg-gray-800 rounded-lg p-6">
@@ -1617,7 +1291,7 @@ const handleDeleteLieu = async (id: number) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-gray-900 rounded-lg p-6">
                 <div className="flex items-center">
-                  <div className="p-3 rounded-full bg-yellow-400 text-black">
+                  <div className="p-3 rounded-full bg-red-500 text-white">
                     <i className="fa-solid fa-users text-xl"></i>
                   </div>
                   <div className="ml-4">
@@ -1664,9 +1338,9 @@ const handleDeleteLieu = async (id: number) => {
                   {newsletterSubscribers.map((email, index) => (
                     <div key={index} className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
                           <i className="fa-solid fa-envelope text-black"></i>
-                        </div>
+                      </div>
                         <div className="ml-4">
                           <p className="text-white font-semibold">{email}</p>
                           <p className="text-gray-400 text-sm">Abonné à la newsletter</p>
@@ -1677,11 +1351,11 @@ const handleDeleteLieu = async (id: number) => {
                           <i className="fa-solid fa-check mr-1"></i>
                           Actif
                         </span>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
+            )}
             </div>
           </div>
         )}
@@ -1749,29 +1423,16 @@ const handleDeleteLieu = async (id: number) => {
                     required
                   />
                 </div>
+                {/* Champ Prix supprimé */}
                 <div>
-                  <label className="block text-white mb-2">Prix (€)</label>
+                  <label className="block text-white mb-2">Lien vers la billetterie</label>
                   <input
-                    type="number"
-                    name="prix"
-                    value={spectacleFormData.prix}
+                    type="url"
+                    name="lien_spectacle"
+                    value={spectacleFormData.lien_spectacle}
                     onChange={handleSpectacleInputChange}
                     className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Places disponibles (capacité)</label>
-                  <input
-                    type="number"
-                    name="places_disponibles"
-                    value={spectacleFormData.places_disponibles}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    min="0"
-                    step="1"
+                    placeholder="https://billetterie.example.com/spectacle/1"
                   />
                 </div>
                 <div>
@@ -1787,23 +1448,6 @@ const handleDeleteLieu = async (id: number) => {
                     <option value="L'espace comédie">L'espace comédie</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-white mb-2">Artiste</label>
-                  <select
-                    name="artiste_id"
-                    value={spectacleFormData.artiste_id}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  >
-                    <option value="">Sélectionner un artiste</option>
-                    {artists.map(artist => (
-                      <option key={artist.id} value={artist.id}>
-                        {artist.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <div className="flex justify-end space-x-4 mt-6">
                   <button
                     type="button"
@@ -1817,7 +1461,7 @@ const handleDeleteLieu = async (id: number) => {
                   </button>
                   <button
                     type="submit"
-                    className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                   >
                     {isAddingSpectacle ? 'Ajouter' : 'Enregistrer'}
                   </button>
@@ -1862,11 +1506,42 @@ const handleDeleteLieu = async (id: number) => {
                       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
                     }
                   }}
-                  className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                 >
                   Enregistrer
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'maintenance' && (
+          <div className="bg-gray-800 rounded-lg p-6 max-w-xl">
+            <h2 className="text-2xl font-bold text-white mb-6">Maintenance</h2>
+            <p className="text-gray-300 mb-4">
+              Quand la maintenance est activée, seuls les administrateurs connectés peuvent voir le site. Les utilisateurs voient une page de maintenance.
+            </p>
+            <div className="flex items-center justify-between bg-gray-900 rounded-lg p-4">
+              <span className="text-white font-semibold">Activer la maintenance</span>
+              <label className="inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" checked={maintenanceEnabled} onChange={async (e) => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`${API_URL}/api/admin/settings/maintenance`, {
+                      method: 'PUT',
+                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ enabled: e.target.checked })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Erreur lors de la mise à jour');
+                    setMaintenanceEnabled(Boolean(data.maintenance_enabled));
+                    toast.success(`Maintenance ${e.target.checked ? 'activée' : 'désactivée'}`);
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+                  }
+                }} />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute relative after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+              </label>
             </div>
           </div>
         )}
@@ -1897,22 +1572,10 @@ const handleDeleteLieu = async (id: number) => {
                     name="photo"
                     value={artistFormData.photo}
                     onChange={handleArtistInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
                     placeholder="Nom du fichier (ex: tamere.jpg)"
                     required
                   />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-gray-400 mb-2">Photo à l'affiche</label>
-                  <input
-                    type="text"
-                    name="photo_featured"
-                    value={artistFormData.photo_featured}
-                    onChange={handleArtistInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
-                    placeholder="Nom du fichier (ex: tamere.jpg)"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Cette photo sera utilisée lorsque l'artiste est mis en avant sur la page d'accueil. Si non spécifiée, la photo de profil sera utilisée.</p>
                 </div>
                 <div>
                   <label className="block text-white mb-2">Biographie</label>
@@ -1938,7 +1601,7 @@ const handleDeleteLieu = async (id: number) => {
                   </button>
                   <button
                     type="submit"
-                    className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                   >
                     {isAddingArtist ? 'Ajouter' : 'Enregistrer'}
                   </button>
@@ -1957,7 +1620,6 @@ const handleDeleteLieu = async (id: number) => {
                 Êtes-vous sûr de vouloir supprimer {
                   itemToDelete?.type === 'spectacle' ? 'ce spectacle' : 
                   itemToDelete?.type === 'artist' ? 'cet artiste' : 
-                  itemToDelete?.type === 'promocode' ? 'ce code promo' : 
                   'cet utilisateur'
                 } ? 
                 Cette action est irréversible.
@@ -1992,16 +1654,8 @@ const handleDeleteLieu = async (id: number) => {
                 {artists.map((artist) => (
                   <div
                     key={artist.id}
-                    className={`bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition duration-300 ${
-                      artist.upcoming_shows === 0 ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                    onClick={() => {
-                      if (artist.upcoming_shows > 0) {
-                        handleSetFeaturedArtist(artist);
-                      } else {
-                        toast.error('Cet artiste n\'a pas de spectacles à venir');
-                      }
-                    }}
+                    className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition duration-300"
+                    onClick={() => handleSetFeaturedArtist(artist)}
                   >
                     <img
                       src={buildImgSrc('photo_artiste', artist.photo)}
@@ -2011,11 +1665,6 @@ const handleDeleteLieu = async (id: number) => {
                     />
                     <h3 className="text-lg font-bold text-white">{artist.name}</h3>
                     <p className="text-gray-400 text-sm line-clamp-2">{artist.biographie}</p>
-                    <div className="mt-2 text-sm">
-                      <span className={`${artist.upcoming_shows > 0 ? 'text-yellow-400' : 'text-red-400'}`}>
-                        {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
-                      </span>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -2047,131 +1696,7 @@ const handleDeleteLieu = async (id: number) => {
                 </div>
                 <div className="flex justify-end space-x-4 mt-6">
                   <button type="button" onClick={() => { setIsLieuModalOpen(false); }} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300">Annuler</button>
-                  <button type="submit" className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300">Enregistrer</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Modal ajout/modif code promo */}
-        {isPromoCodeModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                {isAddingPromoCode ? 'Ajouter un code promo' : 'Modifier le code promo'}
-              </h2>
-              <form onSubmit={isAddingPromoCode ? handleAddPromoCode : handleEditPromoCode} className="space-y-4">
-                <div>
-                  <label className="block text-white mb-2">Code</label>
-                  <input
-                    type="text"
-                    name="code"
-                    value={promoCodeFormData.code}
-                    onChange={handlePromoCodeInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Type</label>
-                                     <select
-                     name="type"
-                     value={promoCodeFormData.type}
-                     onChange={handlePromoCodeTypeChange}
-                     className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                     required
-                   >
-                     <option value="percentage">Pourcentage (%)</option>
-                     <option value="fixed">Montant fixe (€)</option>
-                     <option value="free_ticket">Ticket gratuit</option>
-                   </select>
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Valeur</label>
-                  <input
-                    type="number"
-                    name="value"
-                    value={promoCodeFormData.value}
-                    onChange={handlePromoCodeInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Description</label>
-                  <textarea
-                    name="description"
-                    value={promoCodeFormData.description}
-                    onChange={handlePromoCodeInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    checked={promoCodeFormData.is_active}
-                    onChange={handlePromoCodeStatusChange}
-                    className="mr-2"
-                  />
-                  <label className="text-white">Actif</label>
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Utilisations maximales</label>
-                  <input
-                    type="number"
-                    name="max_uses"
-                    value={promoCodeFormData.max_uses}
-                    onChange={handlePromoCodeMaxUsesChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    min="0"
-                    placeholder="0 pour illimité"
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Date de début</label>
-                  <input
-                    type="date"
-                    name="valid_from"
-                    value={promoCodeFormData.valid_from}
-                    onChange={handlePromoCodeValidFromChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Date de fin</label>
-                  <input
-                    type="date"
-                    name="valid_until"
-                    value={promoCodeFormData.valid_until}
-                    onChange={handlePromoCodeValidUntilChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end space-x-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPromoCodeModalOpen(false);
-                      setIsAddingPromoCode(false);
-                    }}
-                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                  >
-                    {isAddingPromoCode ? 'Ajouter' : 'Enregistrer'}
-                  </button>
+                  <button type="submit" className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Enregistrer</button>
                 </div>
               </form>
             </div>
@@ -2221,7 +1746,7 @@ const handleDeleteLieu = async (id: number) => {
                     required
                   />
                 </div>
-                <div className="bg-yellow-400 text-black p-4 rounded-lg">
+                <div className="bg-red-500 text-white p-4 rounded-lg">
                   <p className="font-semibold mb-2">⚠️ Attention</p>
                   <p className="text-sm">
                     Cet email sera envoyé à {emailFormData.recipients === 'all' ? users.length : newsletterSubscribers.length} destinataire(s).
@@ -2245,7 +1770,7 @@ const handleDeleteLieu = async (id: number) => {
                     className={`px-4 py-2 rounded transition duration-300 ${
                       isSendingEmail
                         ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                        : 'bg-yellow-400 text-black hover:bg-yellow-300'
+                        : 'bg-red-500 text-white hover:bg-red-600'
                     }`}
                   >
                     {isSendingEmail ? (

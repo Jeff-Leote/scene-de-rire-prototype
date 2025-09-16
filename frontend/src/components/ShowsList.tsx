@@ -66,7 +66,7 @@ const ShowsList = () => {
     return (
       <section className="py-16">
         <div className="container mx-auto px-6 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto" />
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mx-auto" />
         </div>
       </section>
     );
@@ -93,51 +93,44 @@ const ShowsList = () => {
           <p className="text-gray-400 text-center">Aucun spectacle trouvé</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 mb-8">
               {spectacles.map((spectacle) => (
                 <div
                   key={spectacle.id}
-                  className="bg-gray-900 rounded-lg overflow-hidden hover:scale-[1.02] transition duration-300 cursor-pointer"
+                  className="w-full bg-gray-900 rounded-lg overflow-hidden hover:scale-[1.02] transition duration-300 cursor-pointer shadow-lg hover:shadow-xl flex flex-col"
                   onClick={() => navigate(`/spectacles/${spectacle.id}`)}
                 >
-                  <div className="relative h-64">
+                  {/* Image qui occupe la majeure partie de la carte */}
+                  <div className="relative flex-1 min-h-[36rem] w-full">
                     <img
                       src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
                       alt={spectacle.title}
-                      className="object-cover w-full h-full"
+                      className="w-full h-full object-cover"
                       onError={onImgErrorSwap}
                     />
-                    <div className="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
+                    {/* Badge de date en haut à droite */}
+                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-xl font-bold">
                       {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
                     </div>
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
-                    <p className="text-gray-400 mb-4">{spectacle.description}</p>
-                    <div className="flex justify-between items-center mb-4">
-                      <div>
-                        <div className="flex items-center">
-                          <i className="fa-regular fa-calendar mr-2 text-yellow-400"></i>
-                          <span className="text-gray-300">
-                            {format(new Date(spectacle.date_spectacle), "d MMMM yyyy", { locale: fr })}
-                          </span>
-                        </div>
-                        <div className="flex items-center mt-1">
-                          <i className="fa-regular fa-clock mr-2 text-yellow-400"></i>
-                          <span className="text-gray-300">{formatHeure(spectacle.heure_spectacle)}</span>
-                        </div>
-                        <div className="mt-1 text-gray-300">
-                          <i className="fa-solid fa-location-dot mr-2 text-yellow-400"></i>
-                          <span>{spectacle.lieu}</span>
-                        </div>
-                      </div>
-                      <span className="text-white font-bold text-lg">{spectacle.prix}€</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-yellow-400 hover:text-yellow-300 cursor-pointer flex items-center transition duration-300">
-                        Réserver <i className="fa-solid fa-arrow-right ml-2"></i>
-                      </span>
-                    </div>
+                  
+                  {/* Section texte compacte en bas */}
+                  <div className="p-4 bg-gray-900">
+                    <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">
+                      {spectacle.title}
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-3">
+                      {format(new Date(spectacle.date_spectacle), "EEEE d MMMM", { locale: fr })} - {formatHeure(spectacle.heure_spectacle)}
+                    </p>
+                    <button 
+                      className="w-full bg-black text-white py-2 px-4 rounded font-semibold hover:bg-red-500 transition duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/spectacles/${spectacle.id}`);
+                      }}
+                    >
+                      RÉSERVER
+                    </button>
                   </div>
                 </div>
               ))}
@@ -147,7 +140,7 @@ const ShowsList = () => {
               <button
                 onClick={handlePrev}
                 disabled={page === 1}
-                className="bg-yellow-400 text-black font-bold py-2 px-4 rounded disabled:opacity-50"
+                className="bg-red-500 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:bg-red-600 transition duration-300"
               >
                 Précédent
               </button>
@@ -157,7 +150,7 @@ const ShowsList = () => {
               <button
                 onClick={handleNext}
                 disabled={page === Math.ceil(total / limit)}
-                className="bg-yellow-400 text-black font-bold py-2 px-4 rounded disabled:opacity-50"
+                className="bg-red-500 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:bg-red-600 transition duration-300"
               >
                 Suivant
               </button>

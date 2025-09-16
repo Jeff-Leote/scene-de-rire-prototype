@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Spectacle, AvailabilityResponse } from '../services/types';
+import { Spectacle } from '../services/types';
 import { toast } from "@/components/ui/sonner";
 
 
@@ -15,7 +15,8 @@ const SpectacleDetail = () => {
   const [spectacle, setSpectacle] = useState<Spectacle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [availability, setAvailability] = useState<AvailabilityResponse | null>(null);
+  // Availability removed with reservations
+  const [extraPhotos, setExtraPhotos] = useState<Array<{ id: number; image_path: string }>>([]);
 
   const formatHeure = (heure: string) => {
     return heure.split(":").slice(0, 2).join(":");
@@ -52,32 +53,39 @@ const SpectacleDetail = () => {
     fetchSpectacle();
   }, [id]);
 
-  // Récupérer la disponibilité du spectacle pour bloquer la réservation si complet
+  // Charger toutes les photos additionnelles (pas liées à un spectacle spécifique)
   useEffect(() => {
-    const fetchAvailability = async () => {
+    const fetchPhotos = async () => {
       try {
         const { api } = await import('@/services/api');
-        if (!id) return;
-        const d = await api.get<AvailabilityResponse>(`/api/reservations/availability/${id}`);
-        setAvailability(d);
+        const photos = await api.get<Array<{ id: number; spectacle_id: number; image_path: string; sort_order: number | null }>>(`/api/photos`);
+        setExtraPhotos((photos || []).slice(0, 3).map(p => ({ id: p.id, image_path: p.image_path })));
       } catch {
-        // silencieux
+        setExtraPhotos([]);
       }
     };
-    fetchAvailability();
-  }, [id]);
+    fetchPhotos();
+  }, []);
 
-  const isSoldOut = availability?.places_restantes !== undefined && availability.places_restantes <= 0;
+  const isSoldOut = false;
 
   const handleReserve = () => {
-    if (isSoldOut) {
-      toast.error("Spectacle complet, malheureusement vous êtes arrivés trop tard");
-      return;
-    }
     if (!spectacle) return;
     
-    // Passer seulement l'ID et laisser Reservation.tsx récupérer les données
-    navigate("/reservation", { state: { spectacleId: spectacle.id } });
+    // Utiliser le lien de billetterie du spectacle s'il existe
+    if (spectacle.lien_spectacle) {
+      window.location.href = spectacle.lien_spectacle;
+      return;
+    }
+    
+    // Fallback vers la variable d'environnement
+    const url = import.meta.env.VITE_TICKETING_URL as string | undefined;
+    if (url && typeof url === 'string') {
+      window.location.href = url;
+      return;
+    }
+    
+    toast.error("Lien de billetterie indisponible pour ce spectacle.");
   };
 
   if (loading) {
@@ -85,7 +93,7 @@ const SpectacleDetail = () => {
       <div className="min-h-screen bg-black">
         <section className="bg-black py-12">
           <div className="container mx-auto px-6 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto" />
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mx-auto" />
           </div>
         </section>
       </div>
@@ -111,97 +119,104 @@ const SpectacleDetail = () => {
         <section className="bg-black py-12">
           <div className="container mx-auto px-6">
             {/* Hero Section */}
-            <div className="relative h-[400px] rounded-lg overflow-hidden mb-8">
+            <div className="relative h-[700px] rounded-xl overflow-hidden mb-8 shadow-2xl">
               <img
                 src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
                 alt={spectacle.title}
-                className="w-full h-full object-cover object-[center_25%]"
+                className="w-full h-full object-cover object-center"
                 onError={onImgErrorSwap}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-8">
-                <div className="flex items-center mb-4">
-                  <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold uppercase">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-8">
+                <div className="flex items-center mb-6">
+                  <span className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg">
                     {format(new Date(spectacle.date_spectacle), "d MMM", {
                       locale: fr,
                     }).toUpperCase()}
                   </span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
                   {spectacle.title}
                 </h1>
+                <div className="flex items-center text-white/90 text-lg">
+                  <i className="fa-solid fa-calendar-days mr-3 text-red-400"></i>
+                  <span className="font-medium">
+                    {format(new Date(spectacle.date_spectacle), "EEEE d MMMM yyyy", {
+                      locale: fr,
+                    })}
+                  </span>
+                  <i className="fa-solid fa-clock ml-6 mr-3 text-red-400"></i>
+                  <span className="font-medium">{formatHeure(spectacle.heure_spectacle)}</span>
+                </div>
               </div>
             </div>
 
             {/* Content Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Main Content */}
+              {/* Main Content */
+              }
               <div className="md:col-span-2">
+                {/* Informations pratiques */}
                 <div className="bg-gray-900 rounded-lg p-6 mb-6">
-                  <h2 className="text-2xl font-bold text-white mb-4">
-                    À propos du spectacle
-                  </h2>
-                  <p className="text-gray-300 mb-6">{spectacle.description}</p>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex items-center">
-                      <i className="fa-regular fa-calendar mr-3 text-yellow-400 text-xl"></i>
+                      <i className="fa-regular fa-calendar mr-3 text-red-500 text-xl"></i>
                       <div>
                         <p className="text-gray-400 text-sm">Date</p>
                         <p className="text-white">
-                          {format(new Date(spectacle.date_spectacle), "d MMMM yyyy", {
+                          {format(new Date(spectacle.date_spectacle), "EEEE d MMMM yyyy", {
                             locale: fr,
                           })}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <i className="fa-regular fa-clock mr-3 text-yellow-400 text-xl"></i>
+                      <i className="fa-regular fa-clock mr-3 text-red-500 text-xl"></i>
                       <div>
                         <p className="text-gray-400 text-sm">Heure</p>
                         <p className="text-white">{formatHeure(spectacle.heure_spectacle)}</p>
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <i className="fa-solid fa-location-dot mr-3 text-yellow-400 text-xl"></i>
+                      <i className="fa-solid fa-location-dot mr-3 text-red-500 text-xl"></i>
                       <div>
                         <p className="text-gray-400 text-sm">Lieu</p>
                         <p className="text-white">{spectacle.lieu}</p>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <i className="fa-solid fa-ticket-alt mr-3 text-yellow-400 text-xl"></i>
-                      <div>
-                        <p className="text-gray-400 text-sm">Prix</p>
-                        <p className="text-white">{spectacle.prix}€</p>
-                      </div>
-                    </div>
+                    {/* Prix retiré */}
                   </div>
                 </div>
 
-                {/* Artist Section */}
-                <div className="bg-gray-900 rounded-lg p-6">
-                  <h2 className="text-2xl font-bold text-white mb-4">L'artiste</h2>
-                  <div className="flex items-center">
-                    <img
-                      src={
-                        buildImgSrc('photo_artiste', spectacle.artiste_photo || undefined) || "/assets/placeholder.jpg"
-                      }
-                      alt={spectacle.artiste_name}
-                      className="w-24 h-24 rounded-full object-cover mr-6"
-                      onError={onImgErrorSwap}
-                    />
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-2">{spectacle.artiste_name}</h3>
-                      <p className="text-gray-300">Comédien professionnel</p>
+                {/* Description */}
+                <div className="bg-gray-900 rounded-lg p-6 mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
+                  <p className="text-gray-300">{spectacle.description}</p>
+                </div>
+
+                {/* Additional Photos Section */}
+                {extraPhotos.length > 0 && (
+                  <div className="bg-gray-900 rounded-lg p-6 mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-6">Photos additionnelles</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {extraPhotos.map((p) => (
+                        <div key={p.id} className="rounded-lg overflow-hidden bg-black">
+                          <img
+                            src={buildImgSrc('photo_additionnel', p.image_path)}
+                            alt={`Photo additionnelle ${p.id}`}
+                            className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                            onError={onImgErrorSwap}
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Sidebar */}
               <div className="md:col-span-1">
-                <div className="bg-gray-900 rounded-lg p-6 sticky top-6">
+                <div className="bg-gray-900 rounded-lg p-6 sticky top-24">
                   <h2 className="text-2xl font-bold text-white mb-4">Réserver</h2>
                   <p className="text-gray-300 mb-6">
                     Ne manquez pas ce spectacle exceptionnel ! Réservez vos places dès maintenant.
@@ -212,7 +227,7 @@ const SpectacleDetail = () => {
                     className={`w-full font-bold py-3 px-6 rounded transition duration-300 flex items-center justify-center ${
                       isSoldOut
                         ? 'bg-red-600 text-white cursor-not-allowed'
-                        : 'bg-yellow-400 text-black hover:bg-yellow-300'
+                        : 'bg-red-500 text-white hover:bg-red-600'
                     }`}
                   >
                     <i className="fa-solid fa-ticket-alt mr-2"></i>
@@ -220,12 +235,8 @@ const SpectacleDetail = () => {
                   </button>
                   <div className="mt-6">
                     <div className="flex items-center justify-between text-gray-300 mb-2">
-                      <span>Prix par place</span>
-                      <span>{spectacle.prix}€</span>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-300 mb-2">
                       <span>Date</span>
-                      <span>{format(new Date(spectacle.date_spectacle), "d MMM yyyy", { locale: fr })}</span>
+                      <span>{format(new Date(spectacle.date_spectacle), "EEEE d MMM yyyy", { locale: fr })}</span>
                     </div>
                     <div className="flex items-center justify-between text-gray-300">
                       <span>Heure</span>

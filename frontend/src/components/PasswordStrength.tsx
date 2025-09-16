@@ -49,7 +49,7 @@ const PasswordStrength: React.FC<PasswordStrengthProps> = ({ password, confirmPa
   const getStrengthLevel = () => {
     if (strengthPercentage === 100) return { level: "Très fort", color: "bg-green-500", textColor: "text-green-400" };
     if (strengthPercentage >= 80) return { level: "Fort", color: "bg-green-400", textColor: "text-green-400" };
-    if (strengthPercentage >= 60) return { level: "Moyen", color: "bg-yellow-500", textColor: "text-yellow-400" };
+    if (strengthPercentage >= 60) return { level: "Moyen", color: "bg-red-500", textColor: "text-red-400" };
     if (strengthPercentage >= 40) return { level: "Faible", color: "bg-orange-500", textColor: "text-orange-400" };
     return { level: "Très faible", color: "bg-red-500", textColor: "text-red-400" };
   };

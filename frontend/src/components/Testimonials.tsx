@@ -7,9 +7,9 @@ const Testimonials = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Testimonial 1 */}
-          <div id="testimonial-1" className="bg-gray-900 p-6 rounded-lg border-l-4 border-yellow-400">
+          <div id="testimonial-1" className="bg-gray-900 p-6 rounded-lg border-l-4 border-red-500">
             <div className="flex items-center mb-4">
-              <div className="text-yellow-400">
+              <div className="text-red-500">
                 <i className="fa-solid fa-star"></i>
                 <i className="fa-solid fa-star"></i>
                 <i className="fa-solid fa-star"></i>
@@ -32,9 +32,9 @@ const Testimonials = () => {
           </div>
           
           {/* Testimonial 2 */}
-          <div id="testimonial-2" className="bg-gray-900 p-6 rounded-lg border-l-4 border-yellow-400">
+          <div id="testimonial-2" className="bg-gray-900 p-6 rounded-lg border-l-4 border-red-500">
             <div className="flex items-center mb-4">
-              <div className="text-yellow-400">
+              <div className="text-red-500">
                 <i className="fa-solid fa-star"></i>
                 <i className="fa-solid fa-star"></i>
                 <i className="fa-solid fa-star"></i>
@@ -57,9 +57,9 @@ const Testimonials = () => {
           </div>
           
           {/* Testimonial 3 */}
-          <div id="testimonial-3" className="bg-gray-900 p-6 rounded-lg border-l-4 border-yellow-400">
+          <div id="testimonial-3" className="bg-gray-900 p-6 rounded-lg border-l-4 border-red-500">
             <div className="flex items-center mb-4">
-              <div className="text-yellow-400">
+              <div className="text-red-500">
                 <i className="fa-solid fa-star"></i>
                 <i className="fa-solid fa-star"></i>
                 <i className="fa-solid fa-star"></i>

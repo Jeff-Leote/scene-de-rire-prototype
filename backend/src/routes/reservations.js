@@ -381,8 +381,8 @@ async function handleCancelledReservation(session) {
 }
 
 // Créer une session de paiement (checkout)
-router.post("/checkout", auth, async (req, res) => {
-  const { spectacles, email, prenom, nom, promoCode } = req.body;
+router.post("/checkout", async (req, res) => {
+  const { spectacles, email, prenom, nom, promoCode, user_id } = req.body;
   
   console.log('🔍 Données reçues pour checkout:', { spectacles, email, prenom, nom, promoCode });
 
@@ -411,11 +411,9 @@ router.post("/checkout", auth, async (req, res) => {
       spectaclesDetails[row.id] = { title: row.title, prix: row.prix };
     });
 
-    // Calculer le total et préparer les line items
     let total = 0;
     let lineItems = [];
     
-    // Calculer d'abord le total original
     for (const item of spectacles) {
       const spectacleDetail = spectaclesDetails[item.id];
       if (!spectacleDetail) {
@@ -424,7 +422,6 @@ router.post("/checkout", auth, async (req, res) => {
       total += spectacleDetail.prix * item.billets;
     }
 
-    // Appliquer le code promo si fourni
     let finalTotal = total;
     let discountAmount = 0;
     let discountPercentage = 0;
@@ -432,7 +429,6 @@ router.post("/checkout", auth, async (req, res) => {
     console.log('💰 Calcul initial - Total:', total, 'Code promo:', promoCode);
     
     if (promoCode) {
-      // Valider le code promo
       const [promoCodes] = await pool.query(`
         SELECT * FROM promo_codes 
         WHERE code = ? AND is_active = TRUE
@@ -442,12 +438,9 @@ router.post("/checkout", auth, async (req, res) => {
         const promo = promoCodes[0];
         const now = new Date();
 
-        // Vérifier la validité temporelle
         if ((!promo.valid_from || new Date(promo.valid_from) <= now) &&
             (!promo.valid_until || new Date(promo.valid_until) >= now) &&
             (!promo.max_uses || promo.current_uses < promo.max_uses)) {
-          
-          // Calculer la réduction
           switch (promo.type) {
             case 'percentage':
               discountAmount = (total * promo.value) / 100;
@@ -466,24 +459,19 @@ router.post("/checkout", auth, async (req, res) => {
               discountPercentage = (discountAmount / total) * 100;
               break;
           }
-          
           console.log('✅ Code promo appliqué - Réduction:', discountAmount, 'Total final:', finalTotal, 'Pourcentage réduction:', discountPercentage);
         }
       }
     }
     
-    // Créer les line items avec les prix ajustés
     for (const item of spectacles) {
       const spectacleDetail = spectaclesDetails[item.id];
       let adjustedPrice = spectacleDetail.prix;
-      
-      // Appliquer la réduction au prix unitaire si un code promo est actif
       if (discountAmount > 0) {
         const itemTotal = spectacleDetail.prix * item.billets;
         const itemDiscount = (itemTotal * discountPercentage) / 100;
         adjustedPrice = (itemTotal - itemDiscount) / item.billets;
       }
-      
       lineItems.push({
         price_data: {
           currency: 'eur',
@@ -491,15 +479,12 @@ router.post("/checkout", auth, async (req, res) => {
             name: spectacleDetail.title,
             description: `${item.billets} billet(s)${discountAmount > 0 ? ` - Réduction ${promoCode.code} appliquée` : ''}`,
           },
-          unit_amount: Math.round(adjustedPrice * 100), // Stripe utilise les centimes
+          unit_amount: Math.round(adjustedPrice * 100),
         },
         quantity: item.billets,
       });
     }
-    
-    console.log('📊 Résumé final - Total original:', total, 'Total final:', finalTotal, 'Réduction:', discountAmount);
 
-    // Déterminer l'URL du frontend selon l'environnement (AMÉLIORÉ)
     let frontendUrl;
     if (process.env.NODE_ENV === 'production') {
       frontendUrl = 'https://espacecomedie.fr';
@@ -507,13 +492,6 @@ router.post("/checkout", auth, async (req, res) => {
       frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     }
     
-    console.log('🌐 URL du frontend configurée:', frontendUrl);
-    console.log('🔧 Mode d\'environnement:', process.env.NODE_ENV);
-    console.log('💳 Clé Stripe configurée:', process.env.STRIPE_SECRET_KEY ? 'OUI' : 'NON');
-    console.log('🔑 Type de clé Stripe:', process.env.STRIPE_SECRET_KEY ? 
-      (process.env.STRIPE_SECRET_KEY.startsWith('sk_live_') ? 'PRODUCTION' : 'TEST') : 'NON DÉFINIE');
-
-    // Créer une session Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -521,14 +499,14 @@ router.post("/checkout", auth, async (req, res) => {
       success_url: `${frontendUrl}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${frontendUrl}/?payment=cancel`,
       metadata: {
-        user_id: req.user.id.toString(),
-        prenom: prenom,
-        nom: nom,
-        email: email,
+        user_id: user_id ? String(user_id) : '0',
+        prenom: prenom || '',
+        nom: nom || '',
+        email: email || '',
         cart: JSON.stringify(spectacles),
-        total: finalTotal.toString(),
-        original_total: total.toString(),
-        discount_amount: discountAmount.toString(),
+        total: String(finalTotal),
+        original_total: String(total),
+        discount_amount: String(discountAmount),
         promo_code: promoCode ? promoCode.code : null
       },
       customer_email: email,
@@ -538,31 +516,6 @@ router.post("/checkout", auth, async (req, res) => {
 
   } catch (error) {
     console.error("Erreur lors de la création de la session Stripe:", error);
-    
-    // Vérifier si c'est un problème de configuration Stripe
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(500).json({ 
-        error: "Erreur de configuration Stripe",
-        details: "La clé secrète Stripe n'est pas configurée"
-      });
-    }
-    
-    // Vérifier si c'est un problème avec l'URL du frontend
-    if (!process.env.FRONTEND_URL && process.env.NODE_ENV !== 'production') {
-      return res.status(500).json({ 
-        error: "Erreur de configuration",
-        details: "L'URL du frontend n'est pas configurée"
-      });
-    }
-    
-    // Gestion spécifique des erreurs Stripe
-    if (error.type === 'StripeInvalidRequestError') {
-      return res.status(400).json({ 
-        error: "Erreur de configuration Stripe",
-        details: "Vérifiez que votre clé Stripe est valide"
-      });
-    }
-    
     res.status(500).json({ 
       error: "Erreur serveur lors de la création du paiement",
       details: error.message 
@@ -799,17 +752,9 @@ router.post("/cancel", async (req, res) => {
 });
 
 // Récupérer la liste des tickets d'une réservation
-router.get("/:reservationId/tickets", auth, async (req, res) => {
+router.get("/:reservationId/tickets", async (req, res) => {
   const { reservationId } = req.params;
   try {
-    // Vérifier la réservation
-    const [reservations] = await pool.query(
-      "SELECT id FROM reservation WHERE id = ? AND user_id = ?",
-      [reservationId, req.user.id]
-    );
-    if (reservations.length === 0) {
-      return res.status(404).json({ error: "Réservation non trouvée ou non autorisée" });
-    }
     const [tickets] = await pool.query(
       "SELECT id as ticket_id, qr_code_path, used, used_at FROM ticket WHERE reservation_id = ? ORDER BY id ASC",
       [reservationId]
@@ -822,23 +767,17 @@ router.get("/:reservationId/tickets", auth, async (req, res) => {
 });
 
 // Récupérer le QR code d'un ticket
-router.get("/ticket/:ticketId/qrcode", auth, async (req, res) => {
+router.get("/ticket/:ticketId/qrcode", async (req, res) => {
   const { ticketId } = req.params;
   try {
     const [rows] = await pool.query(
-      `SELECT t.qr_code_path, r.user_id
-       FROM ticket t
-       JOIN reservation r ON t.reservation_id = r.id
-       WHERE t.id = ?`,
+      `SELECT t.qr_code_path FROM ticket t JOIN reservation r ON t.reservation_id = r.id WHERE t.id = ?`,
       [ticketId]
     );
     if (rows.length === 0) {
       return res.status(404).json({ error: "Ticket non trouvé" });
     }
     const row = rows[0];
-    if (row.user_id !== req.user.id) {
-      return res.status(403).json({ error: "Non autorisé" });
-    }
     if (!row.qr_code_path) {
       return res.status(404).json({ error: "QR code non disponible" });
     }
@@ -878,7 +817,6 @@ router.get("/user/:userId", async (req, res) => {
         p.date as date_paiement
       FROM reservation r
       JOIN spectacle s ON r.spectacle_id = s.id
-      JOIN artiste a ON s.artiste_id = a.id
       LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
       LEFT JOIN paiement p ON pr.paiement_id = p.id
       WHERE r.user_id = ?
@@ -926,45 +864,7 @@ router.get("/user/:userId", async (req, res) => {
 
 
 
-// Vérifier la disponibilité des places d'un spectacle
-router.get("/availability/:spectacleId", async (req, res) => {
-  const { spectacleId } = req.params;
-  
-  try {
-    const [spectacleRows] = await pool.query(
-      "SELECT places_disponibles, title FROM spectacle WHERE id = ?",
-      [spectacleId]
-    );
-
-    if (spectacleRows.length === 0) {
-      return res.status(404).json({ error: "Spectacle non trouvé" });
-    }
-
-    const spectacle = spectacleRows[0];
-
-    // Compter les réservations existantes
-    const [reservationsRows] = await pool.query(
-      "SELECT SUM(nb_places) as total_reserve FROM reservation WHERE spectacle_id = ?",
-      [spectacleId]
-    );
-
-    const totalReserve = reservationsRows[0].total_reserve || 0;
-    const placesRestantes = spectacle.places_disponibles - totalReserve;
-
-    res.json({
-      spectacle_id: parseInt(spectacleId),
-      spectacle_title: spectacle.title,
-      places_total: spectacle.places_disponibles,
-      places_reservees: totalReserve,
-      places_restantes: placesRestantes,
-      disponible: placesRestantes > 0
-    });
-
-  } catch (error) {
-    console.error("Erreur lors de la vérification de la disponibilité:", error);
-    res.status(500).json({ error: "Erreur lors de la vérification de la disponibilité" });
-  }
-});
+// Availability endpoint removed
 
 // Valider un ticket (route publique pour la validation)
 router.get("/validate/:reservationId", async (req, res) => {
@@ -994,7 +894,6 @@ router.get("/validate/:reservationId", async (req, res) => {
         u.email as user_email
       FROM reservation r
       JOIN spectacle s ON r.spectacle_id = s.id
-      JOIN artiste a ON s.artiste_id = a.id
       JOIN user u ON r.user_id = u.id
       LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
       LEFT JOIN paiement p ON pr.paiement_id = p.id

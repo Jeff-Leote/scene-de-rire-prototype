@@ -7,7 +7,7 @@ const PasswordHelper: React.FC = () => {
   return (
     <div className="mt-2 p-3 bg-gray-800 rounded-lg border border-gray-700">
       <div className="flex items-start space-x-2">
-        <Info className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+        <Info className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
         <div className="space-y-2">
           <p className="text-sm text-gray-300">
             <strong>Caractères spéciaux autorisés :</strong>
@@ -16,7 +16,7 @@ const PasswordHelper: React.FC = () => {
             {specialChars.split('').map((char, index) => (
               <span 
                 key={index}
-                className="inline-block px-1 py-0.5 bg-gray-700 text-yellow-400 text-xs rounded"
+                className="inline-block px-1 py-0.5 bg-gray-700 text-red-500 text-xs rounded"
               >
                 {char}
               </span>

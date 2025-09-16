@@ -8,6 +8,10 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || "root",
   database: process.env.DB_NAME || "espace_comedie",
   
+  // Configuration de l'encodage UTF-8
+  charset: 'utf8mb4',
+  collation: 'utf8mb4_unicode_ci',
+  
   // Optimisations de base
   waitForConnections: true,
   connectionLimit: process.env.NODE_ENV === 'production' ? 10 : 5,

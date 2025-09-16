@@ -6,10 +6,8 @@ const db = require('../db');
 router.get('/', async (req, res) => {
   try {
     const [artistes] = await db.query(`
-      SELECT a.*, COUNT(s.id) as upcoming_shows
+      SELECT a.*, 0 as upcoming_shows
       FROM artiste a
-      LEFT JOIN spectacle s ON a.id = s.artiste_id AND s.date_spectacle >= CURDATE()
-      GROUP BY a.id
       ORDER BY a.created_at DESC
     `);
     res.json(artistes);
@@ -22,30 +20,29 @@ router.get('/', async (req, res) => {
 // Récupérer l'artiste à l'affiche (automatique)
 router.get('/featured', async (req, res) => {
   try {
-    // Sélectionner le prochain spectacle à venir et son artiste
+    // Sélectionner le prochain spectacle à venir
     const [rows] = await db.query(`
-      SELECT a.*, s.id as next_show_id, s.title as next_show_title, s.date_spectacle as next_show_date, s.heure_spectacle as next_show_time
+      SELECT s.id as next_show_id, s.title as next_show_title, s.date_spectacle as next_show_date, s.heure_spectacle as next_show_time, s.img as next_show_image
       FROM spectacle s
-      JOIN artiste a ON s.artiste_id = a.id
       WHERE s.date_spectacle >= CURDATE()
       ORDER BY s.date_spectacle ASC, s.heure_spectacle ASC
       LIMIT 1
     `);
     if (rows.length === 0) {
-      return res.status(404).json({ error: "Aucun spectacle à venir, donc aucun artiste à l'affiche" });
+      return res.status(404).json({ error: "Aucun spectacle à venir" });
     }
-    const artiste = rows[0];
+    const spectacle = rows[0];
     const response = {
-      id: artiste.id,
-      name: artiste.name,
-      photo: artiste.photo,
-      photo_featured: artiste.photo_featured,
-      biographie: artiste.biographie,
+      id: 1,
+      name: "Artiste à l'affiche",
+      photo: "default-artist.jpg",
+      biographie: "Artiste en vedette pour ce spectacle",
       next_show: {
-        id: artiste.next_show_id,
-        title: artiste.next_show_title,
-        date: artiste.next_show_date,
-        time: artiste.next_show_time
+        id: spectacle.next_show_id,
+        title: spectacle.next_show_title,
+        date: spectacle.next_show_date,
+        time: spectacle.next_show_time,
+        image: spectacle.next_show_image
       }
     };
     res.json(response);
