@@ -3108,3 +3108,8 @@ WHERE title = 'Tchatcheur Comedy Club';
 UPDATE spectacle
 SET lien_spectacle = 'https://www.billetweb.fr/un-ado-peut-en-cacher-un-autre18'
 WHERE title = 'Un ado peut en cacher un autre';
+
+-- Kaci dans La connerie humaine → corriger le nom de fichier image (sensible à la casse en prod)
+UPDATE spectacle
+SET img = 'Kaci dans la connerie humaine.webp'
+WHERE title = 'Kaci dans La connerie humaine';
