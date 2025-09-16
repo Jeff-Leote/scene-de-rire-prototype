@@ -20,12 +20,12 @@ export interface Spectacle {
   description: string;
   date_spectacle: string;
   heure_spectacle: string;
-  prix: number;
   lieu: string;
   artiste_name: string;
   artiste_photo: string;
   artiste_id: number;
   places_disponibles?: number;
+  lien_spectacle?: string;
 }
 
 // Interfaces pour les artistes
@@ -33,7 +33,6 @@ export interface Artist {
   id: number;
   name: string;
   photo: string;
-  photo_featured: string;
   biographie: string;
   upcoming_shows: number;
 }
@@ -42,7 +41,6 @@ export interface ArtistFormData {
   name: string;
   biographie: string;
   photo: string;
-  photo_featured: string;
 }
 
 // Interfaces pour les réservations
@@ -161,13 +159,13 @@ export interface FeaturedArtist {
   id: number;
   name: string;
   photo: string;
-  photo_featured: string;
   biographie: string;
   next_show?: {
     id: number;
     date: string;
     time: string;
     title: string;
+    image: string;
   };
 }
 

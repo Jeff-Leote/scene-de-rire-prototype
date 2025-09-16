@@ -11,13 +11,13 @@ const CTA = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link 
             to="/spectacles"
-            className="bg-yellow-400 text-black px-8 py-4 rounded-lg hover:bg-yellow-300 transition duration-300 font-bold cursor-pointer"
+            className="bg-red-500 text-white px-8 py-4 rounded-lg hover:bg-red-600 transition duration-300 font-bold cursor-pointer"
           >
             Voir les spectacles
           </Link>
           <Link 
             to="/contact"
-            className="border-2 border-yellow-400 text-yellow-400 px-8 py-4 rounded-lg hover:bg-yellow-400 hover:text-black transition duration-300 font-bold cursor-pointer"
+            className="border-2 border-red-500 text-red-500 px-8 py-4 rounded-lg hover:bg-red-500 hover:text-white transition duration-300 font-bold cursor-pointer"
           >
             Contacter l'équipe
           </Link>

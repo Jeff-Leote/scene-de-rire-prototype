@@ -40,7 +40,7 @@ const Venue = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           <div className="container mx-auto px-4 md:px-8 relative h-full flex flex-col justify-end pb-16">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-yellow-400 mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-red-500 mb-4">
               Bienvenue à L'Espace Comédie
             </h1>
             <p className="text-xl md:text-2xl max-w-3xl text-white">
@@ -56,7 +56,7 @@ const Venue = () => {
               <p className="text-xl md:text-2xl mb-8 leading-relaxed">
                 Situé en plein cœur de la ville, L'Espace Comédie vous accueille pour des soirées de rire et de découvertes humoristiques dans une ambiance conviviale et intimiste.
               </p>
-              <div className="flex items-center justify-center text-yellow-400 text-xl">
+              <div className="flex items-center justify-center text-red-500 text-xl">
                 <i className="fa-solid fa-location-dot text-3xl mr-3"></i>
                 <p className="text-lg md:text-xl">136 rue Solferino, 59000  Lille </p>
               </div>
@@ -67,9 +67,9 @@ const Venue = () => {
         {/* Bloc galerie */}
         <section className="py-12 bg-gray-950">
           <div className="container mx-auto px-4 md:px-8">
-            <h2 className="text-3xl font-bold text-yellow-400 mb-10 text-center">Découvrez notre espace</h2>
+            <h2 className="text-3xl font-bold text-red-500 mb-10 text-center">Découvrez notre espace</h2>
             {loading ? (
-              <div className="text-center text-yellow-400">Chargement des images...</div>
+              <div className="text-center text-red-500">Chargement des images...</div>
             ) : error ? (
               <div className="text-center text-red-400">{error}</div>
             ) : (
@@ -93,7 +93,7 @@ const Venue = () => {
         <section className="py-16 bg-black">
           <div className="container mx-auto px-4 md:px-8">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-yellow-400 mb-8 flex items-center">
+              <h2 className="text-3xl font-bold text-red-500 mb-8 flex items-center">
                 <i className="fa-solid fa-route mr-3"></i>Comment venir ?
               </h2>
               
@@ -103,40 +103,40 @@ const Venue = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 <div className="bg-gray-900 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-yellow-400 mb-4 flex items-center">
+                  <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
                     <i className="fa-solid fa-train-subway mr-2"></i>Transports en commun
                   </h3>
                   <ul className="space-y-3">
                     <li className="flex items-start">
-                      <i className="fa-solid fa-subway mt-1 mr-3 text-yellow-400"></i>
+                      <i className="fa-solid fa-subway mt-1 mr-3 text-red-500"></i>
                       <span>Métro : Station Saint-Michel (Ligne 4)</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fa-solid fa-bus mt-1 mr-3 text-yellow-400"></i>
+                      <i className="fa-solid fa-bus mt-1 mr-3 text-red-500"></i>
                       <span>Bus : Lignes 27, 38 et 85 (arrêt Saint-André-des-Arts)</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fa-solid fa-bicycle mt-1 mr-3 text-yellow-400"></i>
+                      <i className="fa-solid fa-bicycle mt-1 mr-3 text-red-500"></i>
                       <span>Stations Vélib' à proximité</span>
                     </li>
                   </ul>
                 </div>
                 
                 <div className="bg-gray-900 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-yellow-400 mb-4 flex items-center">
+                  <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
                     <i className="fa-solid fa-car mr-2"></i>En voiture
                   </h3>
                   <ul className="space-y-3">
                     <li className="flex items-start">
-                      <i className="fa-solid fa-parking mt-1 mr-3 text-yellow-400"></i>
+                      <i className="fa-solid fa-parking mt-1 mr-3 text-red-500"></i>
                       <span>Parking Saint-Michel (payant)</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fa-solid fa-road mt-1 mr-3 text-yellow-400"></i>
+                      <i className="fa-solid fa-road mt-1 mr-3 text-red-500"></i>
                       <span>Stationnement payant dans les rues avoisinantes</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fa-solid fa-info-circle mt-1 mr-3 text-yellow-400"></i>
+                      <i className="fa-solid fa-info-circle mt-1 mr-3 text-red-500"></i>
                       <span>Pensez à venir en avance les soirs de forte affluence</span>
                     </li>
                   </ul>
@@ -150,7 +150,7 @@ const Venue = () => {
         <section className="py-12 bg-gray-950">
           <div className="container mx-auto px-4 md:px-8">
             <div className="max-w-5xl mx-auto">
-              <h2 className="text-3xl font-bold text-yellow-400 mb-8 text-center">
+              <h2 className="text-3xl font-bold text-red-500 mb-8 text-center">
                 <i className="fa-solid fa-map-location-dot mr-3"></i>Nous situer
               </h2>
               <div className="rounded-lg overflow-hidden h-[400px] mb-6 relative">
@@ -165,7 +165,7 @@ const Venue = () => {
                   referrerPolicy="no-referrer-when-downgrade"
                 ></iframe>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-yellow-400 text-black font-bold px-4 py-2 rounded-full animate-pulse opacity-90">
+                  <div className="bg-red-500 text-white font-bold px-4 py-2 rounded-full animate-pulse opacity-90">
                     L'Espace Comédie
                   </div>
                 </div>
@@ -175,7 +175,7 @@ const Venue = () => {
                   href="https://www.google.com/maps/dir/?api=1&destination=136+rue+Solferino,+59000+Lille"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 px-6 rounded-full flex items-center transition cursor-pointer"
+                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full flex items-center transition cursor-pointer"
                 >
                   <i className="fa-solid fa-directions mr-2"></i>
                   Itinéraire depuis votre position
@@ -189,11 +189,11 @@ const Venue = () => {
         <section className="py-16 bg-black">
           <div className="container mx-auto px-4 md:px-8">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-yellow-400 mb-12 text-center">Infos pratiques</h2>
+              <h2 className="text-3xl font-bold text-red-500 mb-12 text-center">Infos pratiques</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 <div className="bg-gray-900 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-yellow-400 mb-4 flex items-center">
+                  <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
                     <i className="fa-solid fa-clock mr-2"></i>Horaires
                   </h3>
                   <ul className="space-y-3">
@@ -209,14 +209,14 @@ const Venue = () => {
                       <span>Fermeture</span>
                       <span>00h00</span>
                     </li>
-                    <li className="text-yellow-400 text-sm mt-4">
+                    <li className="text-red-500 text-sm mt-4">
                       Les horaires peuvent varier selon les événements
                     </li>
                   </ul>
                 </div>
                 
                 <div className="bg-gray-900 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-yellow-400 mb-4 flex items-center">
+                  <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
                     <i className="fa-solid fa-building-user mr-2"></i>Notre espace
                   </h3>
                   <ul className="space-y-3">
@@ -242,29 +242,25 @@ const Venue = () => {
               
               {/* FAQ */}
               <div className="bg-gray-900 p-8 rounded-lg">
-                <h3 className="text-xl font-semibold text-yellow-400 mb-6 flex items-center">
+                <h3 className="text-xl font-semibold text-red-500 mb-6 flex items-center">
                   <i className="fa-solid fa-circle-question mr-2"></i>Questions fréquentes
                 </h3>
-                
                 <div className="space-y-6">
                   <div className="border-b border-gray-800 pb-4">
-                    <h4 className="text-lg font-medium mb-2">Peut-on venir en groupe ?</h4>
-                    <p className="text-gray-300">Bien sûr ! Pour les groupes de plus de 8 personnes, nous vous conseillons de réserver à l'avance pour garantir des places côte à côte.</p>
+                    <h4 className="text-lg font-medium mb-2">Où se situe l’Espace Comédie ?</h4>
+                    <p className="text-gray-300">L’Espace Comédie se trouve au 136 rue Solférino, en plein cœur de Lille. La salle se trouve au sous-sol du Jager, l’entrée se fait directement par le Jager. Un parking est à proximité pour se garer facilement.</p>
                   </div>
-                  
                   <div className="border-b border-gray-800 pb-4">
-                    <h4 className="text-lg font-medium mb-2">Le bar est-il ouvert avant et après le spectacle ?</h4>
-                    <p className="text-gray-300">Oui, notre bar vous accueille 1h30 avant le début du spectacle et reste ouvert après la représentation pour prolonger votre soirée.</p>
+                    <h4 className="text-lg font-medium mb-2">Faut-il réserver ?</h4>
+                    <p className="text-gray-300">Oui, on recommande de réserver en ligne sur notre billetterie sécurisée. Vous recevrez vos billets par e-mail, il suffira de les présenter à l’entrée (version papier ou sur téléphone). Il est parfois possible de payer sur place si des places restent disponibles.</p>
                   </div>
-                  
                   <div className="border-b border-gray-800 pb-4">
-                    <h4 className="text-lg font-medium mb-2">Peut-on manger sur place ?</h4>
-                    <p className="text-gray-300">Nous proposons une carte de snacking et de tapas à partager. Il n'est pas possible d'apporter sa propre nourriture.</p>
+                    <h4 className="text-lg font-medium mb-2">Est-il possible de boire et/ou manger sur place ?</h4>
+                    <p className="text-gray-300">Oui ! A l’Espace Comédie vous pouvez profiter de boissons et de planches apéritives pendant, avant ou après les spectacles. Les boissons sont servies et facturées exclusivement par le Jager, titulaire de la licence IV.</p>
                   </div>
-                  
                   <div>
-                    <h4 className="text-lg font-medium mb-2">Y a-t-il un âge minimum pour assister aux spectacles ?</h4>
-                    <p className="text-gray-300">La plupart de nos spectacles sont accessibles à partir de 12 ans. L'âge recommandé est indiqué sur la page de chaque spectacle.</p>
+                    <h4 className="text-lg font-medium mb-2">L’Espace Comédie est-il accessible aux personnes à mobilité réduite (PMR) ?</h4>
+                    <p className="text-gray-300">Notre salle se situe au sous-sol, sans ascenseur. L’accès peut donc être difficile pour certaines personnes à mobilité réduite. Nous avons déjà accueilli des spectateurs en fauteuil, aidés par notre équipe pour descendre les escaliers. Si vous êtes concerné, n’hésitez pas à nous contacter en amont afin que nous puissions vous accompagner dans les meilleures conditions possibles.</p>
                   </div>
                 </div>
               </div>
@@ -275,11 +271,11 @@ const Venue = () => {
         {/* Témoignages */}
         <section className="py-12 bg-gray-950">
           <div className="container mx-auto px-4 md:px-8">
-            <h2 className="text-3xl font-bold text-yellow-400 mb-10 text-center">Ce qu'en disent nos spectateurs</h2>
+            <h2 className="text-3xl font-bold text-red-500 mb-10 text-center">Ce qu'en disent nos spectateurs</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               <div className="bg-black p-6 rounded-lg">
-                <div className="text-yellow-400 mb-2">
+                <div className="text-red-500 mb-2">
                   <i className="fa-solid fa-star"></i>
                   <i className="fa-solid fa-star"></i>
                   <i className="fa-solid fa-star"></i>
@@ -287,11 +283,11 @@ const Venue = () => {
                   <i className="fa-solid fa-star"></i>
                 </div>
                 <p className="italic mb-4">"Une salle à taille humaine qui permet une véritable proximité avec les artistes. On s'y sent comme chez soi !"</p>
-                <p className="text-yellow-400 font-medium">Marie T.</p>
+                <p className="text-red-500 font-medium">Marie T.</p>
               </div>
               
               <div className="bg-black p-6 rounded-lg">
-                <div className="text-yellow-400 mb-2">
+                <div className="text-red-500 mb-2">
                   <i className="fa-solid fa-star"></i>
                   <i className="fa-solid fa-star"></i>
                   <i className="fa-solid fa-star"></i>
@@ -299,11 +295,11 @@ const Venue = () => {
                   <i className="fa-solid fa-star"></i>
                 </div>
                 <p className="italic mb-4">"Le bar est super sympa, parfait pour prolonger la soirée après le spectacle et discuter avec d'autres spectateurs."</p>
-                <p className="text-yellow-400 font-medium">Thomas B.</p>
+                <p className="text-red-500 font-medium">Thomas B.</p>
               </div>
               
               <div className="bg-black p-6 rounded-lg">
-                <div className="text-yellow-400 mb-2">
+                <div className="text-red-500 mb-2">
                   <i className="fa-solid fa-star"></i>
                   <i className="fa-solid fa-star"></i>
                   <i className="fa-solid fa-star"></i>
@@ -311,7 +307,7 @@ const Venue = () => {
                   <i className="fa-solid fa-star-half-alt"></i>
                 </div>
                 <p className="italic mb-4">"Facile d'accès, une programmation variée et des découvertes à chaque fois. Un incontournable !"</p>
-                <p className="text-yellow-400 font-medium">Sophie M.</p>
+                <p className="text-red-500 font-medium">Sophie M.</p>
               </div>
             </div>
           </div>

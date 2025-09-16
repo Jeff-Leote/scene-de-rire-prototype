@@ -10,19 +10,15 @@ import Index from './pages/Index';
 import Shows from './pages/Shows';
 import SpectacleDetail from './pages/SpectacleDetail';
 import Venue from './pages/Venue';
-import Reservation from './pages/Reservation';
-import ReservationInformations from './pages/ReservationInformations';
-import ReservationPaiement from './pages/ReservationPaiement';
-import PaymentStatus from './pages/PaymentStatus';
-import ValidateTicket from './pages/ValidateTicket';
 import Artists from './pages/Artists';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import MyAccount from './pages/MyAccount';
 import Dashboard from './components/Dashboard';
 import Contact from './pages/Contact';
 import Unsubscribe from './pages/Unsubscribe';
 import NotFound from './pages/NotFound';
+import Maintenance from './pages/Maintenance';
+import { useAuth } from './contexts/AuthContext';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -35,21 +31,14 @@ import { usePreloadData } from './hooks/usePreloadData';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // ⚡ OPTIMISATIONS AGGRESSIVES POUR LA PRODUCTION
-      staleTime: 10 * 60 * 1000, // 10 minutes - données fraîches plus longtemps
-      retry: 5,                   // 5 tentatives pour éviter les échecs
-      retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000), // Max 5s
-      refetchOnWindowFocus: false, // Pas de refetch automatique
-      refetchOnMount: false,       // Pas de refetch au montage si en cache
-      refetchOnReconnect: false,   // Pas de refetch à la reconnexion
-      
-      // 🔧 CACHE ULTRA-INTELLIGENT
-      gcTime: 30 * 60 * 1000,     // 30 minutes - garder en cache très longtemps
-      
-      // 🎯 FALLBACKS POUR ÉVITER LES COMPOSANTS VIDES
-      placeholderData: (previousData) => previousData, // Garder les anciennes données
-      
-      // 📊 Monitoring des performances (en développement seulement)
+      staleTime: 10 * 60 * 1000,
+      retry: 5,
+      retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000),
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      gcTime: 30 * 60 * 1000,
+      placeholderData: (previousData) => previousData,
       ...(process.env.NODE_ENV === 'development' && {
         onSuccess: (data, query) => {
           console.log(`✅ Query réussie: ${query.queryKey.join(' -> ')}`);
@@ -60,10 +49,9 @@ const queryClient = new QueryClient({
       })
     },
     mutations: {
-      // 🔄 Optimisations des mutations
-      retry: 3,                   // 3 tentatives pour les mutations
+      retry: 3,
       retryDelay: 1000,
-      onSuccess: (data, variables, context) => {
+      onSuccess: () => {
         if (process.env.NODE_ENV === 'development') {
           console.log(`✅ Mutation réussie`);
         }
@@ -72,7 +60,6 @@ const queryClient = new QueryClient({
   }
 });
 
-// Petit Error Boundary pour éviter les écrans blancs
 class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }>{
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -82,7 +69,6 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
     return { hasError: true };
   }
   componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
-    // Log l'erreur pour le debugging
     console.error('Erreur UI non interceptée:', error);
     console.error('Stack trace:', errorInfo.componentStack);
     console.error('Error Info:', errorInfo);
@@ -94,7 +80,7 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
           <div>
             <div className="text-2xl font-bold mb-2">Une erreur est survenue</div>
             <div className="text-gray-400 mb-6">Veuillez actualiser la page. Si le problème persiste, réessayez plus tard.</div>
-            <button className="bg-yellow-400 text-black px-4 py-2 rounded" onClick={() => window.location.reload()}>Actualiser</button>
+            <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => window.location.reload()}>Actualiser</button>
           </div>
         </div>
       );
@@ -103,62 +89,56 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
   }
 }
 
-// Composant principal avec préchargement
 const AppContent = () => {
-  // 🚀 Préchargement global des données critiques
   usePreloadData();
-  
+  const [maintenance, setMaintenance] = React.useState(false);
+  const { user } = useAuth();
+
+  React.useEffect(() => {
+    const check = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL;
+        const res = await fetch(`${API_URL}/api/settings/maintenance`, { credentials: 'include' });
+        const data = await res.json();
+        setMaintenance(Boolean(data?.maintenance_enabled));
+      } catch {}
+    };
+    check();
+  }, []);
+
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/spectacles" element={<Shows />} />
-            <Route path="/spectacles/:id" element={<SpectacleDetail />} />
-            <Route path="/le-lieu" element={<Venue />} />
-            <Route path="/reservation" element={<Reservation />} />
-            <Route path="/reservation/informations" element={<ReservationInformations />} />
-            <Route path="/reservation/paiement" element={<ReservationPaiement />} />
-            <Route path="/payment-status" element={<PaymentStatus />} />
-        <Route path="/validate-ticket/:reservationId" element={<ValidateTicket />} />
+      <Routes>
+        {maintenance && process.env.NODE_ENV === 'production' && (!user || user.role !== 'admin') ? (
+          <>
+            <Route path="*" element={<Maintenance />} />
+          </>
+        ) : (
+          <>
+        <Route path="/" element={<Index />} />
+        <Route path="/spectacles" element={<Shows />} />
+        <Route path="/spectacles/:id" element={<SpectacleDetail />} />
+        <Route path="/le-lieu" element={<Venue />} />
+        {/* Routes de réservation, paiement, QR et validation retirées */}
 
-            <Route path="/artistes" element={<Artists />} />
-            <Route 
-              path="/connexion" 
-              element={
-                <ProtectedRoute>
-                  <Login />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/inscription" 
-              element={
-                <ProtectedRoute>
-                  <Register />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/mon-compte" 
-              element={
-                <ProtectedRoute requireAuth>
-                  <MyAccount />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute requireAuth requireAdmin>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/contact" element={<Contact />} />
+        <Route path="/artistes" element={<Artists />} />
+        <Route path="/connexion" element={<Login />} />
+        <Route path="/inscription" element={<Register />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute requireAuth requireAdmin>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <Route path="*" element={<NotFound />} />
+          </>
+        )}
+      </Routes>
+    </BrowserRouter>
   );
 };
 
@@ -172,11 +152,11 @@ const App = () => (
             <TooltipProvider>
               <Sonner />
               <AppContent />
-      </TooltipProvider>
-    </QueryClientProvider>
+            </TooltipProvider>
+          </QueryClientProvider>
         </CSRFProvider>
       </CartProvider>
-  </AuthProvider>
+    </AuthProvider>
   </AppErrorBoundary>
 );
 

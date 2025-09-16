@@ -135,17 +135,17 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
         {/* Background effect elements */}
         <div className="absolute bottom-0 left-0 w-full h-[300px] opacity-10 pointer-events-none">
           <div className="absolute bottom-10 left-10 transform rotate-12">
-            <Mic className="w-[120px] h-[120px] text-yellow-400" />
+            <Mic className="w-[120px] h-[120px] text-red-500" />
           </div>
           <div className="absolute bottom-20 right-20 transform -rotate-6">
-            <Lightbulb className="w-[100px] h-[100px] text-yellow-400" />
+            <Lightbulb className="w-[100px] h-[100px] text-red-500" />
           </div>
         </div>
         
         {/* Minimal header */}
         <div id="minimal-header" className="w-full max-w-md mb-8">
           <div className="flex items-center justify-between">
-            <Link to="/connexion" className="text-yellow-400 hover:text-yellow-300 transition flex items-center cursor-pointer">
+            <Link to="/connexion" className="text-red-500 hover:text-red-400 transition flex items-center cursor-pointer">
               <ArrowLeft className="w-4 h-4 mr-2" />
               <span>Retour à la connexion</span>
             </Link>
@@ -173,15 +173,15 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         className="flex gap-6"
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="M." id="monsieur" className="border-gray-700 text-yellow-400" />
+                          <RadioGroupItem value="M." id="monsieur" className="border-gray-700 text-red-500" />
                           <label htmlFor="monsieur" className="text-white cursor-pointer">M.</label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="Mme." id="madame" className="border-gray-700 text-yellow-400" />
+                          <RadioGroupItem value="Mme." id="madame" className="border-gray-700 text-red-500" />
                           <label htmlFor="madame" className="text-white cursor-pointer">Mme.</label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="Non-renseigné" id="non-renseigné" className="border-gray-700 text-yellow-400" />
+                          <RadioGroupItem value="Non-renseigné" id="non-renseigné" className="border-gray-700 text-red-500" />
                           <label htmlFor="non-renseigné" className="text-white cursor-pointer">Non-renseigné</label>
                         </div>
                       </RadioGroup>
@@ -202,7 +202,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                       <FormControl>
                         <Input 
                           placeholder="Votre prénom" 
-                          className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
+                          className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500"
                           {...field} 
                         />
                       </FormControl>
@@ -220,7 +220,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                       <FormControl>
                         <Input 
                           placeholder="Votre nom" 
-                          className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
+                          className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500"
                           {...field} 
                         />
                       </FormControl>
@@ -243,7 +243,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         <FormControl>
                           <select
                             {...field}
-                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-yellow-400"
+                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-red-500"
                           >
                             <option value="">Jour</option>
                             {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
@@ -267,7 +267,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         <FormControl>
                           <select
                             {...field}
-                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-yellow-400"
+                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-red-500"
                           >
                             <option value="">Mois</option>
                             {[
@@ -304,7 +304,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         <FormControl>
                           <select
                             {...field}
-                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-yellow-400"
+                            className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:border-red-500"
                           >
                             <option value="">Année</option>
                             {(() => {
@@ -344,7 +344,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                       <Input 
                         placeholder="votre@email.com" 
                         type="email"
-                        className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
+                        className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500"
                         {...field} 
                       />
                     </FormControl>
@@ -366,7 +366,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                           placeholder="••••••••" 
                           type={showPassword ? "text" : "password"}
                           autoComplete="new-password"
-                          className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
+                          className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500 pr-10"
                           {...field}
                           onFocus={() => setShowPasswordStrength(true)}
                           onBlur={(e) => {
@@ -423,7 +423,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                           placeholder="••••••••" 
                           type={showConfirmPassword ? "text" : "password"}
                           autoComplete="new-password"
-                          className="bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
+                          className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500 pr-10"
                           {...field} 
                         />
                         <button
@@ -451,7 +451,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-3 px-4 rounded-md transition-colors duration-200"
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center">
@@ -476,11 +476,11 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
           {/* Social signup options */}
           <div id="social-login" className="space-y-3">
             <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium transition-colors duration-200 flex items-center justify-center">
-              <Mail className="w-5 h-5 mr-3 text-yellow-400" />
+              <Mail className="w-5 h-5 mr-3 text-red-500" />
               S'inscrire avec Google
             </Button>
             <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium transition-colors duration-200 flex items-center justify-center">
-              <Mail className="w-5 h-5 mr-3 text-yellow-400" />
+              <Mail className="w-5 h-5 mr-3 text-red-500" />
               S'inscrire avec Facebook
             </Button>
           </div>
@@ -488,7 +488,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
           {/* Already have account */}
           <div className="mt-6 text-center text-gray-400">
             Vous avez déjà un compte ?{' '}
-            <Link to="/connexion" className="text-yellow-400 hover:text-yellow-300">
+            <Link to="/connexion" className="text-red-500 hover:text-red-400">
               Connectez-vous
             </Link>
           </div>

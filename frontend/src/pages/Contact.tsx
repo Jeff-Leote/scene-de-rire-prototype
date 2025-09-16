@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import Header from '@/components/Header';
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronDown, Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, Clock } from "lucide-react";
+import { ChevronDown, Facebook, Instagram, Globe, Phone, Mail, MapPin, Clock } from "lucide-react";
 
 type FormData = {
   firstName: string;
@@ -74,38 +74,38 @@ const Contact = () => {
           {/* Contact Information */}
           <section className="lg:w-1/3">
             <div className="bg-white rounded-xl shadow-md p-8">
-              <h2 className="text-2xl font-bold mb-6 text-yellow-400">Nous joindre</h2>
+              <h2 className="text-2xl font-bold mb-6 text-red-500">Nous joindre</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start">
-                  <Phone className="text-yellow-400 mt-1 w-6 h-6" />
+                  <Phone className="text-red-500 mt-1 w-6 h-6" />
                   <div className="ml-4">
                     <h3 className="font-semibold mb-1">Téléphone</h3>
-                    <span className="text-yellow-400 hover:underline cursor-pointer">01 23 45 67 89</span>
+                      <span className="text-red-500 hover:underline cursor-pointer">0667160943</span>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <Mail className="text-yellow-400 mt-1 w-6 h-6" />
+                  <Mail className="text-red-500 mt-1 w-6 h-6" />
                   <div className="ml-4">
                     <h3 className="font-semibold mb-1">Email</h3>
-                    <span className="text-yellow-400 hover:underline cursor-pointer">contact@espacecomedia.fr</span>
+                    <a href="mailto:lespacecomedie@gmail.com" className="text-red-500 hover:underline cursor-pointer">lespacecomedie@gmail.com</a>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <MapPin className="text-yellow-400 mt-1 w-6 h-6" />
+                  <MapPin className="text-red-500 mt-1 w-6 h-6" />
                   <div className="ml-4">
                     <h3 className="font-semibold mb-1">Adresse</h3>
-                    <p>123 Avenue de la Comédie<br />Quartier des Arts<br />75000 Paris</p>
+                    <p>136 rue Solférino<br />59000 Lille</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
-                  <Clock className="text-yellow-400 mt-1 w-6 h-6" />
+                  <Clock className="text-red-500 mt-1 w-6 h-6" />
                   <div className="ml-4">
                     <h3 className="font-semibold mb-1">Horaires d'ouverture</h3>
-                    <p>Du mardi au samedi<br />13h30 - 19h30</p>
+                    <p>Lundi–Vendredi : 18h–23h<br />Samedi–Dimanche : 16h–22h</p>
                   </div>
                 </div>
               </div>
@@ -114,18 +114,15 @@ const Contact = () => {
               <div className="mt-10">
                 <h3 className="font-semibold mb-4">Suivez-nous</h3>
                 <div className="flex space-x-4">
-                  <span className="bg-black bg-opacity-10 hover:bg-opacity-20 text-yellow-400 p-3 rounded-full transition duration-300 cursor-pointer">
+                  <a href="https://share.google/wyNIUTlnM8Zr7oszq" target="_blank" rel="noreferrer" className="bg-black bg-opacity-10 hover:bg-opacity-20 text-red-500 p-3 rounded-full transition duration-300 cursor-pointer" aria-label="Google">
+                    <Globe className="h-5 w-5" />
+                  </a>
+                  <a href="https://www.facebook.com/share/1FYTKaxZrB/?mibextid=wwXIfr" target="_blank" rel="noreferrer" className="bg-black bg-opacity-10 hover:bg-opacity-20 text-red-500 p-3 rounded-full transition duration-300 cursor-pointer" aria-label="Facebook">
                     <Facebook className="h-5 w-5" />
-                  </span>
-                  <span className="bg-black bg-opacity-10 hover:bg-opacity-20 text-yellow-400 p-3 rounded-full transition duration-300 cursor-pointer">
+                  </a>
+                  <a href="https://www.instagram.com/lespacecomedie?igsh=MTBrNXcydjZmYzhhaA==" target="_blank" rel="noreferrer" className="bg-black bg-opacity-10 hover:bg-opacity-20 text-red-500 p-3 rounded-full transition duration-300 cursor-pointer" aria-label="Instagram">
                     <Instagram className="h-5 w-5" />
-                  </span>
-                  <span className="bg-black bg-opacity-10 hover:bg-opacity-20 text-yellow-400 p-3 rounded-full transition duration-300 cursor-pointer">
-                    <Twitter className="h-5 w-5" />
-                  </span>
-                  <span className="bg-black bg-opacity-10 hover:bg-opacity-20 text-yellow-400 p-3 rounded-full transition duration-300 cursor-pointer">
-                    <Youtube className="h-5 w-5" />
-                  </span>
+                  </a>
                 </div>
               </div>
             </div>
@@ -134,7 +131,7 @@ const Contact = () => {
           {/* Contact Form */}
           <section className="lg:w-2/3">
             <div className="bg-white rounded-xl shadow-md p-8">
-              <h2 className="text-2xl font-bold mb-6 text-yellow-400">Envoyez-nous un message</h2>
+              <h2 className="text-2xl font-bold mb-6 text-red-500">Envoyez-nous un message</h2>
               
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -179,7 +176,7 @@ const Contact = () => {
                   <select
                     id="subject"
                     {...register("subject", { required: true })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="reservation">Réservation</option>
                     <option value="spectacle">Spectacle</option>
@@ -211,7 +208,7 @@ const Contact = () => {
                   <div className="ml-3">
                     <label htmlFor="privacy" className="text-sm text-gray-600">
                       <span className="text-red-500 mr-1">*</span>
-                      J'accepte que mes données soient traitées conformément à la <span className="text-yellow-400 hover:underline cursor-pointer">politique de confidentialité</span>.
+                      J'accepte que mes données soient traitées conformément à la <span className="text-red-500 hover:underline cursor-pointer">politique de confidentialité</span>.
                     </label>
                     {errors.privacy && <p className="mt-1 text-sm text-red-500">Vous devez accepter la politique de confidentialité</p>}
                   </div>
@@ -223,7 +220,7 @@ const Contact = () => {
                     disabled={!privacyAccepted}
                     className={`px-8 py-3 rounded-md font-medium transition duration-300 ${
                       privacyAccepted 
-                        ? 'bg-yellow-400 hover:bg-yellow-500 text-black' 
+                        ? 'bg-red-500 hover:bg-red-600 text-white' 
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
@@ -244,7 +241,7 @@ const Contact = () => {
         {/* FAQ Section */}
         <section className="mb-16">
           <div className="bg-white rounded-xl shadow-md p-8">
-            <h2 className="text-2xl font-bold mb-6 text-yellow-400">Questions fréquentes</h2>
+            <h2 className="text-2xl font-bold mb-6 text-red-500">Questions fréquentes</h2>
             
             <div className="space-y-6">
               <div className="border-b border-gray-200 pb-4">
@@ -252,11 +249,11 @@ const Contact = () => {
                   className="flex justify-between items-center w-full text-left font-medium text-lg"
                   onClick={() => toggleFAQ('faq-1')}
                 >
-                  Comment puis-je réserver des billets ?
-                  <ChevronDown className={`text-yellow-400 transition-transform ${openFaq === 'faq-1' ? 'transform rotate-180' : ''}`} />
+                  Où se situe l’Espace Comédie ?
+                  <ChevronDown className={`text-red-500 transition-transform ${openFaq === 'faq-1' ? 'transform rotate-180' : ''}`} />
                 </button>
                 <div className={`mt-3 text-gray-600 ${openFaq === 'faq-1' ? '' : 'hidden'}`}>
-                  <p>Vous pouvez réserver vos billets directement sur notre site web en cliquant sur "Réserver", par téléphone ou au guichet de l'Espace Comédie pendant les heures d'ouverture.</p>
+                  <p>L’Espace Comédie se trouve au 136 rue Solférino, en plein cœur de Lille. La salle se trouve au sous-sol du Jager, l’entrée se fait directement par le Jager. Un parking est à proximité pour se garer facilement.</p>
                 </div>
               </div>
               
@@ -265,11 +262,11 @@ const Contact = () => {
                   className="flex justify-between items-center w-full text-left font-medium text-lg"
                   onClick={() => toggleFAQ('faq-2')}
                 >
-                  Quelle est la politique d'annulation ?
-                  <ChevronDown className={`text-yellow-400 transition-transform ${openFaq === 'faq-2' ? 'transform rotate-180' : ''}`} />
+                  Faut-il réserver ?
+                  <ChevronDown className={`text-red-500 transition-transform ${openFaq === 'faq-2' ? 'transform rotate-180' : ''}`} />
                 </button>
                 <div className={`mt-3 text-gray-600 ${openFaq === 'faq-2' ? '' : 'hidden'}`}>
-                  <p>Les billets peuvent être remboursés jusqu'à 48h avant le spectacle. Passé ce délai, aucun remboursement ne sera possible sauf cas exceptionnels.</p>
+                  <p>Oui, on recommande de réserver en ligne sur notre billetterie sécurisée. Vous recevrez vos billets par e-mail, il suffira de les présenter à l’entrée (version papier ou sur téléphone). Il est parfois possible de payer sur place si des places restent disponibles.</p>
                 </div>
               </div>
               
@@ -278,11 +275,11 @@ const Contact = () => {
                   className="flex justify-between items-center w-full text-left font-medium text-lg"
                   onClick={() => toggleFAQ('faq-3')}
                 >
-                  L'Espace Comédie est-il accessible aux personnes à mobilité réduite ?
-                  <ChevronDown className={`text-yellow-400 transition-transform ${openFaq === 'faq-3' ? 'transform rotate-180' : ''}`} />
+                  Est-il possible de boire et/ou manger sur place ?
+                  <ChevronDown className={`text-red-500 transition-transform ${openFaq === 'faq-3' ? 'transform rotate-180' : ''}`} />
                 </button>
                 <div className={`mt-3 text-gray-600 ${openFaq === 'faq-3' ? '' : 'hidden'}`}>
-                  <p>Oui, notre établissement est entièrement accessible aux personnes à mobilité réduite. Des places adaptées sont disponibles dans la salle et tous les espaces sont accessibles.</p>
+                  <p>Oui ! A l’Espace Comédie vous pouvez profiter de boissons et de planches apéritives pendant, avant ou après les spectacles. Les boissons sont servies et facturées exclusivement par le Jager, titulaire de la licence IV.</p>
                 </div>
               </div>
               
@@ -291,11 +288,11 @@ const Contact = () => {
                   className="flex justify-between items-center w-full text-left font-medium text-lg"
                   onClick={() => toggleFAQ('faq-4')}
                 >
-                  Peut-on louer l'Espace Comédie pour des événements privés ?
-                  <ChevronDown className={`text-yellow-400 transition-transform ${openFaq === 'faq-4' ? 'transform rotate-180' : ''}`} />
+                  L’Espace Comédie est-il accessible aux personnes à mobilité réduite (PMR) ?
+                  <ChevronDown className={`text-red-500 transition-transform ${openFaq === 'faq-4' ? 'transform rotate-180' : ''}`} />
                 </button>
                 <div className={`mt-3 text-gray-600 ${openFaq === 'faq-4' ? '' : 'hidden'}`}>
-                  <p>Oui, l'Espace Comédie peut être loué pour des événements privés, des soirées d'entreprise ou des conférences. Contactez-nous par email ou téléphone pour plus d'informations sur les disponibilités et tarifs.</p>
+                  <p>Notre salle se situe au sous-sol, sans ascenseur. L’accès peut donc être difficile pour certaines personnes à mobilité réduite. Nous avons déjà accueilli des spectateurs en fauteuil, aidés par notre équipe pour descendre les escaliers. Si vous êtes concerné, n’hésitez pas à nous contacter en amont afin que nous puissions vous accompagner dans les meilleures conditions possibles.</p>
                 </div>
               </div>
             </div>

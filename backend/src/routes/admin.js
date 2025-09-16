@@ -137,15 +137,27 @@ router.put('/settings/contact-email', async (req, res) => {
   }
 });
 
+// Activer/désactiver la maintenance (admin)
+router.put('/settings/maintenance', async (req, res) => {
+  try {
+    const { enabled } = req.body || {};
+    const value = enabled ? '1' : '0';
+    await db.query("CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )");
+    await db.query('INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)', ['maintenance_enabled', value]);
+    res.json({ maintenance_enabled: value === '1' });
+  } catch (error) {
+    console.error('Erreur maj maintenance:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Récupérer tous les spectacles (pour l'admin)
 router.get('/spectacles', async (req, res) => {
 
   try {
     const [spectacles] = await db.query(`
-      SELECT s.*, a.name as artiste_name 
-      FROM spectacle s 
-      JOIN artiste a ON s.artiste_id = a.id 
-      ORDER BY s.date_spectacle DESC, s.heure_spectacle DESC
+      SELECT * FROM spectacle 
+      ORDER BY date_spectacle DESC, heure_spectacle DESC
     `);
 
     res.json(spectacles);
@@ -165,23 +177,20 @@ router.post('/spectacles', async (req, res) => {
       return res.status(400).json({ error: 'Corps de la requête manquant' });
     }
 
-    const { title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, lieu } = req.body;
+    const { title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle } = req.body;
 
+    if (!title || !img || !description || !date_spectacle || !heure_spectacle || !lieu) {
+      return res.status(400).json({ error: 'Tous les champs sont requis' });
+    }
 
-
-    if (!title || !img || !description || !date_spectacle || !heure_spectacle || !prix || !artiste_id || !lieu) {
-
-    return res.status(400).json({ error: 'Tous les champs sont requis' });
-  }
-
-  try {
-    const [result] = await db.query(
-        'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, lieu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, lieu]
-    );
+    try {
+      const [result] = await db.query(
+          'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle || null]
+      );
     
     const [newSpectacle] = await db.query(
-      'SELECT s.*, a.name as artiste_name FROM spectacle s JOIN artiste a ON s.artiste_id = a.id WHERE s.id = ?',
+      'SELECT * FROM spectacle WHERE id = ?',
       [result.insertId]
     );
 
@@ -209,21 +218,20 @@ router.post('/spectacles', async (req, res) => {
 router.put('/spectacles/:id', async (req, res) => {
   const { id } = req.params;
 
-  const { title, img, description, date_spectacle, heure_spectacle, prix, artiste_id } = req.body;
+  const { title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle } = req.body;
 
-  if (!title || !img || !description || !date_spectacle || !heure_spectacle || !prix || !artiste_id) {
-
+  if (!title || !img || !description || !date_spectacle || !heure_spectacle || !lieu) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
     await db.query(
-      'UPDATE spectacle SET title = ?, img = ?, description = ?, date_spectacle = ?, heure_spectacle = ?, prix = ?, artiste_id = ? WHERE id = ?',
-      [title, img, description, date_spectacle, heure_spectacle, prix, artiste_id, id]
+      'UPDATE spectacle SET title = ?, img = ?, description = ?, date_spectacle = ?, heure_spectacle = ?, lieu = ?, lien_spectacle = ? WHERE id = ?',
+      [title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle || null, id]
     );
 
     const [updatedSpectacle] = await db.query(
-      'SELECT s.*, a.name as artiste_name FROM spectacle s JOIN artiste a ON s.artiste_id = a.id WHERE s.id = ?',
+      'SELECT * FROM spectacle WHERE id = ?',
       [id]
     );
 
@@ -247,9 +255,8 @@ router.delete('/spectacles/:id', async (req, res) => {
   try {
     // 1. Récupérer les informations du spectacle avant suppression
     const [spectacleInfo] = await db.query(`
-      SELECT s.*, a.name as artiste_name 
+      SELECT s.*
       FROM spectacle s 
-      JOIN artiste a ON s.artiste_id = a.id 
       WHERE s.id = ?
     `, [id]);
 
@@ -374,11 +381,8 @@ router.delete('/spectacles/:id', async (req, res) => {
 router.get('/artistes', async (req, res) => {
   try {
     const [artistes] = await db.query(`
-      SELECT a.*, COUNT(s.id) as upcoming_shows
+      SELECT a.*, 0 as upcoming_shows
       FROM artiste a
-      LEFT JOIN spectacle s ON a.id = s.artiste_id 
-      AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-      GROUP BY a.id
       ORDER BY a.created_at DESC
     `);
     res.json(artistes);
@@ -413,7 +417,6 @@ router.get('/reservations', async (req, res) => {
         p.date as date_paiement
       FROM reservation r
       JOIN spectacle s ON r.spectacle_id = s.id
-      JOIN artiste a ON s.artiste_id = a.id
       JOIN user u ON r.user_id = u.id
       LEFT JOIN paiement_reservation pr ON r.id = pr.reservation_id
       LEFT JOIN paiement p ON pr.paiement_id = p.id
@@ -462,12 +465,9 @@ router.put('/artistes/:id', async (req, res) => {
     );
 
     const [updatedArtist] = await db.query(
-      `SELECT a.*, COUNT(s.id) as upcoming_shows
+      `SELECT a.*, 0 as upcoming_shows
        FROM artiste a
-       LEFT JOIN spectacle s ON a.id = s.artiste_id 
-       AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-       WHERE a.id = ?
-       GROUP BY a.id`,
+       WHERE a.id = ?`,
       [id]
     );
 
@@ -487,11 +487,11 @@ router.delete('/artistes/:id', async (req, res) => {
 
 
   try {
-    // Vérifier si l'artiste a des spectacles associés
-    const [spectacles] = await db.query('SELECT id FROM spectacle WHERE artiste_id = ?', [id]);
-    if (spectacles.length > 0) {
-      return res.status(400).json({ 
-        error: 'Impossible de supprimer cet artiste car il a des spectacles associés' 
+    // Vérifier si l'artiste existe
+    const [artiste] = await db.query('SELECT id FROM artiste WHERE id = ?', [id]);
+    if (artiste.length === 0) {
+      return res.status(404).json({ 
+        error: 'Artiste non trouvé' 
       });
     }
 
@@ -522,12 +522,9 @@ router.post('/artiste', async (req, res) => {
     );
 
     const [newArtist] = await db.query(
-      `SELECT a.*, COUNT(s.id) as upcoming_shows
+      `SELECT a.*, 0 as upcoming_shows
        FROM artiste a
-       LEFT JOIN spectacle s ON a.id = s.artiste_id 
-       AND CONCAT(s.date_spectacle, ' ', s.heure_spectacle) > NOW()
-       WHERE a.id = ?
-       GROUP BY a.id`,
+       WHERE a.id = ?`,
       [result.insertId]
     );
 
@@ -544,28 +541,27 @@ router.get('/featured', async (req, res) => {
   try {
     // Sélectionner le prochain spectacle à venir et son artiste
     const [rows] = await db.query(`
-      SELECT a.*, s.id as next_show_id, s.title as next_show_title, s.date_spectacle as next_show_date, s.heure_spectacle as next_show_time
+      SELECT s.id as next_show_id, s.title as next_show_title, s.date_spectacle as next_show_date, s.heure_spectacle as next_show_time
       FROM spectacle s
-      JOIN artiste a ON s.artiste_id = a.id
       WHERE TIMESTAMP(s.date_spectacle, s.heure_spectacle) >= CONVERT_TZ(NOW(), 'UTC', 'Europe/Paris')
       ORDER BY s.date_spectacle ASC, s.heure_spectacle ASC
       LIMIT 1
     `);
     if (rows.length === 0) {
-      return res.status(404).json({ error: "Aucun spectacle à venir, donc aucun artiste à l'affiche" });
+      return res.status(404).json({ error: "Aucun spectacle à venir" });
     }
-    const artiste = rows[0];
+    const spectacle = rows[0];
     const response = {
-      id: artiste.id,
-      name: artiste.name,
-      photo: artiste.photo,
-      photo_featured: artiste.photo_featured,
-      biographie: artiste.biographie,
+      id: 1,
+      name: "Artiste à l'affiche",
+      photo: "default-artist.jpg",
+      photo_featured: "default-artist.jpg",
+      biographie: "Artiste en vedette pour ce spectacle",
       next_show: {
-        id: artiste.next_show_id,
-        title: artiste.next_show_title,
-        date: artiste.next_show_date,
-        time: artiste.next_show_time
+        id: spectacle.next_show_id,
+        title: spectacle.next_show_title,
+        date: spectacle.next_show_date,
+        time: spectacle.next_show_time
       }
     };
     res.json(response);

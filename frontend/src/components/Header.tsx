@@ -16,30 +16,23 @@ const Header = ({ activeItem }: HeaderProps) => {
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center">
-            <i className="fa-solid fa-microphone-lines text-yellow-400 text-2xl mr-2"></i>
-            <span className="text-2xl font-bold tracking-tight">L'espace Comedie</span>
+            <i className="fa-solid fa-microphone-lines text-red-500 text-2xl mr-2"></i>
+            <span className="text-2xl font-bold tracking-tight">L'Espace Comédie Lille</span>
           </div>
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
               Accueil
             </Link>
-            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
-              Spectacles
+            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
+              Programmation
             </Link>
-            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
               Le lieu
             </Link>
-            <Link to="/reservation" className={`${activeItem === 'Réservation' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer relative`}>
-              Réservation
-              {cart.length > 0 && (
-                <span className="absolute -top-2 -right-4 bg-yellow-400 text-black text-xs font-bold rounded-full px-2 py-0.5">
-                  {cart.length}
-                </span>
-              )}
-            </Link>
-            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-yellow-400 border-b-2 border-yellow-400 pb-1' : 'hover:text-yellow-400 transition duration-300'} cursor-pointer`}>
+            {/* Lien texte Réservations retiré */}
+            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
               Contact
             </Link>
           </nav>
@@ -50,25 +43,17 @@ const Header = ({ activeItem }: HeaderProps) => {
               <div className="relative">
                 <button 
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 hover:text-yellow-400 transition duration-300"
+                  className="flex items-center space-x-2 hover:text-red-500 transition duration-300"
                 >
                   <span>{user?.firstName} {user?.lastName}</span>
                   <i className={`fa-solid fa-chevron-${isUserMenuOpen ? 'up' : 'down'} text-sm`}></i>
                 </button>
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-black border border-yellow-400 rounded shadow-lg py-2">
-                    <Link 
-                      to="/mon-compte" 
-                      className="block px-4 py-2 hover:bg-yellow-400 hover:text-black transition duration-300"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Mon compte
-                    </Link>
-
+                  <div className="absolute right-0 mt-2 w-48 bg-black border border-red-500 rounded shadow-lg py-2">
                     {user?.role === 'admin' && (
                       <Link 
                         to="/dashboard" 
-                        className="block px-4 py-2 hover:bg-yellow-400 hover:text-black transition duration-300"
+                        className="block px-4 py-2 hover:bg-red-500 hover:text-white transition duration-300"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Dashboard
@@ -79,19 +64,15 @@ const Header = ({ activeItem }: HeaderProps) => {
                         logout();
                         setIsUserMenuOpen(false);
                       }}
-                      className="block w-full text-left px-4 py-2 hover:bg-yellow-400 hover:text-black transition duration-300"
+                      className="block w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white transition duration-300"
                     >
                       Déconnexion
                     </button>
                   </div>
                 )}
               </div>
-            ) : (
-              <Link to="/connexion" className={`hover:text-yellow-400 transition duration-300 hidden md:block cursor-pointer ${activeItem === 'Connexion' ? 'text-yellow-400' : ''}`}>
-                Connexion
-              </Link>
-            )}
-            <Link to="/reservation" className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 hidden md:block cursor-pointer">
+            ) : null}
+            <Link to="/reservation" className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 hidden md:block cursor-pointer">
               Réserver
             </Link>
             <button 
@@ -114,27 +95,20 @@ const Header = ({ activeItem }: HeaderProps) => {
             <i className="fa-solid fa-xmark text-2xl"></i>
           </button>
           <nav className="flex flex-col space-y-6 text-center">
-            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Accueil
             </Link>
-            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Spectacles
             </Link>
-            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Le lieu
             </Link>
-            <Link to="/reservation" className={`${activeItem === 'Réservation' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
-              Réservation
-            </Link>
-            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
+            {/* Lien texte Réservation (mobile) retiré */}
+            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Contact
             </Link>
-            {!isAuthenticated && (
-              <Link to="/connexion" className={`${activeItem === 'Connexion' ? 'text-yellow-400 text-2xl border-b-2 border-yellow-400 pb-1' : 'text-white text-2xl hover:text-yellow-400 transition duration-300'}`}>
-                Connexion
-              </Link>
-            )}
-            <Link to="/reservation" className="bg-yellow-400 text-black px-6 py-3 rounded text-xl mt-4 hover:bg-yellow-300 transition duration-300">
+            <Link to="/reservation" className="bg-red-500 text-white px-6 py-3 rounded text-xl mt-4 hover:bg-red-600 transition duration-300">
               Réserver
             </Link>
           </nav>

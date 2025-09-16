@@ -110,7 +110,7 @@ const Newsletter = () => {
   }
 
   return (
-    <section id="newsletter" className="bg-yellow-400 py-16">
+    <section id="newsletter" className="bg-red-500 py-16">
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row items-center justify-between">
           <div className="md:w-1/2 mb-8 md:mb-0">

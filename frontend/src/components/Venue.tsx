@@ -39,25 +39,25 @@ const Venue = () => {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="flex items-center">
-                <i className="fa-solid fa-chair text-yellow-400 mr-3 text-xl"></i>
+                <i className="fa-solid fa-chair text-red-500 mr-3 text-xl"></i>
                 <span className="text-white">120 places assises</span>
               </div>
               <div className="flex items-center">
-                <i className="fa-solid fa-martini-glass text-yellow-400 mr-3 text-xl"></i>
+                <i className="fa-solid fa-martini-glass text-red-500 mr-3 text-xl"></i>
                 <span className="text-white">Bar & snacks</span>
               </div>
               <div className="flex items-center">
-                <i className="fa-solid fa-wheelchair text-yellow-400 mr-3 text-xl"></i>
+                <i className="fa-solid fa-wheelchair text-red-500 mr-3 text-xl"></i>
                 <span className="text-white">Accès PMR</span>
               </div>
               <div className="flex items-center">
-                <i className="fa-solid fa-car text-yellow-400 mr-3 text-xl"></i>
+                <i className="fa-solid fa-car text-red-500 mr-3 text-xl"></i>
                 <span className="text-white">Parking à proximité</span>
               </div>
             </div>
 
             <span
-              className="inline-block bg-yellow-400 text-black px-6 py-3 rounded hover:bg-yellow-300 transition duration-300 mt-4 cursor-pointer"
+              className="inline-block bg-red-500 text-white px-6 py-3 rounded hover:bg-red-600 transition duration-300 mt-4 cursor-pointer"
               onClick={() => navigate("/le-lieu")}
             >
               Comment s'y rendre
@@ -67,7 +67,7 @@ const Venue = () => {
           <div className="md:w-1/2">
             <div className="relative h-[400px] rounded-lg overflow-hidden">
               {loading ? (
-                <div className="w-full h-full flex items-center justify-center text-yellow-400">
+                <div className="w-full h-full flex items-center justify-center text-red-500">
                   Chargement...
                 </div>
               ) : error ? (
@@ -88,7 +88,7 @@ const Venue = () => {
               )}
               <div className="absolute inset-0 bg-black bg-opacity-30"></div>
               <div className="absolute bottom-6 right-6">
-                <div className="bg-yellow-400 text-black px-4 py-2 rounded-lg font-bold">
+                <div className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">
                   Ouverture des portes 30 min avant le spectacle
                 </div>
               </div>

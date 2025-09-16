@@ -88,17 +88,7 @@ const Artists = () => {
                     <div className="absolute inset-0 flex flex-col justify-end p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
                       <h3 className="text-2xl font-bold text-white mb-2">{artist.name}</h3>
                       <p className="text-gray-300 mb-4 line-clamp-3">{artist.biographie}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-yellow-400">
-                          {artist.upcoming_shows} {artist.upcoming_shows > 1 ? 'spectacles' : 'spectacle'} à venir
-                        </span>
-                        <Link 
-                          to={`/spectacles?artiste=${artist.id}`}
-                          className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
-                        >
-                          Voir les spectacles
-                        </Link>
-                      </div>
+                      {/* Intentionnellement vide: suppression du bouton */}
                     </div>
                   </div>
                 </div>

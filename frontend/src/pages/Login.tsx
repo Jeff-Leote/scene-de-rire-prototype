@@ -67,17 +67,17 @@ const Login = () => {
       {/* Background effect elements */}
       <div className="absolute bottom-0 left-0 w-full h-[300px] opacity-10 pointer-events-none">
         <div className="absolute bottom-10 left-10 transform rotate-12">
-          <Mic className="w-[120px] h-[120px] text-yellow-400" />
+          <Mic className="w-[120px] h-[120px] text-red-500" />
         </div>
         <div className="absolute bottom-20 right-20 transform -rotate-6">
-          <Lightbulb className="w-[100px] h-[100px] text-yellow-400" />
+          <Lightbulb className="w-[100px] h-[100px] text-red-500" />
         </div>
       </div>
       
       {/* Minimal header */}
       <div id="minimal-header" className="w-full max-w-md mb-8">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-yellow-400 hover:text-yellow-300 transition flex items-center cursor-pointer">
+          <Link to="/" className="text-red-500 hover:text-red-400 transition flex items-center cursor-pointer">
             <ArrowLeft className="w-4 h-4 mr-2" />
             <span>Retour aux spectacles</span>
           </Link>
@@ -107,7 +107,7 @@ const Login = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400"
+              className="w-full bg-gray-800 border border-gray-700 text-white focus:ring-red-500"
               placeholder="votre@email.com"
             />
           </div>
@@ -123,7 +123,7 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 autoComplete="current-password"
-                className="w-full bg-gray-800 border border-gray-700 text-white focus:ring-yellow-400 pr-10"
+                className="w-full bg-gray-800 border border-gray-700 text-white focus:ring-red-500 pr-10"
                 placeholder="••••••••"
               />
               <button
@@ -149,17 +149,17 @@ const Login = () => {
               id="remember" 
               checked={formData.remember}
               onCheckedChange={handleCheckboxChange}
-              className="w-4 h-4 bg-gray-800 border-gray-700 text-yellow-400"
+              className="w-4 h-4 bg-gray-800 border-gray-700 text-red-500"
             />
             <label htmlFor="remember" className="ml-2 text-sm text-gray-300">Rester connecté</label>
-            <span className="ml-auto text-sm text-yellow-400 hover:text-yellow-300 cursor-pointer">Mot de passe oublié ?</span>
+            <span className="ml-auto text-sm text-red-500 hover:text-red-400 cursor-pointer">Mot de passe oublié ?</span>
           </div>
           
           {/* Login button */}
           <Button 
             type="submit" 
             disabled={isLoading}
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-3 px-4 rounded-md transition-colors duration-200 mb-6 flex justify-center items-center"
+            className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 mb-6 flex justify-center items-center"
           >
             {isLoading ? (
               <>
@@ -178,7 +178,7 @@ const Login = () => {
         
         {/* Create account button */}
         <Link to="/inscription">
-          <Button className="w-full border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-medium py-3 px-4 rounded-md transition-colors duration-200 mb-6 bg-transparent">
+          <Button className="w-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 mb-6 bg-transparent">
             Créer un compte
           </Button>
         </Link>
@@ -186,11 +186,11 @@ const Login = () => {
         {/* Social login options */}
         <div id="social-login" className="space-y-3 mb-4">
           <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium transition-colors duration-200 flex items-center justify-center">
-            <Mail className="w-5 h-5 mr-3 text-yellow-400" />
+            <Mail className="w-5 h-5 mr-3 text-red-500" />
             Continuer avec Google
           </Button>
           <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium transition-colors duration-200 flex items-center justify-center">
-            <Mail className="w-5 h-5 mr-3 text-yellow-400" />
+            <Mail className="w-5 h-5 mr-3 text-red-500" />
             Continuer avec Facebook
           </Button>
         </div>

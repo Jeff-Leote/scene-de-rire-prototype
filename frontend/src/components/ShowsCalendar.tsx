@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   format,
   startOfMonth,
@@ -24,6 +25,7 @@ type Spectacle = {
 };
 
 const ShowsCalendar = () => {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +64,19 @@ const ShowsCalendar = () => {
     return spectacleDateTime < now;
   };
 
+  const handleDateClick = (spectaclesForDay: Spectacle[]) => {
+    // Si il y a plusieurs spectacles, ne pas permettre le clic direct sur la date
+    if (spectaclesForDay.length === 1) {
+      navigate(`/spectacles/${spectaclesForDay[0].id}`);
+    }
+    // Si il y a plusieurs spectacles, ne rien faire - l'utilisateur doit choisir via le hover
+  };
+
+  const handleSpectacleClick = (spectacleId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Empêcher le clic sur la date
+    navigate(`/spectacles/${spectacleId}`);
+  };
+
   const renderDays = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
@@ -82,7 +97,7 @@ const ShowsCalendar = () => {
           isSameDay(parseISO(s.date_spectacle), day)
         );
 
-        let classes = "text-center p-2 rounded ";
+        let classes = "text-center py-3 px-2 rounded ";
         if (!isInCurrentMonth) {
           classes += "text-gray-600 ";
         } else if (isPast) {
@@ -94,16 +109,28 @@ const ShowsCalendar = () => {
         const content =
           spectaclesForDay.length > 0 ? (
             <div className="relative group">
-              <div className={`${spectaclesForDay.some(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle)) ? 'bg-yellow-200' : 'bg-yellow-400'} text-black rounded-full h-8 w-8 flex items-center justify-center mx-auto cursor-pointer`}>
+              <div 
+                className={`${spectaclesForDay.some(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle)) ? 'bg-red-200' : 'bg-red-500'} text-white rounded-full h-8 w-8 flex items-center justify-center mx-auto ${spectaclesForDay.length === 1 ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform duration-200`}
+                onClick={() => handleDateClick(spectaclesForDay)}
+              >
                 {format(day, "d")}
               </div>
-              <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs p-2 rounded whitespace-nowrap">
-                {spectaclesForDay
-                  .map(
-                    (s) =>
-                      `${s.artiste_name} - ${formatHeure(s.heure_spectacle)}`
-                  )
-                  .join("\n")}
+              <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs p-3 rounded whitespace-nowrap leading-6 min-w-max">
+                <div className="space-y-2">
+                  {spectaclesForDay.map((s, index) => (
+                    <div 
+                      key={index} 
+                      className="text-center cursor-pointer hover:bg-gray-700 p-2 rounded transition-colors duration-200"
+                      onClick={(e) => handleSpectacleClick(s.id, e)}
+                    >
+                      <div className="font-semibold text-red-400 hover:text-red-300">{s.title}</div>
+                      <div className="text-gray-300">{formatHeure(s.heure_spectacle)}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-center mt-2 text-gray-400 text-xs">
+                  {spectaclesForDay.length > 1 ? "Choisissez un spectacle ci-dessus" : "Cliquez pour voir les détails"}
+                </div>
               </div>
             </div>
           ) : (
@@ -120,7 +147,7 @@ const ShowsCalendar = () => {
       }
 
       rows.push(
-        <div className="grid grid-cols-7 gap-2" key={day.toString()}>
+        <div className="grid grid-cols-7 gap-3" key={day.toString()}>
           {days}
         </div>
       );
@@ -165,19 +192,19 @@ const ShowsCalendar = () => {
   }
 
   return (
-    <section id="calendrier-spectacles" className="py-16">
+    <section id="calendrier-spectacles" className="py-16 min-h-[10vh] text-lg">
       <div className="container mx-auto px-6">
         <h2 className="text-3xl font-bold text-white mb-8">
           Calendrier des spectacles
         </h2>
-        <div className="bg-gray-900 rounded-lg p-6">
+        <div className="bg-gray-900 rounded-xl p-8 md:p-10 min-h-[40vh] border border-gray-800 shadow-2xl">
           {renderHeader()}
 
           <div className="grid grid-cols-7 gap-2 mb-4">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
               <div
                 key={day}
-                className="text-center text-gray-500 text-sm font-semibold"
+                className="text-center text-gray-500 text-base font-semibold"
               >
                 {day}
               </div>

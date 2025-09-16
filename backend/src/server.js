@@ -79,8 +79,8 @@ app.use(cors({
     console.warn(`❌ CORS - Origine non autorisée: ${origin}`);
     console.log(`📋 Origines autorisées:`, allowedOrigins);
     
-    const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
-    return callback(new Error(msg), false);
+      const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
+      return callback(new Error(msg), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -147,7 +147,7 @@ app.use((req, res, next) => {
   
   // Log minimal en production pour éviter le spam
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   }
   
   // Monitoring des temps de réponse
@@ -218,7 +218,7 @@ app.get('/api/health', async (req, res) => {
 if (routes) {
   // Protection CSRF pour les routes API seulement
   app.use("/api", csrfProtection);
-  app.use("/api", routes);
+app.use("/api", routes);
 } else {
   // Routes de fallback sans base de données
   app.get("/api/health", (req, res) => {
@@ -295,13 +295,92 @@ app.get('/favicon.ico', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=86400');
   return res.status(204).end();
 });
-app.get('/robots.txt', (req, res) => {
-  res.setHeader('Cache-Control', 'public, max-age=86400');
-  return res.status(204).end();
+app.get('/robots.txt', async (req, res) => {
+  try {
+    const protocol = (req.headers['x-forwarded-proto'] || req.protocol || 'https').toString();
+    const host = (req.headers['x-forwarded-host'] || req.headers.host || 'www.espacecomedie.fr').toString();
+    const baseUrl = `${protocol}://${host}`;
+
+    const lines = [
+      'User-agent: *',
+      'Allow: /',
+      // Éviter l'indexation d'URLs d'administration et d'API
+      'Disallow: /api/',
+      'Disallow: /dashboard',
+      'Disallow: /connexion?redirect=*',
+      '',
+      `Sitemap: ${baseUrl}/sitemap.xml`
+    ];
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.status(200).send(lines.join('\n'));
+  } catch (e) {
+    return res.status(200).type('text/plain').send('User-agent: *\nAllow: /');
+  }
 });
-app.get('/sitemap.xml', (req, res) => {
-  res.setHeader('Cache-Control', 'public, max-age=86400');
-  return res.status(204).end();
+
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const protocol = (req.headers['x-forwarded-proto'] || req.protocol || 'https').toString();
+    const host = (req.headers['x-forwarded-host'] || req.headers.host || 'www.espacecomedie.fr').toString();
+    const baseUrl = `${protocol}://${host}`;
+
+    // Routes statiques publiques
+    const staticRoutes = [
+      '/',
+      '/spectacles',
+      '/le-lieu',
+      '/artistes',
+      '/contact',
+      '/connexion',
+      '/inscription'
+    ];
+
+    // Récupération des spectacles pour générer les URLs dynamiques /spectacles/:id
+    let dynamicRoutes = [];
+    try {
+      const db = require('./db');
+      const [rows] = await db.query(`
+        SELECT id, date_spectacle
+        FROM spectacle
+        ORDER BY date_spectacle DESC
+        LIMIT 500
+      `);
+      dynamicRoutes = rows.map(r => ({
+        loc: `/spectacles/${r.id}`,
+        lastmod: r.date_spectacle ? new Date(r.date_spectacle).toISOString().split('T')[0] : undefined
+      }));
+    } catch (err) {
+      console.warn('⚠️ Sitemap: impossible de charger les spectacles depuis la DB:', err.message);
+    }
+
+    const urls = [
+      // Statiques
+      ...staticRoutes.map(path => ({ loc: path })),
+      // Dynamiques
+      ...dynamicRoutes
+    ];
+
+    const urlset = urls.map(u => {
+      const loc = `${baseUrl}${u.loc}`;
+      const lastmodTag = u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : '';
+      // Priorités simples: page d'accueil > sections > détails
+      const priority = u.loc === '/' ? '1.0' : (u.loc.startsWith('/spectacles/') ? '0.6' : '0.8');
+      const changefreq = u.loc === '/' ? 'daily' : (u.loc.startsWith('/spectacles/') ? 'weekly' : 'weekly');
+      return `<url><loc>${loc}</loc>${lastmodTag}<changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+    }).join('');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urlset}</urlset>`;
+
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(xml);
+  } catch (e) {
+    console.error('❌ Erreur génération sitemap:', e);
+    return res.status(500).type('text/plain').send('Sitemap generation error');
+  }
 });
 // Vite uniquement en dev; en prod l'asset est fingerprinté
 app.get('/vite.svg', (req, res) => {

@@ -15,15 +15,12 @@ router.get("/", async (req, res) => {
         spectacle.title,
         spectacle.img,
         spectacle.description,
+        spectacle.pitch_description,
         spectacle.date_spectacle,
         spectacle.heure_spectacle,
-        spectacle.prix,
         spectacle.lieu,
-        spectacle.artiste_id,
-        artiste.name AS artiste_name,
-        artiste.photo AS artiste_photo
+        spectacle.lien_spectacle
       FROM spectacle
-      JOIN artiste ON spectacle.artiste_id = artiste.id
       WHERE spectacle.date_spectacle >= CURDATE()
       ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ? OFFSET ?
@@ -62,15 +59,12 @@ router.get("/upcoming", async (req, res) => {
         spectacle.title,
         spectacle.img,
         spectacle.description,
+        spectacle.pitch_description,
         spectacle.date_spectacle,
         spectacle.heure_spectacle,
-        spectacle.prix,
         spectacle.lieu,
-        spectacle.artiste_id,
-        artiste.name AS artiste_name,
-        artiste.photo AS artiste_photo
+        spectacle.lien_spectacle
       FROM spectacle
-      JOIN artiste ON spectacle.artiste_id = artiste.id
       WHERE spectacle.date_spectacle >= CURDATE()
       ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ?
@@ -93,15 +87,12 @@ router.get("/all", async (req, res) => {
         spectacle.title,
         spectacle.img,
         spectacle.description,
+        spectacle.pitch_description,
         spectacle.date_spectacle,
         spectacle.heure_spectacle,
-        spectacle.prix,
         spectacle.lieu,
-        spectacle.artiste_id,
-        artiste.name AS artiste_name,
-        artiste.photo AS artiste_photo
+        spectacle.lien_spectacle
       FROM spectacle
-      JOIN artiste ON spectacle.artiste_id = artiste.id
       ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
     `);
 
@@ -121,15 +112,12 @@ router.get("/:id", async (req, res) => {
         spectacle.title,
         spectacle.img,
         spectacle.description,
+        spectacle.pitch_description,
         spectacle.date_spectacle,
         spectacle.heure_spectacle,
-        spectacle.prix,
         spectacle.lieu,
-        spectacle.artiste_id,
-        artiste.name AS artiste_name,
-        artiste.photo AS artiste_photo
+        spectacle.lien_spectacle
       FROM spectacle
-      JOIN artiste ON spectacle.artiste_id = artiste.id
       WHERE spectacle.id = ?
     `, [req.params.id]);
 

@@ -198,7 +198,7 @@ const MyAccount = () => {
             </div>
             <Link 
               to="/" 
-              className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300 flex items-center space-x-2"
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 flex items-center space-x-2"
             >
               <span>←</span>
               <span>Retour à l'accueil</span>
@@ -207,7 +207,7 @@ const MyAccount = () => {
 
           {/* Carte principale */}
           <div className="bg-gray-900 rounded-lg overflow-hidden mb-8">
-            <div className="relative h-48 bg-gradient-to-r from-yellow-400 to-yellow-600">
+            <div className="relative h-48 bg-gradient-to-r from-red-500 to-red-600">
               <div className="absolute bottom-0 left-0 p-8">
                 <div className="flex items-center space-x-4">
                   <div className="w-24 h-24 rounded-full bg-gray-900 border-4 border-white overflow-hidden">
@@ -233,7 +233,7 @@ const MyAccount = () => {
                     <h3 className="text-xl font-semibold text-white">Informations Personnelles</h3>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                     >
                       Modifier
                     </button>
@@ -280,7 +280,7 @@ const MyAccount = () => {
                         name="civility"
                         value={formData.civility}
                         onChange={handleChange}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
                         disabled={isLoading}
                       >
                         <option value="M.">M.</option>
@@ -295,7 +295,7 @@ const MyAccount = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
                         disabled={isLoading}
                       />
                     </div>
@@ -306,7 +306,7 @@ const MyAccount = () => {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleChange}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
                         disabled={isLoading}
                       />
                     </div>
@@ -317,7 +317,7 @@ const MyAccount = () => {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleChange}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-yellow-400"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
                         disabled={isLoading}
                       />
                     </div>
@@ -326,7 +326,7 @@ const MyAccount = () => {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      className="bg-yellow-400 text-black px-6 py-2 rounded hover:bg-yellow-300 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={isLoading}
                     >
                       {isLoading ? 'Enregistrement...' : 'Enregistrer'}
@@ -345,7 +345,7 @@ const MyAccount = () => {
                 <button
                   onClick={loadReservations}
                   disabled={loadingReservations}
-                  className="text-yellow-400 hover:text-yellow-300 transition duration-300"
+                  className="text-red-500 hover:text-red-400 transition duration-300"
                 >
                   <span className={`${loadingReservations ? 'animate-spin' : ''}`}>🔄</span>
                 </button>
@@ -353,7 +353,7 @@ const MyAccount = () => {
               
               {loadingReservations ? (
                 <div className="text-center py-8">
-                  <span className="inline-block animate-spin text-2xl text-yellow-400 mb-4">⏳</span>
+                  <span className="inline-block animate-spin text-2xl text-red-500 mb-4">⏳</span>
                   <p className="text-gray-400">Chargement des réservations...</p>
                 </div>
               ) : reservations.length > 0 ? (
@@ -398,7 +398,7 @@ const MyAccount = () => {
                             </div>
                             <div>
                               <p className="text-gray-500">Prix total</p>
-                              <p className="text-yellow-400 font-semibold">{reservation.montant_paye || reservation.prix * reservation.nb_places}€</p>
+                              <p className="text-red-500 font-semibold">{reservation.montant_paye || reservation.prix * reservation.nb_places}€</p>
                             </div>
                           </div>
                           <div className="mt-3 pt-3 border-t border-gray-700">
@@ -437,7 +437,7 @@ const MyAccount = () => {
                     <p className="text-gray-400 mb-4">Vous n'avez pas encore de réservations</p>
                     <Link 
                       to="/spectacles"
-                      className="inline-block bg-yellow-400 text-black px-6 py-2 rounded hover:bg-yellow-300 transition duration-300"
+                      className="inline-block bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 transition duration-300"
                     >
                       Découvrir les spectacles
                     </Link>
