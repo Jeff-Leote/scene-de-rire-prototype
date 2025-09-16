@@ -19,7 +19,7 @@ const Dashboard = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'featured' | 'lieu' | 'users' | 'photos' | 'newsletter' | 'settings' | 'maintenance'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'newsletter' | 'settings' | 'maintenance'>('spectacles');
   const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean>(false);
   const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -34,23 +34,25 @@ const Dashboard = () => {
   const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user', id: number } | null>(null);
   const [spectacleFormData, setSpectacleFormData] = useState({
     title: '',
-    img: '',
+    img: '/assets/img/spectacles/',
     description: '',
     date_spectacle: '',
     heure_spectacle: '',
     lieu: '',
-    lien_spectacle: ''
+    lien_spectacle: '',
+    recurrence_enabled: false,
+    recurrence_weekday: 0,
+    recurrence_time: '17:00',
+    recurrence_start: '',
+    recurrence_end: ''
   });
   const [artistFormData, setArtistFormData] = useState({
     name: '',
-    photo: '',
-    biographie: ''
+    photo: ''
   });
-  const [featuredArtist, setFeaturedArtist] = useState<FeaturedArtist | null>(null);
-  const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
+  // L'affiche retiré
   const [newArtist, setNewArtist] = useState<ArtistFormData>({
     name: '',
-    biographie: '',
     photo: ''
   });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -93,13 +95,7 @@ const Dashboard = () => {
         const artistsData = await api.get<Artist[]>('/api/admin/artistes');
         setArtists(artistsData);
 
-        // Récupérer l'artiste à l'affiche
-        try {
-          const featuredData = await api.get<FeaturedArtist>('/api/admin/featured');
-          setFeaturedArtist(featuredData);
-        } catch {
-          // Ignorer les erreurs de récupération de l'artiste à l'affiche
-        }
+        // Section L'affiche retirée
 
         // Réservations supprimées
 
@@ -192,7 +188,12 @@ const Dashboard = () => {
       date_spectacle: formatDateForInput(spectacle.date_spectacle),
       heure_spectacle: formatTimeForInput(spectacle.heure_spectacle),
       lieu: spectacle.lieu,
-      lien_spectacle: spectacle.lien_spectacle || ''
+      lien_spectacle: spectacle.lien_spectacle || '',
+      recurrence_enabled: false,
+      recurrence_weekday: 0,
+      recurrence_time: '17:00',
+      recurrence_start: '',
+      recurrence_end: ''
     });
     setIsSpectacleModalOpen(true);
   };
@@ -201,8 +202,7 @@ const Dashboard = () => {
     setSelectedArtist(artist);
     setArtistFormData({
       name: artist.name,
-      photo: artist.photo,
-      biographie: artist.biographie
+      photo: artist.photo
     });
     setIsArtistModalOpen(true);
   };
@@ -228,12 +228,17 @@ const Dashboard = () => {
     setSelectedSpectacle(null);
     setSpectacleFormData({
       title: '',
-      img: '',
+      img: '/assets/img/spectacles/',
       description: '',
       date_spectacle: '',
       heure_spectacle: '',
       lieu: '',
-      lien_spectacle: ''
+      lien_spectacle: '',
+      recurrence_enabled: false,
+      recurrence_weekday: 0,
+      recurrence_time: '17:00',
+      recurrence_start: '',
+      recurrence_end: ''
     });
     setIsSpectacleModalOpen(true);
   };
@@ -243,8 +248,7 @@ const Dashboard = () => {
     setSelectedArtist(null);
     setArtistFormData({
       name: '',
-      photo: '',
-      biographie: ''
+      photo: ''
     });
     setIsArtistModalOpen(true);
   };
@@ -258,8 +262,27 @@ const Dashboard = () => {
         ? `${API_URL}/api/admin/spectacles`
         : `${API_URL}/api/admin/spectacles/${selectedSpectacle?.id}`;
       
-      const requestBody = {
-        ...spectacleFormData
+      const requestBody = spectacleFormData.recurrence_enabled ? {
+        title: spectacleFormData.title,
+        img: spectacleFormData.img,
+        description: spectacleFormData.description,
+        lieu: spectacleFormData.lieu,
+        lien_spectacle: spectacleFormData.lien_spectacle || null,
+        recurrence: {
+          enabled: true,
+          weekday: Number(spectacleFormData.recurrence_weekday),
+          time: spectacleFormData.recurrence_time,
+          startDate: spectacleFormData.recurrence_start,
+          endDate: spectacleFormData.recurrence_end,
+        }
+      } : {
+        title: spectacleFormData.title,
+        img: spectacleFormData.img,
+        description: spectacleFormData.description,
+        date_spectacle: spectacleFormData.date_spectacle,
+        heure_spectacle: spectacleFormData.heure_spectacle,
+        lieu: spectacleFormData.lieu,
+        lien_spectacle: spectacleFormData.lien_spectacle || null,
       };
 
 // Avoid logging credentials in plain text.
@@ -420,44 +443,11 @@ console.debug('Spectacle request:', {
     }
   };
 
-  const handleSetFeaturedArtist = async (artist: Artist) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/api/admin/featured`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ artist_id: artist.id })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || 'Erreur lors de la mise à jour de l\'artiste à l\'affiche');
-      }
-
-      setFeaturedArtist(data);
-      toast.success('Artiste à l\'affiche mis à jour avec succès');
-      setIsFeaturedModalOpen(false);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
-    }
-  };
+  // L'affiche: fonctionnalités retirées
 
   const handleAddArtist = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newArtist.name || !newArtist.biographie || !newArtist.photo) {
+    if (!newArtist.name || !newArtist.photo) {
       toast.error('Tous les champs sont requis');
       return;
     }
@@ -493,7 +483,7 @@ console.debug('Spectacle request:', {
       }
 
       setArtists([...artists, data]);
-      setNewArtist({ name: '', biographie: '', photo: '' });
+      setNewArtist({ name: '', photo: '' });
       setIsAddModalOpen(false);
       toast.success('Artiste ajouté avec succès');
     } catch (err) {
@@ -509,7 +499,6 @@ console.debug('Spectacle request:', {
     try {
       const formData = new FormData();
       formData.append('name', selectedArtist.name);
-      formData.append('biographie', selectedArtist.biographie);
       
       // Gestion des photos
       const photoInput = document.querySelector('input[name="photo"]') as HTMLInputElement;
@@ -911,16 +900,7 @@ const handleDeleteLieu = async (id: number) => {
             >
               Artistes
             </button>
-            <button
-              onClick={() => setActiveTab('featured')}
-              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'featured'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
-              } transition duration-300`}
-            >
-              L'affiche
-            </button>
+            {/* Onglet L'affiche retiré */}
             {/* Onglet Réservations supprimé */}
             <button
               onClick={() => setActiveTab('lieu')}
@@ -1011,34 +991,7 @@ const handleDeleteLieu = async (id: number) => {
         </div>
 
         {/* Content */}
-        {activeTab === 'featured' && (
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Artiste à l'affiche (automatique)</h2>
-            {featuredArtist ? (
-              <div className="flex items-start space-x-6">
-                <img 
-                  src={buildImgSrc('photo_artiste', featuredArtist.photo)} 
-                  alt={featuredArtist.name} 
-                  className="w-48 h-48 object-cover rounded-lg"
-                  onError={onImgErrorSwap}
-                />
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-2">{featuredArtist.name}</h3>
-                  <p className="text-gray-400 mb-4">{featuredArtist.biographie}</p>
-                  {featuredArtist.next_show && (
-                    <div className="mt-2 text-sm text-red-500">
-                      Prochain spectacle : {featuredArtist.next_show.title} le {new Date(featuredArtist.next_show.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {featuredArtist.next_show.time?.slice(0,5)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) :
-              <div className="text-center py-8">
-                <p className="text-gray-400 mb-4">Aucun artiste n'est actuellement à l'affiche</p>
-              </div>
-            }
-          </div>
-        )}
+        {/* Section L'affiche retirée */}
 
         {activeTab === 'spectacles' && (
           spectacles.length === 0 ? (
@@ -1085,7 +1038,6 @@ const handleDeleteLieu = async (id: number) => {
                   <img src={buildImgSrc('photo_artiste', artist.photo)} alt={artist.name} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
-                    <p className="text-gray-400 mb-4 line-clamp-3">{artist.biographie}</p>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <button 
                         onClick={() => handleEditArtistClick(artist)}
@@ -1380,15 +1332,44 @@ const handleDeleteLieu = async (id: number) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-white mb-2">Image URL</label>
-                  <input
-                    type="text"
-                    name="img"
-                    value={spectacleFormData.img}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
+                  <label className="block text-white mb-2">Image (WEBP recommandé)</label>
+                  <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const token = localStorage.getItem('token');
+                          const form = new FormData();
+                          form.append('file', file);
+                          const res = await fetch(`${API_URL}/api/admin/upload/spectacle-image`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` },
+                            body: form
+                          });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.error || 'Upload échoué');
+                          setSpectacleFormData(prev => ({ ...prev, img: data.path }));
+                          toast.success('Image téléversée');
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : 'Erreur upload');
+                        }
+                      }}
+                      className="bg-gray-700 text-white rounded px-4 py-2 w-full md:w-auto"
+                    />
+                    <input
+                      type="text"
+                      name="img"
+                      value={spectacleFormData.img}
+                      onChange={handleSpectacleInputChange}
+                      className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                      placeholder="/assets/img/spectacles/mon_image.webp"
+                      required
+                    />
+                  </div>
+                  <p className="text-gray-400 text-xs mt-2">Max 5 Mo, conversion en .webp côté serveur.</p>
                 </div>
                 <div>
                   <label className="block text-white mb-2">Description</label>
@@ -1401,29 +1382,88 @@ const handleDeleteLieu = async (id: number) => {
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-white mb-2">Date</label>
-                  <input
-                    type="date"
-                    name="date_spectacle"
-                    value={spectacleFormData.date_spectacle}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
+                <div className="bg-gray-900 rounded p-4 space-y-3">
+                  <label className="inline-flex items-center gap-2 text-white">
+                    <input
+                      type="checkbox"
+                      checked={spectacleFormData.recurrence_enabled}
+                      onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_enabled: e.target.checked }))}
+                    />
+                    Ajouter en récurrence (hebdomadaire)
+                  </label>
+                  {!spectacleFormData.recurrence_enabled ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-white mb-2">Date</label>
+                        <input
+                          type="date"
+                          name="date_spectacle"
+                          value={spectacleFormData.date_spectacle}
+                          onChange={handleSpectacleInputChange}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-2">Heure</label>
+                        <input
+                          type="time"
+                          name="heure_spectacle"
+                          value={spectacleFormData.heure_spectacle}
+                          onChange={handleSpectacleInputChange}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                          required
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-white mb-2">Jour de la semaine</label>
+                        <select
+                          value={spectacleFormData.recurrence_weekday}
+                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_weekday: Number(e.target.value) }))}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                        >
+                          <option value={1}>Lundi</option>
+                          <option value={2}>Mardi</option>
+                          <option value={3}>Mercredi</option>
+                          <option value={4}>Jeudi</option>
+                          <option value={5}>Vendredi</option>
+                          <option value={6}>Samedi</option>
+                          <option value={0}>Dimanche</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-white mb-2">Heure</label>
+                        <input
+                          type="time"
+                          value={spectacleFormData.recurrence_time}
+                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_time: e.target.value }))}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-2">Début</label>
+                        <input
+                          type="date"
+                          value={spectacleFormData.recurrence_start}
+                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_start: e.target.value }))}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-2">Fin</label>
+                        <input
+                          type="date"
+                          value={spectacleFormData.recurrence_end}
+                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_end: e.target.value }))}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-white mb-2">Heure</label>
-                  <input
-                    type="time"
-                    name="heure_spectacle"
-                    value={spectacleFormData.heure_spectacle}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
-                </div>
-                {/* Champ Prix supprimé */}
                 <div>
                   <label className="block text-white mb-2">Lien vers la billetterie</label>
                   <input
@@ -1577,17 +1617,7 @@ const handleDeleteLieu = async (id: number) => {
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-white mb-2">Biographie</label>
-                  <textarea
-                    name="biographie"
-                    value={artistFormData.biographie}
-                    onChange={handleArtistInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    rows={6}
-                    required
-                  />
-                </div>
+                {/* Champ Biographie retiré */}
                 <div className="flex justify-end space-x-4 mt-6">
                   <button
                     type="button"
@@ -1645,40 +1675,7 @@ const handleDeleteLieu = async (id: number) => {
           </div>
         )}
 
-        {/* Modal de sélection de l'artiste à l'affiche */}
-        {isFeaturedModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">Sélectionner l'artiste à l'affiche</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
-                {artists.map((artist) => (
-                  <div
-                    key={artist.id}
-                    className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition duration-300"
-                    onClick={() => handleSetFeaturedArtist(artist)}
-                  >
-                    <img
-                      src={buildImgSrc('photo_artiste', artist.photo)}
-                      alt={artist.name}
-                      className="w-full h-32 object-cover rounded-lg mb-3"
-                      onError={onImgErrorSwap}
-                    />
-                    <h3 className="text-lg font-bold text-white">{artist.name}</h3>
-                    <p className="text-gray-400 text-sm line-clamp-2">{artist.biographie}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => setIsFeaturedModalOpen(false)}
-                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300"
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modal L'affiche retiré */}
 
         {/* Modal ajout/modif image lieu */}
         {isLieuModalOpen && selectedLieu && (

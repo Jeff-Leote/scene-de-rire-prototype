@@ -33,13 +33,11 @@ export interface Artist {
   id: number;
   name: string;
   photo: string;
-  biographie: string;
   upcoming_shows: number;
 }
 
 export interface ArtistFormData {
   name: string;
-  biographie: string;
   photo: string;
 }
 
@@ -159,7 +157,6 @@ export interface FeaturedArtist {
   id: number;
   name: string;
   photo: string;
-  biographie: string;
   next_show?: {
     id: number;
     date: string;

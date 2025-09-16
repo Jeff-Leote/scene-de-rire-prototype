@@ -212,21 +212,31 @@ const csrfProtection = (req, res, next) => {
   }
   
   // Skip CSRF pour les API stateless (JWT) et les routes publiques
-  if (fullPath.startsWith('/api/auth/') || 
+  const authHeader = req.get('Authorization') || '';
+  const isJwt = authHeader.startsWith('Bearer ');
+  const originalUrl = req.originalUrl || '';
+  const isAdminPath = fullPath.startsWith('/api/admin/') || originalUrl.includes('/api/admin/');
+  if (isJwt ||
+      fullPath.startsWith('/api/auth/') || 
       fullPath === '/api/health' ||
       fullPath === '/api/spectacles' ||
       fullPath === '/api/artistes' ||
       fullPath === '/api/lieu' ||
       fullPath === '/api/contact' ||
+      // Admin content CRUD (protégé par JWT)
+      isAdminPath ||
       // 🔧 EXEMPTION POUR LES PAIEMENTS STRIPE
       fullPath === '/api/reservations/checkout' ||
       fullPath.startsWith('/api/reservations/')) {
-    
-    // 🔧 LOGGING POUR DÉBOGUER LES EXEMPTIONS CSRF
+
+    // 🔧 LOGGING POUR DÉBOGUER LES EXEMPTIONS CSRF (non verbeux)
+    if (isAdminPath && process.env.NODE_ENV !== 'production') {
+      console.log(`🛡️ CSRF exempté (admin): ${req.method} ${originalUrl}`);
+    }
     if (fullPath.includes('reservations')) {
       console.log(`💳 CSRF exempté pour paiement: ${req.method} ${fullPath}`);
     }
-    
+
     return next();
   }
   

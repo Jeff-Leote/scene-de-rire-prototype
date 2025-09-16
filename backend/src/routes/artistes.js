@@ -36,7 +36,6 @@ router.get('/featured', async (req, res) => {
       id: 1,
       name: "Artiste à l'affiche",
       photo: "default-artist.jpg",
-      biographie: "Artiste en vedette pour ce spectacle",
       next_show: {
         id: spectacle.next_show_id,
         title: spectacle.next_show_title,

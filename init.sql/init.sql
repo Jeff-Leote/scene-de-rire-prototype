@@ -49,7 +49,6 @@ CREATE TABLE newsletter_subscribers (
 CREATE TABLE artiste (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL,
-  biographie TEXT NOT NULL,
   photo VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -150,10 +149,10 @@ INSERT INTO user (id, civility, nom, prenom, email, password, dateNaissance, rol
 (8, 'M.', 'Test', 'Jean', 'jean.test@example.com', '$2a$10$k.M7bXp9jJ8G5Qz.cO9dZ.D9uWwYqO/PzM4jG1xRn2qO7m.m.z0qC', '1990-01-01', 'utilisateur', TRUE);
 
 -- 2. Artistes
-INSERT INTO artiste (id, name, biographie, photo) VALUES
-(1, 'Ilyes', 'Artiste comique énergique et charismatique, Ilyes apporte une fraîcheur moderne au stand-up. Son humour percutant et sa présence scénique en font un artiste incontournable.', 'TCC ILYES DDD.JPEG'),
-(2, 'Paul', 'Comédien expérimenté avec un sens de l''humour aiguisé. Paul maîtrise l''art de faire rire avec des histoires personnelles et des observations sociales pertinentes.', 'TCC paul mi.JPEG'),
-(3, 'Tom', 'Artiste comique polyvalent et créatif, Tom excelle dans l''improvisation et l''interaction avec le public. Son style décontracté et son charisme naturel font de lui un favori du public.', 'TCC TOM BOUBOU.JPEG');
+INSERT INTO artiste (id, name, photo) VALUES
+(1, 'Ilyes', 'TCC ILYES DDD.JPEG'),
+(2, 'Paul', 'TCC paul mi.JPEG'),
+(3, 'Tom', 'TCC TOM BOUBOU.JPEG');
 
 -- 3. Spectacles de test
 

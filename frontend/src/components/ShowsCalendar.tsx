@@ -80,78 +80,95 @@ const ShowsCalendar = () => {
   const renderDays = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-    const rows = [];
-    let days = [];
-    let day = startDate;
+    const daysInMonth = Number(format(monthEnd, "d"));
+    const firstWeekday = ((Number(format(monthStart, "i")) + 6) % 7); // 0=Lun … 6=Dim (aligné sur notre header)
 
-    while (day <= endDate) {
-      for (let i = 0; i < 7; i++) {
-        const now = new Date();
-        const isPast = isBefore(day, new Date(format(now, "yyyy-MM-dd")));
-        const isInCurrentMonth = isSameMonth(day, monthStart);
+    const cells: JSX.Element[] = [];
 
-        const spectaclesForDay = spectacles.filter((s) =>
-          isSameDay(parseISO(s.date_spectacle), day)
-        );
-
-        let classes = "text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded ";
-        if (!isInCurrentMonth) {
-          classes += "text-gray-600 ";
-        } else if (isPast) {
-          classes += "text-gray-500 ";
-        } else {
-          classes += "text-white ";
-        }
-
-        const content =
-          spectaclesForDay.length > 0 ? (
-            <div className="relative group">
-              <div 
-                className={`${spectaclesForDay.some(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle)) ? 'bg-red-200' : 'bg-red-500'} text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 flex items-center justify-center mx-auto ${spectaclesForDay.length === 1 ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform duration-200 text-[10px] sm:text-xs md:text-sm`}
-                onClick={() => handleDateClick(spectaclesForDay)}
-              >
-                {format(day, "d")}
-              </div>
-              <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] sm:text-xs p-2 sm:p-3 rounded whitespace-nowrap leading-5 sm:leading-6 min-w-max">
-                <div className="space-y-1 sm:space-y-2">
-                  {spectaclesForDay.map((s, index) => (
-                    <div 
-                      key={index} 
-                      className="text-center cursor-pointer hover:bg-gray-700 p-1.5 sm:p-2 rounded transition-colors duration-200"
-                      onClick={(e) => handleSpectacleClick(s.id, e)}
-                    >
-                      <div className="font-semibold text-red-400 hover:text-red-300">{s.title}</div>
-                      <div className="text-gray-300">{formatHeure(s.heure_spectacle)}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="text-center mt-1 sm:mt-2 text-gray-400 text-[10px] sm:text-xs">
-                  {spectaclesForDay.length > 1 ? "Choisissez un spectacle ci-dessus" : "Cliquez pour voir les détails"}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-[10px] sm:text-xs md:text-sm">{format(day, "d")}</div>
-          );
-
-        days.push(
-          <div key={day.toString()} className={classes}>
-            {content}
-          </div>
-        );
-
-        day = addDays(day, 1);
-      }
-
-      rows.push(
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-3" key={day.toString()}>
-          {days}
+    // Padding avant le 1er jour du mois
+    for (let i = 0; i < firstWeekday; i += 1) {
+      cells.push(
+        <div key={`pad-start-${i}`} className="text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded text-gray-600">
+          <div className="h-5 sm:h-6 md:h-8" />
         </div>
       );
-      days = [];
+    }
+
+    // Jours du mois 1..N
+    for (let d = 1; d <= daysInMonth; d += 1) {
+      const dateObj = new Date(monthStart);
+      dateObj.setDate(d);
+
+      const now = new Date();
+      const isPast = isBefore(dateObj, new Date(format(now, "yyyy-MM-dd")));
+
+      const spectaclesForDay = spectacles.filter((s) =>
+        isSameDay(parseISO(s.date_spectacle), dateObj)
+      );
+
+      let classes = "text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded ";
+      if (isPast) classes += "text-gray-500 "; else classes += "text-white ";
+
+      const content = (
+        spectaclesForDay.length > 0 ? (
+          <div className="relative group">
+            <div 
+              className={`${spectaclesForDay.some(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle)) ? 'bg-red-200' : 'bg-red-500'} text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 flex items-center justify-center mx-auto ${spectaclesForDay.length === 1 ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform duration-200 text-[10px] sm:text-xs md:text-sm`}
+              onClick={() => handleDateClick(spectaclesForDay)}
+            >
+              {d}
+            </div>
+            <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] sm:text-xs p-2 sm:p-3 rounded whitespace-nowrap leading-5 sm:leading-6 min-w-max">
+              <div className="space-y-1 sm:space-y-2">
+                {spectaclesForDay.map((s, index) => (
+                  <div 
+                    key={index} 
+                    className="text-center cursor-pointer hover:bg-gray-700 p-1.5 sm:p-2 rounded transition-colors duration-200"
+                    onClick={(e) => handleSpectacleClick(s.id, e)}
+                  >
+                    <div className="font-semibold text-red-400 hover:text-red-300">{s.title}</div>
+                    <div className="text-gray-300">{formatHeure(s.heure_spectacle)}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-1 sm:mt-2 text-gray-400 text-[10px] sm:text-xs">
+                {spectaclesForDay.length > 1 ? "Choisissez un spectacle ci-dessus" : "Cliquez pour voir les détails"}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-[10px] sm:text-xs md:text-sm">{d}</div>
+        )
+      );
+
+      cells.push(
+        <div key={`day-${d}`} className={classes}>
+          {content}
+        </div>
+      );
+    }
+
+    // Padding de fin pour compléter la dernière semaine
+    const remainder = cells.length % 7;
+    if (remainder !== 0) {
+      for (let i = 0; i < (7 - remainder); i += 1) {
+        cells.push(
+          <div key={`pad-end-${i}`} className="text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded text-gray-600">
+            <div className="h-5 sm:h-6 md:h-8" />
+          </div>
+        );
+      }
+    }
+
+    // Regrouper en lignes de 7
+    const rows: JSX.Element[] = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      rows.push(
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-3" key={`row-${i}`}>
+          {cells.slice(i, i + 7)}
+        </div>
+      );
     }
 
     return rows;

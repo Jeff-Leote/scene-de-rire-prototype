@@ -52,6 +52,7 @@ services:
       - ./backend/node_modules:/app/node_modules
       - backend_logs:/app/logs
       - backend_uploads:/app/uploads
+      - ./frontend/public/assets/img/spectacles:/app/frontend_public_assets/spectacles
     depends_on:
       - db
 
