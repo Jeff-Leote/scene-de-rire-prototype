@@ -34,7 +34,7 @@ const Venue = () => {
           <div className="md:w-1/2">
             <h2 className="text-3xl font-bold text-white mb-6">Notre salle</h2>
             <p className="text-gray-300 mb-6">
-              Située en plein cœur de la ville, notre salle offre une expérience intime et chaleureuse pour apprécier les meilleurs humoristes dans des conditions optimales. Avec une acoustique parfaite et une visibilité exceptionnelle depuis chaque siège, chaque spectacle devient un moment privilégié.
+              En plein cœur de Lille, notre salle propose une ambiance conviviale et chaleureuse pour profiter des meilleurs humoristes dans d’excellentes conditions. Grâce à une acoustique soignée et une visibilité optimale depuis chaque place, chaque spectacle devient un moment unique.
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
