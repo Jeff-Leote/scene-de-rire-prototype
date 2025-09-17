@@ -32,8 +32,9 @@ if (multer && sharp) {
   router.post('/upload/spectacle-image', upload.single('file'), async (req, res) => {
     try {
       if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
-      // Ecrire dans le dossier monté par docker-compose (bind mount)
-      const targetDir = process.env.SPECTACLE_UPLOAD_DIR || path.resolve('/app/frontend_public_assets/spectacles');
+      // Dossier d'uploads backend par défaut, ou variable d'environnement si fournie
+      const defaultUploads = path.resolve(__dirname, '..', 'uploads', 'spectacles');
+      const targetDir = process.env.SPECTACLE_UPLOAD_DIR || defaultUploads;
       console.log('📁 Upload spectacle → targetDir =', targetDir, '| mimetype =', req.file.mimetype, '| size =', req.file.size);
       await fs.promises.mkdir(targetDir, { recursive: true });
 
@@ -57,7 +58,8 @@ if (multer && sharp) {
         targetAbs = path.join(targetDir, targetName);
         suffix += 1;
       }
-      const relativePath = `/assets/img/spectacles/${targetName}`;
+      const publicPrefix = process.env.SPECTACLE_UPLOAD_PUBLIC_PREFIX || '/uploads/spectacles';
+      const relativePath = `${publicPrefix}/${targetName}`;
 
       // Convertir en WEBP pour uniformiser
       await sharp(req.file.buffer).webp({ quality: 85 }).toFile(targetAbs);
