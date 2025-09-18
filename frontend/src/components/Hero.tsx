@@ -329,8 +329,8 @@ const Hero = () => {
     <section id="hero" className="bg-black pt-24 pb-16">
       <div className="container mx-auto px-6">
         <div className="relative overflow-hidden rounded-lg h-[700px] mb-12">
-          <img
-            className="absolute inset-0 w-full h-full object-cover"
+          <img 
+            className="absolute inset-0 w-full h-full object-cover" 
             src={buildImgSrc('spectacles', slides[index].img)}
             loading="eager"
             decoding="async"
@@ -380,18 +380,18 @@ const Hero = () => {
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-2">
                 {slides[index].title}
-              </h1>
+            </h1>
             </div>
 
             {/* Boutons d'action avec responsive amélioré */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Link 
+                <Link 
                 to={`/spectacles/${slides[index].id}`}
                 className="bg-red-500 text-white px-4 sm:px-6 py-3 rounded hover:bg-red-600 transition duration-300 flex items-center justify-center sm:justify-start font-medium"
-              >
+                >
                 <i className="fa-solid fa-ticket-alt mr-2"></i>
                 Réserver maintenant
-              </Link>
+                </Link>
               <Link 
                 to={`/spectacles/${slides[index].id}`}
                 className="border border-red-500 text-red-500 px-4 sm:px-6 py-3 rounded hover:bg-red-500 hover:text-white transition duration-300 flex items-center justify-center sm:justify-start font-medium"
@@ -413,6 +413,35 @@ const Hero = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Section de présentation textuelle pour l'indexation Google */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+            L'Espace Comédie Lille
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-300 mb-4 max-w-4xl mx-auto">
+            La référence pour découvrir et réserver les meilleurs spectacles d'humour à Lille
+          </p>
+          <p className="text-lg text-gray-400 mb-8 max-w-3xl mx-auto">
+            Située en plein cœur de la ville, notre salle offre une expérience intime et chaleureuse pour apprécier les meilleurs humoristes dans des conditions optimales. Stand-up, comédies et soirées exceptionnelles vous attendent.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              to="/spectacles"
+              className="bg-red-500 text-white px-8 py-4 rounded-lg hover:bg-red-600 transition duration-300 font-medium text-lg"
+            >
+              <i className="fa-solid fa-calendar-alt mr-2"></i>
+              Voir la programmation
+            </Link>
+            <Link 
+              to="/le-lieu"
+              className="border border-red-500 text-red-500 px-8 py-4 rounded-lg hover:bg-red-500 hover:text-white transition duration-300 font-medium text-lg"
+            >
+              <i className="fa-solid fa-map-marker-alt mr-2"></i>
+              Découvrir le lieu
+            </Link>
           </div>
         </div>
       </div>

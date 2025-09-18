@@ -72,7 +72,7 @@ const Footer = () => {
         
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-500 text-sm mb-4 md:mb-0">© 2025 Humor Prototype. Tous droits réservés.</p>
+            <p className="text-gray-500 text-sm mb-4 md:mb-0">© 2025 L'Espace Comédie Lille. Tous droits réservés.</p>
             <div className="flex items-center space-x-6">
               <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/default-placeholder.png" alt="Payment methods" className="h-6" />
             </div>

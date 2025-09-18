@@ -1359,15 +1359,15 @@ const handleDeleteLieu = async (id: number) => {
                       }}
                       className="bg-gray-700 text-white rounded px-4 py-2 w-full md:w-auto"
                     />
-                    <input
-                      type="text"
-                      name="img"
-                      value={spectacleFormData.img}
-                      onChange={handleSpectacleInputChange}
-                      className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                  <input
+                    type="text"
+                    name="img"
+                    value={spectacleFormData.img}
+                    onChange={handleSpectacleInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
                       placeholder="/assets/img/spectacles/mon_image.webp"
-                      required
-                    />
+                    required
+                  />
                   </div>
                   <p className="text-gray-400 text-xs mt-2">Max 5 Mo, conversion en .webp côté serveur.</p>
                 </div>
@@ -1393,32 +1393,32 @@ const handleDeleteLieu = async (id: number) => {
                   </label>
                   {!spectacleFormData.recurrence_enabled ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-white mb-2">Date</label>
-                        <input
-                          type="date"
-                          name="date_spectacle"
-                          value={spectacleFormData.date_spectacle}
-                          onChange={handleSpectacleInputChange}
-                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white mb-2">Heure</label>
-                        <input
-                          type="time"
-                          name="heure_spectacle"
-                          value={spectacleFormData.heure_spectacle}
-                          onChange={handleSpectacleInputChange}
-                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                          required
-                        />
-                      </div>
+                <div>
+                  <label className="block text-white mb-2">Date</label>
+                  <input
+                    type="date"
+                    name="date_spectacle"
+                    value={spectacleFormData.date_spectacle}
+                    onChange={handleSpectacleInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Heure</label>
+                  <input
+                    type="time"
+                    name="heure_spectacle"
+                    value={spectacleFormData.heure_spectacle}
+                    onChange={handleSpectacleInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    required
+                  />
+                </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div>
+                <div>
                         <label className="block text-white mb-2">Jour de la semaine</label>
                         <select
                           value={spectacleFormData.recurrence_weekday}
@@ -1436,7 +1436,7 @@ const handleDeleteLieu = async (id: number) => {
                       </div>
                       <div>
                         <label className="block text-white mb-2">Heure</label>
-                        <input
+                  <input
                           type="time"
                           value={spectacleFormData.recurrence_time}
                           onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_time: e.target.value }))}
