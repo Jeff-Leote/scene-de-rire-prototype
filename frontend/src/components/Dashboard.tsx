@@ -48,7 +48,7 @@ const Dashboard = () => {
   });
   const [artistFormData, setArtistFormData] = useState({
     name: '',
-    photo: ''
+    photo: '/assets/img/photo_artiste/'
   });
   // L'affiche retiré
   const [newArtist, setNewArtist] = useState<ArtistFormData>({
@@ -248,7 +248,7 @@ const Dashboard = () => {
     setSelectedArtist(null);
     setArtistFormData({
       name: '',
-      photo: ''
+      photo: '/assets/img/photo_artiste/'
     });
     setIsArtistModalOpen(true);
   };
@@ -1607,15 +1607,43 @@ const handleDeleteLieu = async (id: number) => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-gray-400 mb-2">Photo de profil</label>
-                  <input
-                    type="text"
-                    name="photo"
-                    value={artistFormData.photo}
-                    onChange={handleArtistInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
-                    placeholder="Nom du fichier (ex: tamere.jpg)"
-                    required
-                  />
+                  <div className="flex flex-col md:flex-row gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const token = localStorage.getItem('token');
+                          const form = new FormData();
+                          form.append('file', file);
+                          const res = await fetch(`${API_URL}/api/admin/upload/artiste-image`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` },
+                            body: form
+                          });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data.error || 'Upload échoué');
+                          setArtistFormData(prev => ({ ...prev, photo: data.path }));
+                          toast.success('Image téléversée');
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : 'Erreur upload');
+                        }
+                      }}
+                      className="bg-gray-700 text-white rounded px-4 py-2 w-full md:w-auto"
+                    />
+                    <input
+                      type="text"
+                      name="photo"
+                      value={artistFormData.photo}
+                      onChange={handleArtistInputChange}
+                      className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
+                      placeholder="/assets/img/photo_artiste/mon_image.webp"
+                      required
+                    />
+                  </div>
+                  <p className="text-gray-400 text-xs mt-2">Max 5 Mo, conversion en .webp côté serveur.</p>
                 </div>
                 {/* Champ Biographie retiré */}
                 <div className="flex justify-end space-x-4 mt-6">
