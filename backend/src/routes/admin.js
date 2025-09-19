@@ -73,7 +73,7 @@ if (multer && sharp) {
         // Upload vers Supabase Storage
         console.log('📤 Upload vers Supabase - fileName:', fileName, '| buffer size:', webpBuffer.length);
         const { data, error } = await supabase.storage
-          .from('spectacles')
+          .from('spectacle')
           .upload(fileName, webpBuffer, {
             contentType: 'image/webp',
             upsert: false
@@ -87,7 +87,7 @@ if (multer && sharp) {
 
         // Récupérer l'URL publique
         const { data: urlData } = supabase.storage
-          .from('spectacles')
+          .from('spectacle')
           .getPublicUrl(fileName);
 
         console.log('✅ Upload Supabase réussi:', urlData.publicUrl);
