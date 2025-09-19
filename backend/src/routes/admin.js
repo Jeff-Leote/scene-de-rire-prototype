@@ -134,6 +134,104 @@ if (multer && sharp) {
       return res.status(500).json({ error: 'Erreur serveur lors de l\'upload' });
     }
   });
+
+  // Upload image artiste (photo)
+  router.post('/upload/artist-image', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
+      console.log('📁 Upload artiste → mimetype =', req.file.mimetype, '| size =', req.file.size);
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      // Sanitize base name
+      const original = (req.file.originalname || 'image').toString();
+      const parsed = path.parse(original);
+      const baseRaw = (parsed.name || 'image').toLowerCase();
+      const baseSanitized = baseRaw
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s._-]/g, '')
+        .replace(/[\s]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
+
+      if (isProduction && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.log('☁️ Upload artiste vers Supabase (prod)');
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        const webpBuffer = await sharp(req.file.buffer).webp({ quality: 85 }).toBuffer();
+        const objectKey = `artistes/${baseSanitized}.webp`;
+        const { error } = await supabase.storage
+          .from('spectacle')
+          .upload(objectKey, webpBuffer, { contentType: 'image/webp', upsert: true });
+        if (error) {
+          console.error('❌ Erreur Supabase artistes:', error);
+          return res.status(500).json({ error: 'Erreur Supabase lors de l\'upload: ' + error.message });
+        }
+        const { data: urlData } = supabase.storage.from('spectacle').getPublicUrl(objectKey);
+        console.log('✅ Upload artiste Supabase:', urlData.publicUrl);
+        return res.json({ path: urlData.publicUrl });
+      } else {
+        // Local dev
+        const frontendDir = path.resolve(__dirname, '..', '..', '..', 'frontend', 'public', 'assets', 'img', 'photo_artiste');
+        await fs.promises.mkdir(frontendDir, { recursive: true });
+        const targetAbs = path.join(frontendDir, `${baseSanitized}.webp`);
+        await sharp(req.file.buffer).webp({ quality: 85 }).toFile(targetAbs);
+        const relativePath = `/assets/img/photo_artiste/${baseSanitized}.webp`;
+        console.log('✅ Upload artiste local:', targetAbs);
+        return res.json({ path: relativePath });
+      }
+    } catch (error) {
+      console.error('Erreur upload artiste:', error);
+      return res.status(500).json({ error: 'Erreur serveur lors de l\'upload' });
+    }
+  });
+
+  // Upload image artiste mise en avant (photo_featured)
+  router.post('/upload/artist-featured-image', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
+      console.log('📁 Upload artiste featured → mimetype =', req.file.mimetype, '| size =', req.file.size);
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      const original = (req.file.originalname || 'image').toString();
+      const parsed = path.parse(original);
+      const baseRaw = (parsed.name || 'image').toLowerCase();
+      const baseSanitized = baseRaw
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s._-]/g, '')
+        .replace(/[\s]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
+
+      if (isProduction && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.log('☁️ Upload artiste featured vers Supabase (prod)');
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        const webpBuffer = await sharp(req.file.buffer).webp({ quality: 85 }).toBuffer();
+        const objectKey = `artistes/featured/${baseSanitized}.webp`;
+        const { error } = await supabase.storage
+          .from('spectacle')
+          .upload(objectKey, webpBuffer, { contentType: 'image/webp', upsert: true });
+        if (error) {
+          console.error('❌ Erreur Supabase artistes featured:', error);
+          return res.status(500).json({ error: 'Erreur Supabase lors de l\'upload: ' + error.message });
+        }
+        const { data: urlData } = supabase.storage.from('spectacle').getPublicUrl(objectKey);
+        console.log('✅ Upload artiste featured Supabase:', urlData.publicUrl);
+        return res.json({ path: urlData.publicUrl });
+      } else {
+        const frontendDir = path.resolve(__dirname, '..', '..', '..', 'frontend', 'public', 'assets', 'img', 'photo_featured');
+        await fs.promises.mkdir(frontendDir, { recursive: true });
+        const targetAbs = path.join(frontendDir, `${baseSanitized}.webp`);
+        await sharp(req.file.buffer).webp({ quality: 85 }).toFile(targetAbs);
+        const relativePath = `/assets/img/photo_featured/${baseSanitized}.webp`;
+        console.log('✅ Upload artiste featured local:', targetAbs);
+        return res.json({ path: relativePath });
+      }
+    } catch (error) {
+      console.error('Erreur upload artiste featured:', error);
+      return res.status(500).json({ error: 'Erreur serveur lors de l\'upload' });
+    }
+  });
 }
 
 
