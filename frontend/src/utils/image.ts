@@ -2,6 +2,10 @@ export type ImageCategory = 'spectacles' | 'photo_artiste' | 'photo_featured' | 
 
 export function buildImgSrc(category: ImageCategory, filename?: string): string {
   if (!filename) return '';
+  // Accept full external URLs (e.g., Supabase public URLs)
+  if (/^https?:\/\//i.test(filename)) {
+    return filename;
+  }
   // If the filename is already an absolute or rooted path, return as-is
   if (filename.startsWith('/')) {
     return filename;
