@@ -706,15 +706,20 @@ router.delete('/artistes/:id', async (req, res) => {
 router.post('/artiste', async (req, res) => {
   const { name, photo } = req.body;
 
+  console.log('🎭 Ajout artiste - name:', name, '| photo:', photo);
+
   if (!name || !photo) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
+    console.log('📝 Insertion artiste en base...');
     const [result] = await db.query(
       'INSERT INTO artiste (name, photo) VALUES (?, ?)',
       [name, photo]
     );
+
+    console.log('✅ Insertion réussie - ID:', result.insertId);
 
     const [newArtist] = await db.query(
       `SELECT a.*, 0 as upcoming_shows
@@ -723,10 +728,13 @@ router.post('/artiste', async (req, res) => {
       [result.insertId]
     );
 
-
+    console.log('📋 Artiste récupéré:', newArtist[0]);
     res.status(201).json(newArtist[0]);
   } catch (error) {
-    console.error('Erreur détaillée lors de l\'ajout de l\'artiste:', error);
+    console.error('❌ Erreur détaillée lors de l\'ajout de l\'artiste:', error);
+    console.error('❌ Code erreur:', error.code);
+    console.error('❌ Message erreur:', error.message);
+    console.error('❌ SQL State:', error.sqlState);
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 });
