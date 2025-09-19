@@ -66,9 +66,8 @@ if (multer && sharp) {
         // Convertir en WEBP avec Sharp
         const webpBuffer = await sharp(req.file.buffer).webp({ quality: 85 }).toBuffer();
         
-        // Nom du fichier avec timestamp pour éviter les collisions
-        const timestamp = Date.now();
-        const fileName = `${baseSanitized}-${timestamp}.webp`;
+        // Nom du fichier simple (Supabase gère les collisions automatiquement)
+        const fileName = `${baseSanitized}.webp`;
         
         // Upload vers Supabase Storage
         console.log('📤 Upload vers Supabase - fileName:', fileName, '| buffer size:', webpBuffer.length);
