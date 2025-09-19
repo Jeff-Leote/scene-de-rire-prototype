@@ -48,14 +48,9 @@ const Dashboard = () => {
   });
   const [artistFormData, setArtistFormData] = useState({
     name: '',
-    photo: '/assets/img/photo_artiste/'
-  });
-  // L'affiche retiré
-  const [newArtist, setNewArtist] = useState<ArtistFormData>({
-    name: '',
     photo: ''
   });
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // L'affiche retiré
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [lieuImages, setLieuImages] = useState<LieuImage[]>([]);
   const [isLieuModalOpen, setIsLieuModalOpen] = useState(false);
@@ -248,7 +243,7 @@ const Dashboard = () => {
     setSelectedArtist(null);
     setArtistFormData({
       name: '',
-      photo: '/assets/img/photo_artiste/'
+      photo: ''
     });
     setIsArtistModalOpen(true);
   };
@@ -444,53 +439,6 @@ console.debug('Spectacle request:', {
   };
 
   // L'affiche: fonctionnalités retirées
-
-  const handleAddArtist = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newArtist.name || !newArtist.photo) {
-      toast.error('Tous les champs sont requis');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-
-      const artistData = {
-        ...newArtist
-      };
-
-      const response = await fetch(`${API_URL}/api/admin/artiste`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(artistData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || data.details || 'Erreur lors de l\'ajout de l\'artiste');
-      }
-
-      setArtists([...artists, data]);
-      setNewArtist({ name: '', photo: '' });
-      setIsAddModalOpen(false);
-      toast.success('Artiste ajouté avec succès');
-    } catch (err) {
-      console.error('Erreur complète:', err);
-      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
-    }
-  };
 
   const handleEditArtist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1640,7 +1588,6 @@ const handleDeleteLieu = async (id: number) => {
                       onChange={handleArtistInputChange}
                       className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
                       placeholder="/assets/img/photo_artiste/mon_image.webp"
-                      required
                     />
                   </div>
                   <p className="text-gray-400 text-xs mt-2">Max 5 Mo, conversion en .webp côté serveur.</p>

@@ -704,16 +704,16 @@ router.delete('/artistes/:id', async (req, res) => {
 
 // Ajouter un nouvel artiste
 router.post('/artiste', async (req, res) => {
-  const { name, photo, photo_featured } = req.body;
+  const { name, photo } = req.body;
 
-  if (!name || !photo || !photo_featured) {
+  if (!name || !photo) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
     const [result] = await db.query(
-      'INSERT INTO artiste (name, photo, photo_featured) VALUES (?, ?, ?)',
-      [name, photo, photo_featured]
+      'INSERT INTO artiste (name, photo) VALUES (?, ?)',
+      [name, photo]
     );
 
     const [newArtist] = await db.query(
@@ -750,7 +750,6 @@ router.get('/featured', async (req, res) => {
       id: 1,
       name: "Artiste à l'affiche",
       photo: "default-artist.jpg",
-      photo_featured: "default-artist.jpg",
       biographie: "Artiste en vedette pour ce spectacle",
       next_show: {
         id: spectacle.next_show_id,
