@@ -42,6 +42,8 @@ if (multer && sharp) {
       if (isProduction && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
         // === PRODUCTION: Upload vers Supabase Storage ===
         console.log('☁️ Upload vers Supabase Storage en production');
+        console.log('🔧 SUPABASE_URL:', process.env.SUPABASE_URL);
+        console.log('🔧 SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
         
         // Initialiser le client Supabase
         const supabase = createClient(
@@ -69,6 +71,7 @@ if (multer && sharp) {
         const fileName = `${baseSanitized}-${timestamp}.webp`;
         
         // Upload vers Supabase Storage
+        console.log('📤 Upload vers Supabase - fileName:', fileName, '| buffer size:', webpBuffer.length);
         const { data, error } = await supabase.storage
           .from('spectacles')
           .upload(fileName, webpBuffer, {
@@ -77,8 +80,9 @@ if (multer && sharp) {
           });
 
         if (error) {
-          console.error('Erreur Supabase Storage:', error);
-          return res.status(500).json({ error: 'Erreur Supabase lors de l\'upload' });
+          console.error('❌ Erreur Supabase Storage:', error);
+          console.error('❌ Détails erreur:', JSON.stringify(error, null, 2));
+          return res.status(500).json({ error: 'Erreur Supabase lors de l\'upload: ' + error.message });
         }
 
         // Récupérer l'URL publique
