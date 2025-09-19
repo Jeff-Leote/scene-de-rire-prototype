@@ -5,7 +5,7 @@ const { auth, isAdmin } = require('./auth');
 const { sendBulkEmails } = require('../services/emailService');
 const path = require('path');
 const fs = require('fs');
-let multer, sharp, cloudinary; // lazy require to avoid crash if not installed in some envs
+let multer, sharp, { createClient } = require('@supabase/supabase-js'); // lazy require to avoid crash if not installed in some envs
 
 // Middleware pour protéger toutes les routes admin
 router.use(auth, isAdmin);
@@ -14,9 +14,9 @@ router.use(auth, isAdmin);
 try {
   multer = require('multer');
   sharp = require('sharp');
-  cloudinary = require('cloudinary').v2;
+  const { createClient } = require('@supabase/supabase-js');
 } catch (_) {
-  // Les dépendances seront nécessaires en production: npm i multer sharp cloudinary
+  // Les dépendances seront nécessaires en production: npm i multer sharp @supabase/supabase-js
 }
 
 if (multer && sharp) {
@@ -36,19 +36,18 @@ if (multer && sharp) {
       
       console.log('📁 Upload spectacle → mimetype =', req.file.mimetype, '| size =', req.file.size);
       
-      // Configuration Cloudinary si en production
+      // Configuration Supabase si en production
       const isProduction = process.env.NODE_ENV === 'production';
       
-      if (isProduction && cloudinary && process.env.CLOUDINARY_CLOUD_NAME) {
-        // === PRODUCTION: Upload vers Cloudinary ===
-        console.log('☁️ Upload vers Cloudinary en production');
+      if (isProduction && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        // === PRODUCTION: Upload vers Supabase Storage ===
+        console.log('☁️ Upload vers Supabase Storage en production');
         
-        // Configurer Cloudinary
-        cloudinary.config({
-          cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-          api_key: process.env.CLOUDINARY_API_KEY,
-          api_secret: process.env.CLOUDINARY_API_SECRET
-        });
+        // Initialiser le client Supabase
+        const supabase = createClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
 
         // Construire un nom basé sur le nom original, sécurisé
         const original = (req.file.originalname || 'image').toString();
@@ -62,38 +61,42 @@ if (multer && sharp) {
           .replace(/-+/g, '-')
           .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
 
-        const folder = process.env.CLOUDINARY_FOLDER || 'spectacles';
-        const publicId = `${folder}/${baseSanitized}`;
+        // Convertir en WEBP avec Sharp
+        const webpBuffer = await sharp(req.file.buffer).webp({ quality: 85 }).toBuffer();
+        
+        // Nom du fichier avec timestamp pour éviter les collisions
+        const timestamp = Date.now();
+        const fileName = `${baseSanitized}-${timestamp}.webp`;
+        
+        // Upload vers Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('spectacles')
+          .upload(fileName, webpBuffer, {
+            contentType: 'image/webp',
+            upsert: false
+          });
 
-        // Upload vers Cloudinary avec conversion WebP
-        const uploadResult = await cloudinary.uploader.upload_stream(
-          {
-            resource_type: 'image',
-            folder: folder,
-            public_id: baseSanitized,
-            format: 'webp',
-            quality: 'auto',
-            fetch_format: 'auto'
-          },
-          (error, result) => {
-            if (error) {
-              console.error('Erreur Cloudinary:', error);
-              return res.status(500).json({ error: 'Erreur Cloudinary lors de l\'upload' });
-            }
-            console.log('✅ Upload Cloudinary réussi:', result.secure_url);
-            return res.json({ path: result.secure_url });
-          }
-        ).end(req.file.buffer);
+        if (error) {
+          console.error('Erreur Supabase Storage:', error);
+          return res.status(500).json({ error: 'Erreur Supabase lors de l\'upload' });
+        }
+
+        // Récupérer l'URL publique
+        const { data: urlData } = supabase.storage
+          .from('spectacles')
+          .getPublicUrl(fileName);
+
+        console.log('✅ Upload Supabase réussi:', urlData.publicUrl);
+        return res.json({ path: urlData.publicUrl });
 
       } else {
         // === DÉVELOPPEMENT: Upload local ===
         console.log('💻 Upload local en développement');
         
-        // Dossier d'uploads backend par défaut, ou variable d'environnement si fournie
-        const defaultUploads = path.resolve(__dirname, '..', 'uploads', 'spectacles');
-        const targetDir = process.env.SPECTACLE_UPLOAD_DIR || defaultUploads;
-        console.log('📁 Upload spectacle → targetDir =', targetDir);
-        await fs.promises.mkdir(targetDir, { recursive: true });
+        // Dossier frontend/public/assets/img/spectacles pour le développement
+        const frontendDir = path.resolve(__dirname, '..', '..', '..', 'frontend', 'public', 'assets', 'img', 'spectacles');
+        console.log('📁 Upload spectacle → frontendDir =', frontendDir);
+        await fs.promises.mkdir(frontendDir, { recursive: true });
 
         // Construire un nom basé sur le nom original, sécurisé et unique
         const original = (req.file.originalname || 'image').toString();
@@ -108,15 +111,14 @@ if (multer && sharp) {
           .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
 
         let targetName = `${baseSanitized}.webp`;
-        let targetAbs = path.join(targetDir, targetName);
+        let targetAbs = path.join(frontendDir, targetName);
         let suffix = 1;
         while (fs.existsSync(targetAbs)) {
           targetName = `${baseSanitized}-${suffix}.webp`;
-          targetAbs = path.join(targetDir, targetName);
+          targetAbs = path.join(frontendDir, targetName);
           suffix += 1;
         }
-        const publicPrefix = process.env.SPECTACLE_UPLOAD_PUBLIC_PREFIX || '/uploads/spectacles';
-        const relativePath = `${publicPrefix}/${targetName}`;
+        const relativePath = `/assets/img/spectacles/${targetName}`;
 
         // Convertir en WEBP pour uniformiser
         await sharp(req.file.buffer).webp({ quality: 85 }).toFile(targetAbs);
