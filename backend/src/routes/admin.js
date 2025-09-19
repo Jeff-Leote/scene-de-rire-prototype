@@ -96,9 +96,10 @@ if (multer && sharp) {
         // === DÉVELOPPEMENT: Upload local ===
         console.log('💻 Upload local en développement');
         
-        // Dossier frontend/public/assets/img/spectacles pour le développement
-        const frontendDir = path.resolve(__dirname, '..', '..', '..', 'frontend', 'public', 'assets', 'img', 'spectacles');
-        console.log('📁 Upload spectacle → frontendDir =', frontendDir);
+        // Dossier monté par Docker: ./frontend/public/assets/img/spectacles -> /app/frontend_public_assets/spectacles
+        const mountBase = process.env.FRONTEND_PUBLIC_MOUNT_DIR || '/app/frontend_public_assets';
+        const frontendDir = path.join(mountBase, 'spectacles');
+        console.log('📁 Upload spectacle (DEV) → frontendDir =', frontendDir);
         await fs.promises.mkdir(frontendDir, { recursive: true });
 
         // Construire un nom basé sur le nom original, sécurisé et unique
@@ -215,9 +216,10 @@ if (multer && sharp) {
         // === DÉVELOPPEMENT: Upload local ===
         console.log('💻 Upload artiste local en développement');
         
-        // Dossier frontend/public/assets/img/photo_artiste pour le développement
-        const frontendDir = path.resolve(__dirname, '..', '..', '..', 'frontend', 'public', 'assets', 'img', 'photo_artiste');
-        console.log('📁 Upload artiste → frontendDir =', frontendDir);
+        // Dossier monté par Docker: ./frontend/public/assets/img/photo_artiste -> /app/frontend_public_assets/photo_artiste
+        const mountBase = process.env.FRONTEND_PUBLIC_MOUNT_DIR || '/app/frontend_public_assets';
+        const frontendDir = path.join(mountBase, 'photo_artiste');
+        console.log('📁 Upload artiste (DEV) → frontendDir =', frontendDir);
         await fs.promises.mkdir(frontendDir, { recursive: true });
 
         // Construire un nom basé sur le nom original, sécurisé et unique

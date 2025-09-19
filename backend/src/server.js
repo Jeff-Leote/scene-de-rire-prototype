@@ -290,16 +290,7 @@ app.use("/api", routes);
 const path = require('path');
 const fs = require('fs');
 
-// Exposer un dossier d'uploads persistant en production (Render écrit sur le filesystem éphémère, mais accessible)
-// Permet également de surcharger via env SPECTACLE_UPLOAD_PUBLIC_PREFIX si besoin d'un CDN
-const UPLOADS_DIR = process.env.UPLOADS_DIR || path.resolve(__dirname, '..', 'uploads');
-try { fs.mkdirSync(path.join(UPLOADS_DIR, 'spectacles'), { recursive: true }); } catch {}
-app.use('/uploads', express.static(UPLOADS_DIR, {
-  maxAge: '30d',
-  setHeaders: (res) => {
-    res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
-  }
-}));
+// Uploads gérés directement par les routes admin avec Supabase (prod) ou frontend/public (dev)
 
 // Éviter les 404 bruitées sur des ressources communes
 app.get('/favicon.ico', (req, res) => {

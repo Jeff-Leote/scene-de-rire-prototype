@@ -53,6 +53,7 @@ services:
       - backend_logs:/app/logs
       - backend_uploads:/app/uploads
       - ./frontend/public/assets/img/spectacles:/app/frontend_public_assets/spectacles
+      - ./frontend/public/assets/img/photo_artiste:/app/frontend_public_assets/photo_artiste
     depends_on:
       - db
 
