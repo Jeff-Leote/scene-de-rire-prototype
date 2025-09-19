@@ -713,6 +713,11 @@ router.post('/artiste', async (req, res) => {
   }
 
   try {
+    // Vérifier la structure de la table
+    console.log('🔍 Vérification structure table artiste...');
+    const [tableInfo] = await db.query('DESCRIBE artiste');
+    console.log('📋 Structure table artiste:', tableInfo);
+    
     console.log('📝 Insertion artiste en base...');
     const [result] = await db.query(
       'INSERT INTO artiste (name, photo) VALUES (?, ?)',
