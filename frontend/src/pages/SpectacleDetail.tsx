@@ -202,7 +202,7 @@ const SpectacleDetail = () => {
                       {extraPhotos.map((p) => (
                         <div key={p.id} className="rounded-lg overflow-hidden bg-black">
                           <img
-                            src={buildImgSrc('photo_additionnel', p.image_path)}
+                            src={buildImgSrc('photo_addictionnel', p.image_path)}
                             alt={`Photo additionnelle ${p.id}`}
                             className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                             onError={onImgErrorSwap}

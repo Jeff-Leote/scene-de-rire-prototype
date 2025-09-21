@@ -8,8 +8,16 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div>
             <div className="flex items-center mb-4">
-              <i className="fa-solid fa-microphone-lines text-red-500 text-2xl mr-2"></i>
-              <span className="text-2xl font-bold">L'Espace Comédie Lille</span>
+              <Link to="/" className="flex items-center">
+                <div className="bg-white rounded-lg p-3 shadow-lg mr-4">
+                  <img 
+                    src="/assets/img/logo-espace-comedie-lille.png" 
+                    alt="L'Espace Comédie Lille" 
+                    className="h-12 w-auto max-w-none"
+                  />
+                </div>
+                <span className="text-2xl font-bold">L'Espace Comédie Lille</span>
+              </Link>
             </div>
             <p className="text-gray-400 mb-4">La référence pour découvrir et réserver les meilleurs spectacles d'humour.</p>
             <div className="flex space-x-4">
@@ -73,7 +81,13 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm mb-4 md:mb-0">© 2025 L'Espace Comédie Lille. Tous droits réservés.</p>
             <div className="flex items-center space-x-6">
-              <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/default-placeholder.png" alt="Payment methods" className="h-6" />
+              <div className="bg-white rounded-lg p-2 shadow-lg">
+                <img 
+                  src="/assets/img/logo-espace-comedie-lille.png" 
+                  alt="L'Espace Comédie Lille" 
+                  className="h-4 w-auto max-w-none"
+                />
+              </div>
             </div>
           </div>
         </div>

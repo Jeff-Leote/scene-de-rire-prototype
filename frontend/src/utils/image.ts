@@ -1,4 +1,4 @@
-export type ImageCategory = 'spectacles' | 'photo_artiste' | 'photo_featured' | 'image_path' | 'photo_additionnel';
+export type ImageCategory = 'spectacles' | 'photo_artiste' | 'photo_featured' | 'image_path' | 'photo_addictionnel';
 
 export function buildImgSrc(category: ImageCategory, filename?: string): string {
   if (!filename) return '';

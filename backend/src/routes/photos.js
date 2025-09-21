@@ -7,7 +7,7 @@ const { auth, isAdmin, router: _authRouter } = require('./auth');
 router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT id, spectacle_id, image_path, sort_order FROM photo_addictionnel ORDER BY COALESCE(sort_order, 9999), id LIMIT 3'
+      'SELECT id, image_path, sort_order FROM photo_addictionnel ORDER BY COALESCE(sort_order, 9999), id LIMIT 3'
     );
     res.json(rows);
   } catch (err) {
@@ -16,13 +16,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Public: get up to 3 additional photos for a spectacle
+// Public: get up to 3 additional photos for a spectacle (now returns all photos since they're not linked to specific spectacles)
 router.get('/spectacle/:id', async (req, res) => {
   try {
-    const { id } = req.params;
     const [rows] = await db.query(
-      'SELECT id, spectacle_id, image_path, sort_order FROM photo_addictionnel WHERE spectacle_id = ? ORDER BY COALESCE(sort_order, 9999), id LIMIT 3',
-      [id]
+      'SELECT id, image_path, sort_order FROM photo_addictionnel ORDER BY COALESCE(sort_order, 9999), id LIMIT 3'
     );
     res.json(rows);
   } catch (err) {
@@ -31,13 +29,11 @@ router.get('/spectacle/:id', async (req, res) => {
   }
 });
 
-// Admin: list photos for a spectacle (no limit)
+// Admin: list all photos (no limit)
 router.get('/admin/spectacle/:id', auth, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
     const [rows] = await db.query(
-      'SELECT id, spectacle_id, image_path, sort_order, created_at FROM photo_addictionnel WHERE spectacle_id = ? ORDER BY COALESCE(sort_order, 9999), id',
-      [id]
+      'SELECT id, image_path, sort_order, created_at FROM photo_addictionnel ORDER BY COALESCE(sort_order, 9999), id'
     );
     res.json(rows);
   } catch (err) {
@@ -49,15 +45,15 @@ router.get('/admin/spectacle/:id', auth, isAdmin, async (req, res) => {
 // Admin: create photo
 router.post('/admin', auth, isAdmin, async (req, res) => {
   try {
-    const { spectacle_id, image_path, sort_order } = req.body || {};
-    if (!spectacle_id || !image_path) {
-      return res.status(400).json({ error: 'spectacle_id et image_path requis' });
+    const { image_path, sort_order } = req.body || {};
+    if (!image_path) {
+      return res.status(400).json({ error: 'image_path requis' });
     }
     const [result] = await db.query(
-      'INSERT INTO photo_addictionnel (spectacle_id, image_path, sort_order) VALUES (?, ?, ?)',
-      [spectacle_id, image_path, sort_order ?? null]
+      'INSERT INTO photo_addictionnel (image_path, sort_order) VALUES (?, ?)',
+      [image_path, sort_order ?? null]
     );
-    res.json({ id: result.insertId, spectacle_id, image_path, sort_order: sort_order ?? null });
+    res.json({ id: result.insertId, image_path, sort_order: sort_order ?? null });
   } catch (err) {
     console.error('Erreur admin création photo:', err);
     res.status(500).json({ error: 'Erreur serveur' });

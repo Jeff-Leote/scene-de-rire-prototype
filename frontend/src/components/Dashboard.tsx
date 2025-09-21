@@ -60,8 +60,7 @@ const Dashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   
   // Photos additionnels (admin)
-  const [photosSpectacleId, setPhotosSpectacleId] = useState<string>('');
-  const [spectaclePhotos, setSpectaclePhotos] = useState<Array<{ id: number; image_path: string; sort_order: number | null }>>([]);
+  const [additionnalPhotos, setAdditionnalPhotos] = useState<Array<{ id: number; image_path: string; sort_order: number | null }>>([]);
   const [newPhotoPath, setNewPhotoPath] = useState<string>('');
   const [newPhotoOrder, setNewPhotoOrder] = useState<string>('');
 
@@ -135,6 +134,9 @@ const Dashboard = () => {
           const m = await api.get<{ maintenance_enabled: boolean }>('/api/settings/maintenance');
           setMaintenanceEnabled(Boolean(m.maintenance_enabled));
         } catch {}
+
+        // Charger les photos additionnelles
+        await loadAdditionnalPhotos();
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -610,39 +612,38 @@ const handleDeleteLieu = async (id: number) => {
   };
 
   // ====== Admin Photos logic ======
-  const loadSpectaclePhotos = async (spectacleId: number) => {
+  const loadAdditionnalPhotos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/photos/admin/spectacle/${spectacleId}`, {
+      const res = await fetch(`${API_URL}/api/photos/admin/spectacle/1`, { // Utilise un ID fictif car la route retourne toutes les photos
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur chargement photos');
-      setSpectaclePhotos(data);
+      setAdditionnalPhotos(data);
     } catch (e) {
-      setSpectaclePhotos([]);
+      setAdditionnalPhotos([]);
       toast.error(e instanceof Error ? e.message : 'Erreur');
     }
   };
 
   const handleAddPhoto = async () => {
     try {
-      const spectacleIdNum = parseInt(photosSpectacleId);
-      if (!spectacleIdNum || !newPhotoPath) {
-        toast.error('Sélectionnez un spectacle et indiquez image_path');
+      if (!newPhotoPath) {
+        toast.error('Indiquez le chemin de l\'image');
         return;
       }
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/api/photos/admin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ spectacle_id: spectacleIdNum, image_path: newPhotoPath, sort_order: newPhotoOrder ? parseInt(newPhotoOrder) : null })
+        body: JSON.stringify({ image_path: newPhotoPath, sort_order: newPhotoOrder ? parseInt(newPhotoOrder) : null })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur ajout photo');
       setNewPhotoPath('');
       setNewPhotoOrder('');
-      await loadSpectaclePhotos(spectacleIdNum);
+      await loadAdditionnalPhotos();
       toast.success('Photo ajoutée');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur');
@@ -655,7 +656,7 @@ const handleDeleteLieu = async (id: number) => {
       const res = await fetch(`${API_URL}/api/photos/admin/${photoId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur suppression photo');
-      if (photosSpectacleId) await loadSpectaclePhotos(parseInt(photosSpectacleId));
+      await loadAdditionnalPhotos();
       toast.success('Photo supprimée');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur');
@@ -1118,63 +1119,30 @@ const handleDeleteLieu = async (id: number) => {
 
         {activeTab === 'photos' && (
           <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Photos additionnels des spectacles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div>
-                <label className="block text-white mb-2">Spectacle</label>
-                <select
-                  value={photosSpectacleId}
-                  onChange={(e) => {
-                    setPhotosSpectacleId(e.target.value);
-                    const v = parseInt(e.target.value);
-                    if (v) loadSpectaclePhotos(v);
-                    else setSpectaclePhotos([]);
-                  }}
-                  className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                >
-                  <option value="">Sélectionner</option>
-                  {spectacles.map(s => (
-                    <option key={s.id} value={s.id}>{s.title}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-white mb-2">image_path</label>
-                <input
-                  type="text"
-                  value={newPhotoPath}
-                  onChange={(e) => setNewPhotoPath(e.target.value)}
-                  className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                  placeholder="ex: photo1.webp"
-                />
-              </div>
-              <div>
-                <label className="block text-white mb-2">Ordre (optionnel)</label>
-                <input
-                  type="number"
-                  value={newPhotoOrder}
-                  onChange={(e) => setNewPhotoOrder(e.target.value)}
-                  className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                  min="0"
-                />
-              </div>
-            </div>
-            <div className="mb-6">
-              <button onClick={handleAddPhoto} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Ajouter la photo</button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {spectaclePhotos.length === 0 ? (
-                <p className="text-gray-400">Aucune photo pour ce spectacle.</p>
-              ) : spectaclePhotos.map(p => (
-                <div key={p.id} className="bg-gray-900 rounded-lg overflow-hidden">
-                  <img src={buildImgSrc('spectacles', p.image_path)} alt="photo" className="w-full h-40 object-cover" onError={onImgErrorSwap} />
-                  <div className="p-3 flex items-center justify-between">
-                    <span className="text-gray-300 text-sm truncate">{p.image_path}</span>
-                    <button onClick={() => handleDeletePhoto(p.id)} className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Supprimer</button>
+            <h2 className="text-2xl font-bold text-white mb-6">Photos additionnelles</h2>
+            {additionnalPhotos.length === 0 ? (
+              <p className="text-gray-400 text-center">Aucune photo additionnelle.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {additionnalPhotos.map(p => (
+                  <div key={p.id} className="bg-gray-900 rounded-lg overflow-hidden">
+                    <img 
+                      src={buildImgSrc('photo_addictionnel', p.image_path)} 
+                      alt="photo" 
+                      className="w-full h-48 object-cover" 
+                      onError={onImgErrorSwap} 
+                    />
+                    <div className="p-4">
+                      <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {p.image_path}</p>
+                      <p className="text-gray-400 mb-2"><b>Ordre:</b> {p.sort_order || <span className="text-gray-500">Non défini</span>}</p>
+                      <div className="flex justify-center mt-2">
+                        <button className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Modifier</button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

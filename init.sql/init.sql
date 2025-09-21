@@ -94,14 +94,18 @@ CREATE TABLE lieu (
 -- =====================================================
 CREATE TABLE photo_addictionnel (
     id INT AUTO_INCREMENT PRIMARY KEY,
-  spectacle_id INT NOT NULL,
     image_path VARCHAR(512) NOT NULL,
-  sort_order INT DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_photo_add_spectacle (spectacle_id),
-  FOREIGN KEY (spectacle_id) REFERENCES spectacle(id)
+    sort_order INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- =====================================================
+-- DONNEES PHOTOS ADDITIONNELLES
+-- =====================================================
+INSERT INTO photo_addictionnel (image_path, sort_order) VALUES
+('/assets/img/photo_additionnel/Ado 234.JPEG', 1),
+('/assets/img/photo_additionnel/Ado 1356.JPEG', 2),
+('/assets/img/photo_additionnel/Ado 123.JPEG', 3);
 
 -- =====================================================
 -- TABLE PARAMETRES (SETTINGS)

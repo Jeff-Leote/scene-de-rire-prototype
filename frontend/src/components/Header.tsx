@@ -36,7 +36,6 @@ const Header = ({ activeItem }: HeaderProps) => {
             <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
               Le lieu
             </Link>
-            {/* Lien texte Réservations retiré */}
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
               Contact
             </Link>
@@ -77,6 +76,14 @@ const Header = ({ activeItem }: HeaderProps) => {
                 )}
               </div>
             ) : null}
+            <a 
+              href="https://www.billetweb.fr/multi_event.php?user=139847" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+            >
+              Réserver
+            </a>
             <button 
               className="md:hidden text-white focus:outline-none"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -122,6 +129,14 @@ const Header = ({ activeItem }: HeaderProps) => {
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Contact
             </Link>
+            <a 
+              href="https://www.billetweb.fr/multi_event.php?user=139847" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-red-500 text-white px-6 py-3 rounded text-xl mt-4 hover:bg-red-600 transition duration-300"
+            >
+              Réserver
+            </a>
           </nav>
         </div>
       </div>
