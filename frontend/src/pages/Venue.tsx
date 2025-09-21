@@ -58,7 +58,7 @@ const Venue = () => {
               </p>
               <div className="flex items-center justify-center text-red-500 text-xl">
                 <i className="fa-solid fa-location-dot text-3xl mr-3"></i>
-                <p className="text-lg md:text-xl">136 rue Solferino, 59000  Lille </p>
+                <p className="text-lg md:text-xl">136 rue Solférino, 59800 Lille</p>
               </div>
             </div>
           </div>
@@ -109,15 +109,19 @@ const Venue = () => {
                   <ul className="space-y-3">
                     <li className="flex items-start">
                       <i className="fa-solid fa-subway mt-1 mr-3 text-red-500"></i>
-                      <span>Métro : Station Saint-Michel (Ligne 4)</span>
+                      <span>Métro : République – Beaux-Arts (Ligne M1) - 6 min à pied</span>
                     </li>
                     <li className="flex items-start">
                       <i className="fa-solid fa-bus mt-1 mr-3 text-red-500"></i>
-                      <span>Bus : Lignes 27, 38 et 85 (arrêt Saint-André-des-Arts)</span>
+                      <span>Bus : L1, L5, 18, CITL (arrêts Wazemmes, Nationale, Porte de Douai)</span>
+                    </li>
+                    <li className="flex items-start">
+                      <i className="fa-solid fa-train mt-1 mr-3 text-red-500"></i>
+                      <span>Train : Depuis Lille Flandres/Europe via métro ou bus</span>
                     </li>
                     <li className="flex items-start">
                       <i className="fa-solid fa-bicycle mt-1 mr-3 text-red-500"></i>
-                      <span>Stations Vélib' à proximité</span>
+                      <span>Vélo : Stations V'Lille à proximité</span>
                     </li>
                   </ul>
                 </div>
@@ -127,13 +131,13 @@ const Venue = () => {
                     <i className="fa-solid fa-car mr-2"></i>En voiture
                   </h3>
                   <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <i className="fa-solid fa-parking mt-1 mr-3 text-red-500"></i>
-                      <span>Parking Saint-Michel (payant)</span>
-                    </li>
-                    <li className="flex items-start">
+                  <li className="flex items-start">
                       <i className="fa-solid fa-road mt-1 mr-3 text-red-500"></i>
                       <span>Stationnement payant dans les rues avoisinantes</span>
+                    </li>
+                    <li className="flex items-start">
+                      <i className="fa-solid fa-parking mt-1 mr-3 text-red-500"></i>
+                      <span>Parking gratuit le samedi et dimanche et en semaine à partir de 19h </span>
                     </li>
                     <li className="flex items-start">
                       <i className="fa-solid fa-info-circle mt-1 mr-3 text-red-500"></i>
@@ -156,7 +160,7 @@ const Venue = () => {
               <div className="rounded-lg overflow-hidden h-[400px] mb-6 relative">
                 <iframe
                   title="Google Map - L'Espace Comédie"
-                  src="https://www.google.com/maps?q=136+rue+Solferino,+59000+Lille&output=embed"
+                  src="https://www.google.com/maps?q=136+rue+Solférino,+59800+Lille&output=embed"
                   width="100%"
                   height="400"
                   style={{ border: 0 }}
@@ -172,7 +176,7 @@ const Venue = () => {
               </div>
               <div className="flex justify-center">
                 <a
-                  href="https://www.google.com/maps/dir/?api=1&destination=136+rue+Solferino,+59000+Lille"
+                  href="https://www.google.com/maps/dir/?api=1&destination=136+rue+Solférino,+59800+Lille"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full flex items-center transition cursor-pointer"
@@ -198,16 +202,12 @@ const Venue = () => {
                   </h3>
                   <ul className="space-y-3">
                     <li className="flex justify-between">
-                      <span>Ouverture du bar</span>
-                      <span>19h00</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Début des spectacles</span>
-                      <span>20h30</span>
+                      <span>Ouverture</span>
+                      <span>18h00</span>
                     </li>
                     <li className="flex justify-between">
                       <span>Fermeture</span>
-                      <span>00h00</span>
+                      <span>23h00</span>
                     </li>
                     <li className="text-red-500 text-sm mt-4">
                       Les horaires peuvent varier selon les événements
@@ -221,19 +221,11 @@ const Venue = () => {
                   </h3>
                   <ul className="space-y-3">
                     <li className="flex justify-between">
-                      <span>Capacité de la salle</span>
-                      <span>120 places</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Places numérotées</span>
+                      <span>Accessibilité PMR</span>
                       <span>Non</span>
                     </li>
                     <li className="flex justify-between">
-                      <span>Accessibilité PMR</span>
-                      <span>Oui</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Vestiaire</span>
+                      <span>Toilette</span>
                       <span>Gratuit</span>
                     </li>
                   </ul>
@@ -268,7 +260,7 @@ const Venue = () => {
           </div>
         </section>
 
-        {/* Témoignages */}
+       {/* Témoignages
         <section className="py-12 bg-gray-950">
           <div className="container mx-auto px-4 md:px-8">
             <h2 className="text-3xl font-bold text-red-500 mb-10 text-center">Ce qu'en disent nos spectateurs</h2>
@@ -311,7 +303,7 @@ const Venue = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <CTA />
       </main>

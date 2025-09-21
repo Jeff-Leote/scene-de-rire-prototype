@@ -15,10 +15,15 @@ const Header = ({ activeItem }: HeaderProps) => {
       <header id="header" className="bg-black text-white py-4 px-6 fixed w-full z-50">
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
-          <div className="flex items-center">
-            <i className="fa-solid fa-microphone-lines text-red-500 text-2xl mr-2"></i>
-            <span className="text-2xl font-bold tracking-tight">L'Espace Comédie Lille</span>
-          </div>
+          <Link to="/" className="flex items-center">
+            <div className="bg-white rounded-lg p-3 shadow-lg">
+              <img 
+                src="/assets/img/logo-espace-comedie-lille.png" 
+                alt="L'Espace Comédie Lille" 
+                className="h-16 w-auto max-w-none"
+              />
+            </div>
+          </Link>
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -72,9 +77,6 @@ const Header = ({ activeItem }: HeaderProps) => {
                 )}
               </div>
             ) : null}
-            <Link to="/reservation" className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 hidden md:block cursor-pointer">
-              Réserver
-            </Link>
             <button 
               className="md:hidden text-white focus:outline-none"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -94,6 +96,18 @@ const Header = ({ activeItem }: HeaderProps) => {
           >
             <i className="fa-solid fa-xmark text-2xl"></i>
           </button>
+          
+          {/* Logo mobile */}
+          <div className="mb-8">
+            <div className="bg-white rounded-lg p-4 shadow-lg inline-block">
+              <img 
+                src="/assets/img/logo-espace-comedie-lille.png" 
+                alt="L'Espace Comédie Lille" 
+                className="h-20 w-auto max-w-none"
+              />
+            </div>
+          </div>
+          
           <nav className="flex flex-col space-y-6 text-center">
             <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Accueil
@@ -107,9 +121,6 @@ const Header = ({ activeItem }: HeaderProps) => {
             {/* Lien texte Réservation (mobile) retiré */}
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Contact
-            </Link>
-            <Link to="/reservation" className="bg-red-500 text-white px-6 py-3 rounded text-xl mt-4 hover:bg-red-600 transition duration-300">
-              Réserver
             </Link>
           </nav>
         </div>

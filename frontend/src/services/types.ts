@@ -46,7 +46,6 @@ export interface Reservation {
   reservation_id: number;
   nb_places: number;
   reservation_date: string;
-  qr_code_path?: string;
   spectacle_id: number;
   title: string;
   description: string;
@@ -62,15 +61,6 @@ export interface Reservation {
   date_paiement?: string;
 }
 
-// Interface pour les props du composant QRCodeDisplay
-export interface QRCodeDisplayProps {
-  reservationId: number;
-  qrCodePath?: string;
-  spectacleTitle: string;
-  dateSpectacle: string;
-  heureSpectacle: string;
-  nbPlaces: number;
-}
 
 // Interface pour les props du composant Header
 export interface HeaderProps {

@@ -31,7 +31,6 @@ const Footer = () => {
               <li><Link to="/" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Accueil</Link></li>
               <li><Link to="/spectacles" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Spectacles</Link></li>
               <li><Link to="/le-lieu" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Le lieu</Link></li>
-              <li><Link to="/reservation" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Réservation</Link></li>
               <li><Link to="/contact" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Contact</Link></li>
               <li><Link to="/connexion" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Connexion</Link></li>
             </ul>
@@ -60,7 +59,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center">
                 <i className="fa-solid fa-envelope text-red-500 mr-2"></i>
-                <span className="text-gray-400">contact@lespacecomedie.fr</span>
+                <span className="text-gray-400">lespacecomedie@gmail.com</span>
               </li>
               <li className="flex items-center">
                 <i className="fa-solid fa-clock text-red-500 mr-2"></i>

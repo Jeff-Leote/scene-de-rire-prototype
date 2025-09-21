@@ -284,11 +284,31 @@ const Hero = () => {
     return () => { alive = false; };
   }, []);
 
-  // Auto-advance
+  // Auto-advance avec réinitialisation
   useEffect(() => {
     if (slides.length <= 1) return;
-    const timer = setInterval(() => setIndex(prev => (prev + 1) % slides.length), 6000);
-    return () => clearInterval(timer);
+    
+    let timer: NodeJS.Timeout;
+    
+    const startTimer = () => {
+      timer = setInterval(() => setIndex(prev => (prev + 1) % slides.length), 6000);
+    };
+    
+    const resetTimer = () => {
+      if (timer) clearInterval(timer);
+      startTimer();
+    };
+    
+    // Démarrer le timer initial
+    startTimer();
+    
+    // Fonction pour réinitialiser le timer (sera exposée via ref)
+    (window as any).resetCarouselTimer = resetTimer;
+    
+    return () => {
+      if (timer) clearInterval(timer);
+      delete (window as any).resetCarouselTimer;
+    };
   }, [slides.length]);
 
   if (loading) {
@@ -345,14 +365,20 @@ const Hero = () => {
               <button
                 aria-label="Précédent"
                 className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-10 h-10 flex items-center justify-center"
-                onClick={() => setIndex((prev) => (prev - 1 + slides.length) % slides.length)}
+                onClick={() => {
+                  setIndex((prev) => (prev - 1 + slides.length) % slides.length);
+                  (window as any).resetCarouselTimer?.();
+                }}
               >
                 ‹
               </button>
               <button
                 aria-label="Suivant"
                 className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-10 h-10 flex items-center justify-center"
-                onClick={() => setIndex((prev) => (prev + 1) % slides.length)}
+                onClick={() => {
+                  setIndex((prev) => (prev + 1) % slides.length);
+                  (window as any).resetCarouselTimer?.();
+                }}
               >
                 ›
               </button>
@@ -408,7 +434,10 @@ const Hero = () => {
                     key={i}
                     aria-label={`Aller au slide ${i + 1}`}
                     className={`h-2 w-2 rounded-full ${i === index ? 'bg-red-500' : 'bg-gray-600'}`}
-                    onClick={() => setIndex(i)}
+                    onClick={() => {
+                      setIndex(i);
+                      (window as any).resetCarouselTimer?.();
+                    }}
                   />
                 ))}
               </div>

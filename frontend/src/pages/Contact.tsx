@@ -178,7 +178,6 @@ const Contact = () => {
                     {...register("subject", { required: true })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
-                    <option value="reservation">Réservation</option>
                     <option value="spectacle">Spectacle</option>
                     <option value="partenariat">Partenariat</option>
                     <option value="autre">Autre</option>

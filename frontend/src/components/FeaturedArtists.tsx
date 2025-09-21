@@ -55,9 +55,9 @@ const FeaturedArtists = () => {
       <div className="container mx-auto px-6">
         <h2 className="text-3xl font-bold text-white mb-8">Artistes déjà venus</h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[...artists]
-            .slice(0, 12)
+            .slice(0, 4)
             .map((artist) => (
               <div key={artist.id} className="group">
                 <div className="relative overflow-hidden rounded-full aspect-square">

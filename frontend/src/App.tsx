@@ -119,7 +119,6 @@ const AppContent = () => {
         <Route path="/spectacles" element={<Shows />} />
         <Route path="/spectacles/:id" element={<SpectacleDetail />} />
         <Route path="/le-lieu" element={<Venue />} />
-        {/* Routes de réservation, paiement, QR et validation retirées */}
 
         <Route path="/artistes" element={<Artists />} />
         <Route path="/connexion" element={<Login />} />

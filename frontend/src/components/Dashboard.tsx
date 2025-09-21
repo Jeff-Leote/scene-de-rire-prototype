@@ -807,9 +807,6 @@ const handleDeleteLieu = async (id: number) => {
     );
   }
 
-  function handleDeleteReservation(reservation_id: number): void {
-    throw new Error('Function not implemented.');
-  }
 
   return (
     <div className="min-h-screen bg-gray-950 pt-24 pb-12">
