@@ -354,7 +354,6 @@ const Hero = () => {
             src={buildImgSrc('spectacles', slides[index].img)}
             loading="eager"
             decoding="async"
-            fetchPriority="high"
             alt={slides[index].title}
             onError={onImgErrorSwap}
           />

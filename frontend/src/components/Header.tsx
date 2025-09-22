@@ -16,11 +16,11 @@ const Header = ({ activeItem }: HeaderProps) => {
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="bg-white rounded-lg p-3 shadow-lg">
+            <div className="bg-white rounded-lg p-2 md:p-3 shadow-lg">
               <img 
                 src="/assets/img/logo-espace-comedie-lille.png" 
                 alt="L'Espace Comédie Lille" 
-                className="h-16 w-auto max-w-none"
+                className="h-12 md:h-16 w-auto max-w-none"
               />
             </div>
           </Link>
@@ -80,7 +80,7 @@ const Header = ({ activeItem }: HeaderProps) => {
               href="https://www.billetweb.fr/multi_event.php?user=139847" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+              className="hidden md:inline-block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
             >
               Réserver
             </a>
@@ -104,16 +104,7 @@ const Header = ({ activeItem }: HeaderProps) => {
             <i className="fa-solid fa-xmark text-2xl"></i>
           </button>
           
-          {/* Logo mobile */}
-          <div className="mb-8">
-            <div className="bg-white rounded-lg p-4 shadow-lg inline-block">
-              <img 
-                src="/assets/img/logo-espace-comedie-lille.png" 
-                alt="L'Espace Comédie Lille" 
-                className="h-20 w-auto max-w-none"
-              />
-            </div>
-          </div>
+          {/* Logo mobile removed as requested */}
           
           <nav className="flex flex-col space-y-6 text-center">
             <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>

@@ -63,7 +63,7 @@ const Contact = () => {
     <div className="min-h-screen bg-gray-50">
       <Header activeItem="Contact" />
       
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-12 pt-24">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-12 pt-28 md:pt-32">
         {/* Introduction Section */}
         <section className="mb-16 text-center max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Contactez-nous</h1>
