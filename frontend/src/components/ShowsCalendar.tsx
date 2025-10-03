@@ -106,19 +106,21 @@ const ShowsCalendar = () => {
       const spectaclesForDay = spectacles.filter((s) =>
         isSameDay(parseISO(s.date_spectacle), dateObj)
       );
+      const allExpired = spectaclesForDay.length > 0 && spectaclesForDay.every(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle));
 
       let classes = "text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded ";
       if (isPast) classes += "text-gray-500 "; else classes += "text-white ";
 
       const content = (
         spectaclesForDay.length > 0 ? (
-          <div className="relative group">
+          <div className={`relative ${allExpired ? '' : 'group'}`}>
             <div 
-              className={`${spectaclesForDay.some(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle)) ? 'bg-red-200' : 'bg-red-500'} text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 flex items-center justify-center mx-auto ${spectaclesForDay.length === 1 ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform duration-200 text-[10px] sm:text-xs md:text-sm`}
-              onClick={() => handleDateClick(spectaclesForDay)}
+              className={`${allExpired ? 'bg-gray-600' : 'bg-red-500'} text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 flex items-center justify-center mx-auto ${(!allExpired && spectaclesForDay.length === 1) ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform duration-200 text-[10px] sm:text-xs md:text-sm`}
+              onClick={() => { if (!allExpired) handleDateClick(spectaclesForDay); }}
             >
               {d}
             </div>
+            {!allExpired && (
             <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] sm:text-xs p-2 sm:p-3 rounded whitespace-nowrap leading-5 sm:leading-6 min-w-max">
               <div className="space-y-1 sm:space-y-2">
                 {spectaclesForDay.map((s, index) => (
@@ -136,6 +138,7 @@ const ShowsCalendar = () => {
                 {spectaclesForDay.length > 1 ? "Choisissez un spectacle ci-dessus" : "Cliquez pour voir les détails"}
               </div>
             </div>
+            )}
           </div>
         ) : (
           <div className="text-[10px] sm:text-xs md:text-sm">{d}</div>

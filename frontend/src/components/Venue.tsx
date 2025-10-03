@@ -40,15 +40,11 @@ const Venue = () => {
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="flex items-center">
                 <i className="fa-solid fa-chair text-red-500 mr-3 text-xl"></i>
-                <span className="text-white">120 places assises</span>
+                <span className="text-white">70 places assises</span>
               </div>
               <div className="flex items-center">
                 <i className="fa-solid fa-martini-glass text-red-500 mr-3 text-xl"></i>
-                <span className="text-white">Bar & snacks</span>
-              </div>
-              <div className="flex items-center">
-                <i className="fa-solid fa-wheelchair text-red-500 mr-3 text-xl"></i>
-                <span className="text-white">Accès PMR</span>
+                <span className="text-white">Café - Théatre</span>
               </div>
               <div className="flex items-center">
                 <i className="fa-solid fa-car text-red-500 mr-3 text-xl"></i>
@@ -77,7 +73,7 @@ const Venue = () => {
               ) : mainImage ? (
                 <img
                   className="w-full h-full object-cover"
-                  src={buildImgSrc('image_path', mainImage.image_path)}
+                  src={buildImgSrc('image_path', (mainImage.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
                   alt="comedy club interior"
                   onError={onImgErrorSwap}
                 />
@@ -89,7 +85,7 @@ const Venue = () => {
               <div className="absolute inset-0 bg-black bg-opacity-30"></div>
               <div className="absolute bottom-6 right-6">
                 <div className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">
-                  Ouverture des portes 30 min avant le spectacle
+                  Ouverture des portes 1 heure avant le spectacle
                 </div>
               </div>
             </div>

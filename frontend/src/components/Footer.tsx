@@ -9,14 +9,11 @@ const Footer = () => {
           <div>
             <div className="flex items-center mb-4">
               <Link to="/" className="flex items-center">
-                <div className="bg-white rounded-lg p-3 shadow-lg mr-4">
-                  <img 
-                    src="/assets/img/logo-espace-comedie-lille.png" 
-                    alt="L'Espace Comédie Lille" 
-                    className="h-12 w-auto max-w-none"
-                  />
-                </div>
-                <span className="text-2xl font-bold">L'Espace Comédie Lille</span>
+                <img 
+                  src="/assets/img/logo-espace-comedie-lille.webp" 
+                  alt="L'Espace Comédie Lille" 
+                  className="h-12 w-auto max-w-none mr-4"
+                />
               </Link>
             </div>
             <p className="text-gray-400 mb-4">La référence pour découvrir et réserver les meilleurs spectacles d'humour.</p>
@@ -39,6 +36,7 @@ const Footer = () => {
               <li><Link to="/" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Accueil</Link></li>
               <li><Link to="/spectacles" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Spectacles</Link></li>
               <li><Link to="/le-lieu" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Le lieu</Link></li>
+              <li><Link to="/cours" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Cours</Link></li>
               <li><Link to="/contact" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Contact</Link></li>
               <li><Link to="/connexion" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Connexion</Link></li>
             </ul>
@@ -81,13 +79,11 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm mb-4 md:mb-0">© 2025 L'Espace Comédie Lille. Tous droits réservés.</p>
             <div className="flex items-center space-x-6">
-              <div className="bg-white rounded-lg p-2 shadow-lg">
                 <img 
-                  src="/assets/img/logo-espace-comedie-lille.png" 
+                  src="/assets/img/logo-espace-comedie-lille.webp" 
                   alt="L'Espace Comédie Lille" 
                   className="h-4 w-auto max-w-none"
                 />
-              </div>
             </div>
           </div>
         </div>

@@ -16,13 +16,11 @@ const Header = ({ activeItem }: HeaderProps) => {
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="bg-white rounded-lg p-2 md:p-3 shadow-lg">
-              <img 
-                src="/assets/img/logo-espace-comedie-lille.png" 
-                alt="L'Espace Comédie Lille" 
-                className="h-12 md:h-16 w-auto max-w-none"
-              />
-            </div>
+            <img 
+              src="/assets/img/logo-espace-comedie-lille.webp" 
+              alt="L'Espace Comédie Lille" 
+              className="h-12 md:h-16 w-auto max-w-none"
+            />
           </Link>
           
           {/* Navigation */}
@@ -35,6 +33,9 @@ const Header = ({ activeItem }: HeaderProps) => {
             </Link>
             <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
               Le lieu
+            </Link>
+            <Link to="/cours" className={`${activeItem === 'Cours' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
+              Cours
             </Link>
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
               Contact
@@ -115,6 +116,9 @@ const Header = ({ activeItem }: HeaderProps) => {
             </Link>
             <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
               Le lieu
+            </Link>
+            <Link to="/cours" className={`${activeItem === 'Cours' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
+              Cours
             </Link>
             {/* Lien texte Réservation (mobile) retiré */}
             <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>

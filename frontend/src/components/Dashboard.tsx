@@ -946,7 +946,7 @@ const handleDeleteLieu = async (id: number) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {spectacles.map((spectacle) => (
                 <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={buildImgSrc('spectacles', spectacle.img)} alt={spectacle.title} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
+                  <img src={buildImgSrc('spectacles', (spectacle.img || '').replace(/\.(jpe?g)$/i, '.webp'))} alt={spectacle.title} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
                     <p className="text-gray-400 mb-2">
@@ -981,7 +981,7 @@ const handleDeleteLieu = async (id: number) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {artists.map((artist) => (
                 <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={buildImgSrc('photo_artiste', artist.photo)} alt={artist.name} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
+                  <img src={buildImgSrc('photo_artiste', (artist.photo || '').replace(/\.(jpe?g)$/i, '.webp'))} alt={artist.name} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
                     <div className="flex flex-col sm:flex-row gap-2">
@@ -1127,7 +1127,7 @@ const handleDeleteLieu = async (id: number) => {
                 {additionnalPhotos.map(p => (
                   <div key={p.id} className="bg-gray-900 rounded-lg overflow-hidden">
                     <img 
-                      src={buildImgSrc('photo_addictionnel', p.image_path)} 
+                      src={buildImgSrc('photo_addictionnel', (p.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))} 
                       alt="photo" 
                       className="w-full h-48 object-cover" 
                       onError={onImgErrorSwap} 

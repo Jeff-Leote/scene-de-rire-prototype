@@ -11,6 +11,7 @@ import Shows from './pages/Shows';
 import SpectacleDetail from './pages/SpectacleDetail';
 import Venue from './pages/Venue';
 import Artists from './pages/Artists';
+import Cours from './pages/Cours';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './components/Dashboard';
@@ -119,6 +120,7 @@ const AppContent = () => {
         <Route path="/spectacles" element={<Shows />} />
         <Route path="/spectacles/:id" element={<SpectacleDetail />} />
         <Route path="/le-lieu" element={<Venue />} />
+        <Route path="/cours" element={<Cours />} />
 
         <Route path="/artistes" element={<Artists />} />
         <Route path="/connexion" element={<Login />} />

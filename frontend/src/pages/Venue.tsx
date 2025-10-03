@@ -78,7 +78,7 @@ const Venue = () => {
                   <div key={img.id} className="aspect-square overflow-hidden rounded-lg">
                     <img
                       className="w-full h-full object-cover hover:scale-105 transition duration-500"
-                      src={buildImgSrc('image_path', img.image_path)}
+                      src={buildImgSrc('image_path', (img.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
                       alt="photo du lieu"
                       onError={onImgErrorSwap}
                     />

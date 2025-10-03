@@ -121,7 +121,7 @@ const SpectacleDetail = () => {
             {/* Hero Section */}
             <div className="relative h-[700px] rounded-xl overflow-hidden mb-8 shadow-2xl">
               <img
-                src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
+                src={buildImgSrc('spectacles', (spectacle.img || '').replace(/\.(jpe?g)$/i, '.webp')) || "/assets/placeholder.jpg"}
                 alt={spectacle.title}
                 className="w-full h-full object-cover object-center"
                 onError={onImgErrorSwap}
@@ -202,7 +202,7 @@ const SpectacleDetail = () => {
                       {extraPhotos.map((p) => (
                         <div key={p.id} className="rounded-lg overflow-hidden bg-black">
                           <img
-                            src={buildImgSrc('photo_addictionnel', p.image_path)}
+                            src={buildImgSrc('photo_addictionnel', (p.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
                             alt={`Photo additionnelle ${p.id}`}
                             className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                             onError={onImgErrorSwap}

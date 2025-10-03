@@ -63,7 +63,7 @@ const FeaturedArtists = () => {
                 <div className="relative overflow-hidden rounded-full aspect-square">
                   <img
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    src={buildImgSrc('photo_artiste', artist.photo)}
+                    src={buildImgSrc('photo_artiste', artist.photo || '')}
                     alt={`Portrait de ${artist.name}`}
                     onError={onImgErrorSwap}
                   />
