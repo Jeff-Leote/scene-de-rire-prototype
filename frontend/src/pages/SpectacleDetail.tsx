@@ -53,19 +53,19 @@ const SpectacleDetail = () => {
     fetchSpectacle();
   }, [id]);
 
-  // Charger toutes les photos additionnelles (pas liées à un spectacle spécifique)
+  // Charger les photos additionnelles spécifiques au spectacle (fallback global si non dispo)
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
         const { api } = await import('@/services/api');
-        const photos = await api.get<Array<{ id: number; spectacle_id: number; image_path: string; sort_order: number | null }>>(`/api/photos`);
+        const photos = await api.get<Array<{ id: number; image_path: string }>>(`/api/photos/spectacle/${id}`);
         setExtraPhotos((photos || []).slice(0, 3).map(p => ({ id: p.id, image_path: p.image_path })));
       } catch {
         setExtraPhotos([]);
       }
     };
-    fetchPhotos();
-  }, []);
+    if (id) fetchPhotos();
+  }, [id]);
 
   const isSoldOut = false;
 
@@ -191,7 +191,7 @@ const SpectacleDetail = () => {
                 {/* Description */}
                 <div className="bg-gray-900 rounded-lg p-6 mb-6">
                   <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
-                  <p className="text-gray-300">{spectacle.description}</p>
+                  <p className="text-gray-300 whitespace-pre-line">{spectacle.description}</p>
                 </div>
 
                 {/* Additional Photos Section */}

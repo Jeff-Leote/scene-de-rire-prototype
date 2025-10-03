@@ -32,14 +32,15 @@ const Venue = () => {
       <Header activeItem="Le lieu" />
       <main>
         {/* Hero Section */}
-        <section id="hero-banner" className="relative h-[500px] w-full overflow-hidden">
-          <img 
-            className="absolute w-full h-full object-cover opacity-80" 
-            src="https://storage.googleapis.com/uxpilot-auth.appspot.com/5f3d63cee9-148001036a85859b318f.png" 
-            alt="comedy club theater interior with stage lights, audience seating, moody atmospheric lighting, cinematic" 
-          />
+        <section id="hero-banner" className="relative h-[700px] w-full overflow-hidden">
+            <img 
+              className="absolute w-full h-full object-cover opacity-80" 
+              style={{ objectPosition: 'center top' }}
+              src="/assets/img/banniere lieu.webp" 
+              alt="L'Espace Comédie Lille - scène et salle" 
+            />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-          <div className="container mx-auto px-4 md:px-8 relative h-full flex flex-col justify-end pb-16">
+          <div className="container mx-auto px-4 md:px-8 relative h-full flex flex-col justify-end">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-red-500 mb-4">
               Bienvenue à L'Espace Comédie
             </h1>
