@@ -19,7 +19,7 @@ const Dashboard = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'newsletter' | 'settings' | 'maintenance'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'newsletter' | 'settings' | 'maintenance' | 'sponsorise'>('spectacles');
   const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean>(false);
   const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -897,6 +897,16 @@ const handleDeleteLieu = async (id: number) => {
             >
               Maintenance
             </button>
+            <button
+              onClick={() => setActiveTab('sponsorise')}
+              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
+                activeTab === 'sponsorise'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              } transition duration-300`}
+            >
+              Sponsorisé
+            </button>
           </div>
                       {/* Boutons d'ajout selon l'onglet actif */}
             {activeTab === 'spectacles' && (
@@ -1495,6 +1505,158 @@ const handleDeleteLieu = async (id: number) => {
                 }} />
                 <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute relative after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
               </label>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'sponsorise' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Pages Sponsorisées</h2>
+            <p className="text-gray-300 mb-6">
+              Ces pages sont accessibles via des liens directs mais ne s'affichent pas sur le site principal. 
+              Copiez les liens pour partager les spectacles récurrents.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Tchatcheur Comedy Club */}
+              <div className="bg-gray-900 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Tchatcheur Comedy Club</h3>
+                <p className="text-gray-300 mb-4">Le lundi, mardi, mercredi et vendredi à 20h00</p>
+                <div className="bg-gray-800 rounded p-3 mb-4">
+                  <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={`${window.location.origin}/sponsorise/tchatcheur-comedy-club`}
+                      readOnly
+                      className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/sponsorise/tchatcheur-comedy-club`);
+                        toast.success('Lien copié !');
+                      }}
+                      className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-300"
+                    >
+                      <i className="fa-solid fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+                <a 
+                  href={`${window.location.origin}/sponsorise/tchatcheur-comedy-club`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-red-400 hover:text-red-300 transition duration-300"
+                >
+                  <i className="fa-solid fa-external-link-alt mr-2"></i>
+                  Ouvrir la page
+                </a>
+              </div>
+
+              {/* Un Ado peut en cacher un autre */}
+              <div className="bg-gray-900 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Un Ado peut en cacher un autre</h3>
+                <p className="text-gray-300 mb-4">Le dimanche à 17h00</p>
+                <div className="bg-gray-800 rounded p-3 mb-4">
+                  <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={`${window.location.origin}/sponsorise/un-ado-peut-en-cacher-un-autre`}
+                      readOnly
+                      className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/sponsorise/un-ado-peut-en-cacher-un-autre`);
+                        toast.success('Lien copié !');
+                      }}
+                      className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-300"
+                    >
+                      <i className="fa-solid fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+                <a 
+                  href={`${window.location.origin}/sponsorise/un-ado-peut-en-cacher-un-autre`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-red-400 hover:text-red-300 transition duration-300"
+                >
+                  <i className="fa-solid fa-external-link-alt mr-2"></i>
+                  Ouvrir la page
+                </a>
+              </div>
+
+              {/* Chéri je t'ai trompé */}
+              <div className="bg-gray-900 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Chéri je t'ai trompé (et c'est pas ça le pire...)</h3>
+                <p className="text-gray-300 mb-4">Le dimanche à 18h30</p>
+                <div className="bg-gray-800 rounded p-3 mb-4">
+                  <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={`${window.location.origin}/sponsorise/cheri-je-tai-trompe`}
+                      readOnly
+                      className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/sponsorise/cheri-je-tai-trompe`);
+                        toast.success('Lien copié !');
+                      }}
+                      className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-300"
+                    >
+                      <i className="fa-solid fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+                <a 
+                  href={`${window.location.origin}/sponsorise/cheri-je-tai-trompe`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-red-400 hover:text-red-300 transition duration-300"
+                >
+                  <i className="fa-solid fa-external-link-alt mr-2"></i>
+                  Ouvrir la page
+                </a>
+              </div>
+
+              {/* Kaci dans La connerie humaine */}
+              <div className="bg-gray-900 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Kaci dans La connerie humaine</h3>
+                <p className="text-gray-300 mb-4">Le dimanche à 20h00</p>
+                <div className="bg-gray-800 rounded p-3 mb-4">
+                  <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={`${window.location.origin}/sponsorise/kaci-dans-la-connerie-humaine`}
+                      readOnly
+                      className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/sponsorise/kaci-dans-la-connerie-humaine`);
+                        toast.success('Lien copié !');
+                      }}
+                      className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-300"
+                    >
+                      <i className="fa-solid fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+                <a 
+                  href={`${window.location.origin}/sponsorise/kaci-dans-la-connerie-humaine`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-red-400 hover:text-red-300 transition duration-300"
+                >
+                  <i className="fa-solid fa-external-link-alt mr-2"></i>
+                  Ouvrir la page
+                </a>
+              </div>
             </div>
           </div>
         )}

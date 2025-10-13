@@ -19,6 +19,7 @@ import Contact from './pages/Contact';
 import Unsubscribe from './pages/Unsubscribe';
 import NotFound from './pages/NotFound';
 import Maintenance from './pages/Maintenance';
+import Sponsorise from './pages/Sponsorise';
 import { useAuth } from './contexts/AuthContext';
 
 // Components
@@ -135,6 +136,7 @@ const AppContent = () => {
         />
         <Route path="/contact" element={<Contact />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
+        <Route path="/sponsorise/:slug" element={<Sponsorise />} />
         <Route path="*" element={<NotFound />} />
           </>
         )}

@@ -192,6 +192,14 @@ INSERT INTO artiste (name, photo) VALUES
 ('Tom', 'TCC TOM BOUBOU.webp'),
 ('Mahé', 'mahe photo.webp');
 
+-- Artistes supplémentaires (images présentes dans /assets/img/photo_artiste)
+INSERT INTO artiste (name, photo) VALUES
+('Fanny Ruwet', 'fanny-ruwet-affiche-concert-olympia-paris.webp'),
+('Roman Doduik', 'roman doduik photo.webp'),
+('Rodrigue', 'rodrigue photo.webp'),
+('Alexandra Pizzagali', 'alexandra pizzagali photo.webp'),
+('Julien Santini', 'julien santini photo.webp');
+
 -- 3. Spectacles de test
 
 -- Générateur de dates (0..999 jours) sans CTE, compatible MySQL/MariaDB plus anciens
@@ -249,7 +257,7 @@ WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
 -- Chéri je t'ai trompé (et c'est pas ça le pire...) — dimanches 18:30 sur 12 mois
 INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
 SELECT 'Chéri je t''ai trompé (et c''est pas ça le pire...)', '/assets/img/spectacles/Chéri je t''ai trompé (et c''est pas ça le pire...).webp',
-  'Marina vit seule. Enfin presque seule. Elle est accompagnée de Sandro, son seul et unique enfant qui entre dans l''adolescence.\n\nMarina a du mal avec ce gamin. Tout ce qu''il regarde, tout ce qu''il écoute, tout ce qui l''intéresse lui semble incohérent et sans intérêt. Les ados n''étaient pas comme ça de son temps. Selon elle, ils étaient bien plus raisonnables et sérieux...\n\nSauf qu''un jour Sandro est projeté de l''autre côté du miroir. Il se retrouve au début des années 90, avec sa mère... Redevenue adolescente. Et elle était loin d''être si raisonnable qu''elle le disait...\n\nAttention toute ressemblance avec des personnages existants ou ayant existé serait purement fortuites.\n\nA savoir : \n. Durée du spectcale : 70 minutes\n. A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n. La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.',
+  'Un fonctionnaire raciste va vivre le pire cauchemar de sa vie : sa conjointe le trompe avec un sans-papiers...\nÉric, un haut fonctionnaire raciste va vivre le pire cauchemar de sa vie lorsqu''il va découvrir que sa conjointe, Eva, le trompe avec Lahcen, un sans-papiers maghrébin embauché pour faire des travaux dans leur appartement. \n\nRésultat : une comédie déjantée, une situation hilarante, beaucoup de rire mais aussi un suspens et des rebondissements incroyables. \n\nLe saviez-vous ?\nUne comédie qui a déjà cumulé plus de 500 000 spectateurs. \nChéri je t''ai trompé a reçu plusieurs prix, et est actuellement en tournée dans toute la France. \nGrand succès au Festival d''Avignon.\n\nA savoir : \n. Durée du spectcale : 75 minutes \n. A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n. La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.',
   DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
   '18:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/cheri-je-tai-trompe-et-cest-pas-ca-le-pire2', cat.id
 FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
@@ -282,6 +290,21 @@ CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 
 JOIN category_spectacle cat ON cat.code = '1'
 WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
   AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+
+-- Spectacles exceptionnels du 31 décembre 2025
+-- Un Ado peut en cacher un autre - 17:00
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Un Ado peut en cacher un autre', '/assets/img/spectacles/Un Ado peut en cacher un autre.webp',
+  'Marina vit seule. Enfin presque seule. Elle est accompagnée de Sandro, son seul et unique enfant qui entre dans l''adolescence.\nMarina a du mal avec ce gamin. Tout ce qu''il regarde, tout ce qu''il écoute, tout ce qui l''intéresse lui semble incohérent et sans intérêt. Les ados n''étaient pas comme ça de son temps. Selon elle, ils étaient bien plus raisonnables et sérieux...\n\nSauf qu''un jour Sandro est projeté de l''autre côté du miroir. Il se retrouve au début des années 90, avec sa mère... Redevenue adolescente. Et elle était loin d''être si raisonnable qu''elle le disait...\n\nAttention toute ressemblance avec des personnages existants ou ayant existé serait purement fortuites.\n\nA savoir :\n . Durée du spectcale : 70 minutes\n . A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n . La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n\n',
+  '2025-12-31', '17:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/un-ado-peut-en-cacher-un-autre18', cat.id
+FROM category_spectacle cat WHERE cat.code = '2';
+
+-- Chéri je t'ai trompé - 18:30
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Chéri je t''ai trompé (et c''est pas ça le pire...)', '/assets/img/spectacles/Chéri je t''ai trompé (et c''est pas ça le pire...).webp',
+  'Un fonctionnaire raciste va vivre le pire cauchemar de sa vie : sa conjointe le trompe avec un sans-papiers...\nÉric, un haut fonctionnaire raciste va vivre le pire cauchemar de sa vie lorsqu''il va découvrir que sa conjointe, Eva, le trompe avec Lahcen, un sans-papiers maghrébin embauché pour faire des travaux dans leur appartement. \n\nRésultat : une comédie déjantée, une situation hilarante, beaucoup de rire mais aussi un suspens et des rebondissements incroyables. \n\nLe saviez-vous ?\nUne comédie qui a déjà cumulé plus de 500 000 spectateurs. \nChéri je t''ai trompé a reçu plusieurs prix, et est actuellement en tournée dans toute la France. \nGrand succès au Festival d''Avignon.\n\nA savoir : \n. Durée du spectcale : 75 minutes \n. A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n. La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.',
+  '2025-12-31', '18:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/cheri-je-tai-trompe-et-cest-pas-ca-le-pire2', cat.id
+FROM category_spectacle cat WHERE cat.code = '3';
 
 -- 8. Images du lieu de test
 INSERT INTO lieu (image_path, is_main) VALUES
