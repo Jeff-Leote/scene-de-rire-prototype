@@ -212,6 +212,30 @@ const SpectacleDetail = () => {
                     </div>
                   </div>
                 )}
+  
+              {/* Vidéo (Uniquement pour Tchatcheur Comedy Club) */}
+              {spectacle.title && spectacle.title.toLowerCase().includes('tchatcheur comedy club') && (
+                <div className="bg-gray-900 rounded-lg p-6 mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-4">Vidéo</h2>
+                  <div className="aspect-video w-full rounded overflow-hidden bg-black">
+                    <iframe
+                      src="https://www.youtube.com/embed/bjQdOh830G4"
+                      title="Vidéo YouTube"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                  <a
+                    href="https://youtu.be/bjQdOh830G4"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center mt-3 text-red-400 hover:text-red-300"
+                  >
+                    Ouvrir sur YouTube
+                  </a>
+                </div>
+              )}
               </div>
 
               {/* Sidebar */}

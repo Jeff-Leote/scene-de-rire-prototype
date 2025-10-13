@@ -128,6 +128,14 @@ SELECT '/assets/img/photo_additionnel/Ado 1356.webp', id FROM category_spectacle
 INSERT INTO photo_addictionnel (image_path, category_id)
 SELECT '/assets/img/photo_additionnel/Ado 123.webp', id FROM category_spectacle WHERE code = '2';
 
+-- TCC (photos additionnelles pour la catégorie 1)
+INSERT INTO photo_addictionnel (image_path, category_id)
+SELECT '/assets/img/photo_additionnel/B971A2EB-FE1F-47A0-B534-4D7B850D6AF4.webp', id FROM category_spectacle WHERE code = '1';
+INSERT INTO photo_addictionnel (image_path, category_id)
+SELECT '/assets/img/photo_additionnel/TCC paul mi.webp', id FROM category_spectacle WHERE code = '1';
+INSERT INTO photo_addictionnel (image_path, category_id)
+SELECT '/assets/img/photo_additionnel/D3D99BEC-6EB9-4B02-9019-137DA801E2DB.webp', id FROM category_spectacle WHERE code = '1';
+
 -- =====================================================
 -- TABLE PARAMETRES (SETTINGS)
 -- =====================================================
@@ -182,14 +190,14 @@ INSERT INTO user (id, civility, nom, prenom, email, password, dateNaissance, rol
 
 -- 2. Artistes
 INSERT INTO artiste (name, photo) VALUES
-('Ilyes', 'TCC ILYES DDD.webp'),
-('Paul', 'TCC paul mi.webp'),
+('Ilyes Djadel', 'TCC ILYES DDD.webp'),
+('Paul Mirabel', 'TCC paul mi.webp'),
 ('Edouard Delognon', 'edouard delognon photo.webp');
 
 -- Artistes additionnels
 INSERT INTO artiste (name, photo) VALUES
 ('Nordine Ganso', 'nordine ganso lphoto.webp'),
-('Tom', 'TCC TOM BOUBOU.webp'),
+('Tom Boudet', 'TCC TOM BOUBOU.webp'),
 ('Mahé', 'mahe photo.webp');
 
 -- Artistes supplémentaires (images présentes dans /assets/img/photo_artiste)
@@ -320,6 +328,6 @@ INSERT INTO lieu (image_path, is_main) VALUES
 
 -- 10. Paramètres par défaut
 INSERT INTO settings (`key`, `value`) VALUES
-('contact_recipient_email', 'contact@espacecomedia.fr')
+('contact_recipient_email', 'lespacecomedie@gmail.com')
 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 

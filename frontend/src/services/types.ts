@@ -117,6 +117,23 @@ export interface SpectacleFormData {
   places_disponibles?: number;
 }
 
+// Interfaces spécifiques pages sponsorisées
+export interface SponsoriseData {
+  title: string;
+  img: string;
+  description: string;
+  schedule: string;
+  lieu: string;
+  lien_spectacle: string;
+  videoUrl?: string;
+}
+
+// Photo additionnelle (par catégorie)
+export interface AdditionalPhoto {
+  id: number;
+  image_path: string;
+}
+
 // Interfaces pour les réponses API
 export interface ApiResponse<T> {
   success: boolean;

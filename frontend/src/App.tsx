@@ -110,38 +110,38 @@ const AppContent = () => {
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
+          <Routes>
         {maintenance && process.env.NODE_ENV === 'production' && (!user || user.role !== 'admin') ? (
           <>
             <Route path="*" element={<Maintenance />} />
           </>
         ) : (
           <>
-        <Route path="/" element={<Index />} />
-        <Route path="/spectacles" element={<Shows />} />
-        <Route path="/spectacles/:id" element={<SpectacleDetail />} />
-        <Route path="/le-lieu" element={<Venue />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/spectacles" element={<Shows />} />
+            <Route path="/spectacles/:id" element={<SpectacleDetail />} />
+            <Route path="/le-lieu" element={<Venue />} />
         <Route path="/cours" element={<Cours />} />
 
-        <Route path="/artistes" element={<Artists />} />
+            <Route path="/artistes" element={<Artists />} />
         <Route path="/connexion" element={<Login />} />
         <Route path="/inscription" element={<Register />} />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute requireAuth requireAdmin>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="/contact" element={<Contact />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute requireAuth requireAdmin>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/contact" element={<Contact />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
         <Route path="/sponsorise/:slug" element={<Sponsorise />} />
-        <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NotFound />} />
           </>
         )}
-      </Routes>
-    </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
   );
 };
 
@@ -155,11 +155,11 @@ const App = () => (
             <TooltipProvider>
               <Sonner />
               <AppContent />
-            </TooltipProvider>
-          </QueryClientProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
         </CSRFProvider>
       </CartProvider>
-    </AuthProvider>
+  </AuthProvider>
   </AppErrorBoundary>
 );
 

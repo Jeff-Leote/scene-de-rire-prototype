@@ -4,31 +4,29 @@ import { useParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "@/components/ui/sonner";
+import { Spectacle, SponsoriseData, AdditionalPhoto } from "../services/types";
+import { getSpectacles } from "@/services/spectacles";
+import { api } from "@/services/api";
 
-interface SponsoriseData {
-  title: string;
-  img: string;
-  description: string;
-  schedule: string;
-  lieu: string;
-  lien_spectacle: string;
-}
+// Les types sont désormais centralisés dans services/types.ts
 
 const Sponsorise = () => {
   const { slug } = useParams();
   const [data, setData] = useState<SponsoriseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [extraPhotos, setExtraPhotos] = useState<AdditionalPhoto[]>([]);
 
-  // Données des spectacles sponsorisés
+  // Données des spectacles sponsorisés (fallback local)
   const sponsoriseData: Record<string, SponsoriseData> = {
     'tchatcheur-comedy-club': {
       title: 'Tchatcheur Comedy Club',
       img: '/assets/img/spectacles/Tchatcheur comedy club.webp',
       description: 'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l\'humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l\'humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d\'autres n\'attendent qu\'à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle.',
-      schedule: 'Le lundi, mardi, mercredi et vendredi à 20h00',
+      schedule: ' les lundis, mardis, mercredis, vendredis 20h, les samedis 17h30, 19h00 et 20h30.',
       lieu: 'L\'espace Comédie',
-      lien_spectacle: 'https://www.billetweb.fr/tchatcheur-comedy-club1'
+      lien_spectacle: 'https://www.billetweb.fr/tchatcheur-comedy-club1',
+      videoUrl: 'https://youtu.be/bjQdOh830G4'
     },
     'un-ado-peut-en-cacher-un-autre': {
       title: 'Un Ado peut en cacher un autre',
@@ -57,22 +55,114 @@ const Sponsorise = () => {
   };
 
   useEffect(() => {
-    if (!slug) {
-      setError('Page non trouvée');
-      setLoading(false);
-      return;
-    }
+    const load = async () => {
+      if (!slug) {
+        setError('Page non trouvée');
+        setLoading(false);
+        return;
+      }
 
-    const spectacleData = sponsoriseData[slug];
-    if (!spectacleData) {
-      setError('Spectacle non trouvé');
-      setLoading(false);
-      return;
-    }
+      // 1) Base locale par défaut
+      const base = sponsoriseData[slug];
+      if (!base) {
+        setError('Spectacle non trouvé');
+        setLoading(false);
+        return;
+      }
 
-    setData(spectacleData);
-    setLoading(false);
+      // 2) Tenter de compléter avec la base de données publique
+      try {
+        const spectacles = await getSpectacles();
+
+        // Chercher par titre exact (plus robuste que par slug côté DB)
+        const match = Array.isArray(spectacles)
+          ? spectacles.find(s => (s.title || '').trim().toLowerCase() === base.title.trim().toLowerCase())
+          : undefined;
+
+        if (match) {
+          setData({
+            // Utiliser au maximum les champs DB, fallback sur le JSON si manquant
+            title: match.title || base.title,
+            img: match.img || base.img,
+            description: match.description || base.description,
+            schedule: base.schedule, // La programmation récurrente reste fournie par le JSON
+            lieu: match.lieu || base.lieu,
+            lien_spectacle: match.lien_spectacle || base.lien_spectacle,
+            videoUrl: base.videoUrl,
+          });
+
+          // Charger les photos additionnelles par catégorie via l'id du spectacle
+          try {
+            const photos = await api.get<AdditionalPhoto[]>(`/api/photos/spectacle/${match.id}`);
+            if (Array.isArray(photos) && photos.length > 0) {
+              setExtraPhotos(photos.slice(0, 3));
+            }
+          } catch {}
+        } else {
+          setData(base);
+          // Fallback local des photos additionnelles selon le slug
+          const fallbackPhotos: Record<string, string[]> = {
+            'tchatcheur-comedy-club': [
+              '/assets/img/photo_additionnel/B971A2EB-FE1F-47A0-B534-4D7B850D6AF4.webp',
+              '/assets/img/photo_additionnel/TCC paul mi.webp',
+              '/assets/img/photo_additionnel/D3D99BEC-6EB9-4B02-9019-137DA801E2DB.webp',
+            ],
+            'un-ado-peut-en-cacher-un-autre': [
+              '/assets/img/photo_additionnel/Ado 234.webp',
+              '/assets/img/photo_additionnel/Ado 1356.webp',
+              '/assets/img/photo_additionnel/Ado 123.webp',
+            ],
+            'cheri-je-tai-trompe': [],
+            'kaci-dans-la-connerie-humaine': [],
+          };
+          const imgs = fallbackPhotos[slug] || [];
+          setExtraPhotos(imgs.map((p, idx) => ({ id: idx + 1, image_path: p })));
+        }
+      } catch (e) {
+        // En cas d'erreur API, fallback JSON
+        setData(base);
+        // Fallback local photos
+        const fallbackPhotos: Record<string, string[]> = {
+          'tchatcheur-comedy-club': [
+            '/assets/img/photo_additionnel/B971A2EB-FE1F-47A0-B534-4D7B850D6AF4.webp',
+            '/assets/img/photo_additionnel/TCC paul mi.webp',
+            '/assets/img/photo_additionnel/D3D99BEC-6EB9-4B02-9019-137DA801E2DB.webp',
+          ],
+          'un-ado-peut-en-cacher-un-autre': [
+            '/assets/img/photo_additionnel/Ado 234.webp',
+            '/assets/img/photo_additionnel/Ado 1356.webp',
+            '/assets/img/photo_additionnel/Ado 123.webp',
+          ],
+          'cheri-je-tai-trompe': [],
+          'kaci-dans-la-connerie-humaine': [],
+        };
+        const imgs = fallbackPhotos[slug] || [];
+        setExtraPhotos(imgs.map((p, idx) => ({ id: idx + 1, image_path: p })));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [slug]);
+
+  const toYouTubeEmbed = (url?: string) => {
+    if (!url) return '';
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes('youtu.be')) {
+        const id = u.pathname.slice(1);
+        return `https://www.youtube.com/embed/${id}`;
+      }
+      if (u.hostname.includes('youtube.com')) {
+        const id = u.searchParams.get('v');
+        if (id) return `https://www.youtube.com/embed/${id}`;
+      }
+      return url;
+    } catch {
+      return url || '';
+    }
+  };
 
   const handleReserve = () => {
     if (!data) return;
@@ -112,30 +202,51 @@ const Sponsorise = () => {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pt-24">
         <section className="bg-black py-12">
           <div className="container mx-auto px-6">
-            {/* Hero Section */}
-            <div className="relative h-[700px] rounded-xl overflow-hidden mb-8 shadow-2xl">
-              <img
-                src={buildImgSrc('spectacles', (data.img || '').replace(/\.(jpe?g)$/i, '.webp')) || "/assets/placeholder.jpg"}
-                alt={data.title}
-                className="w-full h-full object-cover object-center"
-                onError={onImgErrorSwap}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <div className="flex items-center mb-6">
-                  <span className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg">
-                    SPECTACLE RÉCURRENT
-                  </span>
+            {/* Header Section: Affiche (gauche) + Infos (droite) */}
+            <div className="bg-gray-900 rounded-xl p-6 mb-8 shadow-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                {/* Affiche */}
+                <div className="w-full">
+                  <div className="relative w-full overflow-hidden rounded-lg bg-black">
+                    <img
+                      src={buildImgSrc('spectacles', (data.img || '').replace(/\.(jpe?g)$/i, '.webp')) || "/assets/placeholder.jpg"}
+                      alt={data.title}
+                      className="w-full h-auto object-contain"
+                      onError={onImgErrorSwap}
+                    />
+                  </div>
                 </div>
-                <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
-                  {data.title}
-                </h1>
-                <div className="flex items-center text-white/90 text-lg">
-                  <i className="fa-solid fa-calendar-days mr-3 text-red-400"></i>
-                  <span className="font-medium">{data.schedule}</span>
+                {/* Infos sur le côté */}
+                <div className="md:col-span-2">
+                  <div className="mb-3">
+                    <span className="inline-block bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                      Spectacle récurrent
+                    </span>
+                  </div>
+                  <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
+                    {data.title}
+                  </h1>
+                  <div className="mt-4 space-y-4">
+                    <div className="bg-gray-800 rounded-lg p-4 flex items-start">
+                      <i className="fa-regular fa-calendar mr-4 text-red-500 text-2xl"></i>
+                      <div>
+                        <div className="text-gray-400 text-xs uppercase tracking-wide">Programmation</div>
+                        <div className="text-white mt-1">
+                          {data.schedule}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-4 flex items-start">
+                      <i className="fa-solid fa-location-dot mr-4 text-red-500 text-2xl"></i>
+                      <div>
+                        <div className="text-gray-400 text-xs uppercase tracking-wide">Lieu</div>
+                        <div className="text-white mt-1">{data.lieu}</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -144,31 +255,53 @@ const Sponsorise = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Main Content */}
               <div className="md:col-span-2">
-                {/* Informations pratiques */}
-                <div className="bg-gray-900 rounded-lg p-6 mb-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center">
-                      <i className="fa-regular fa-calendar mr-3 text-red-500 text-xl"></i>
-                      <div>
-                        <p className="text-gray-400 text-sm">Programmation</p>
-                        <p className="text-white">{data.schedule}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <i className="fa-solid fa-location-dot mr-3 text-red-500 text-xl"></i>
-                      <div>
-                        <p className="text-gray-400 text-sm">Lieu</p>
-                        <p className="text-white">{data.lieu}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Description */}
                 <div className="bg-gray-900 rounded-lg p-6 mb-6">
                   <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
                   <p className="text-gray-300 whitespace-pre-line">{data.description}</p>
                 </div>
+
+              {/* Photos additionnelles */}
+              {extraPhotos.length > 0 && (
+                <div className="bg-gray-900 rounded-lg p-6 mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-6">Photos additionnelles</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {extraPhotos.map((p) => (
+                      <div key={p.id} className="rounded-lg overflow-hidden bg-black">
+                        <img
+                          src={buildImgSrc('photo_addictionnel', (p.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
+                          alt={`Photo additionnelle ${p.id}`}
+                          className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                          onError={onImgErrorSwap}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {data.videoUrl && (
+                    <div className="mt-8">
+                      <h3 className="text-xl font-semibold text-white mb-4">Vidéo</h3>
+                      <div className="aspect-video w-full rounded overflow-hidden bg-black">
+                        <iframe
+                          src={toYouTubeEmbed(data.videoUrl)}
+                          title="Vidéo YouTube"
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                        />
+                      </div>
+                      <a
+                        href={data.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center mt-3 text-red-400 hover:text-red-300"
+                      >
+                        Ouvrir sur YouTube
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
               </div>
 
               {/* Sidebar */}
