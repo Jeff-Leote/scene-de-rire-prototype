@@ -197,6 +197,9 @@ const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe
 // Fonction pour envoyer des emails en masse
 const sendBulkEmails = async (recipients, subject, message) => {
   console.log('📧 Début envoi en masse à', recipients.length, 'destinataires');
+  console.log('📧 Destinataires:', recipients);
+  console.log('📧 Sujet:', subject);
+  console.log('📧 Message:', message);
   const results = [];
   
   for (const recipient of recipients) {
@@ -204,9 +207,10 @@ const sendBulkEmails = async (recipients, subject, message) => {
       console.log('📧 Envoi à:', recipient);
       const result = await sendEmail(recipient, subject, message);
       results.push({ email: recipient, success: true, messageId: result.messageId });
-      console.log('📧 ✓ Succès pour:', recipient);
+      console.log('📧 ✓ Succès pour:', recipient, '- MessageId:', result.messageId);
     } catch (error) {
       console.error('📧 ✗ Échec pour:', recipient, '- Erreur:', error.message);
+      console.error('📧 ✗ Détails erreur:', error);
       results.push({ email: recipient, success: false, error: error.message });
     }
   }

@@ -304,9 +304,12 @@ router.post('/newsletter/send', async (req, res) => {
     console.log(`📧 Envoi de ${emails.length} emails newsletter`);
     console.log('📧 Sujet:', subject);
     console.log('📧 Destinataires:', emails);
+    console.log('📧 Message:', message);
 
     // Envoyer les emails avec le vrai service
+    console.log('📧 Début envoi bulk emails...');
     const results = await sendBulkEmails(emails, subject, message);
+    console.log('📧 Résultats bulk emails:', results);
     
     const successCount = results.filter(r => r.success).length;
     const failureCount = results.filter(r => !r.success).length;
