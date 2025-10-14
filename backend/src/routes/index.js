@@ -45,6 +45,22 @@ router.post('/newsletter/subscribe', async (req, res) => {
     
     console.log('📧 Nouvel abonné newsletter:', email);
     
+    // Envoyer un email de confirmation de bienvenue
+    try {
+      const { sendEmail } = require('../services/emailService');
+      await sendEmail(
+        email, 
+        'Bienvenue dans la newsletter Espace Comédie !', 
+        `Bonjour,\n\nMerci de vous être inscrit à notre newsletter ! Vous recevrez désormais nos actualités, les prochains spectacles et nos offres exclusives.\n\nÀ bientôt pour de bons moments de rire !\n\nL'équipe Espace Comédie`,
+        [], // pas d'attachments
+        true // avec lien de désabonnement
+      );
+      console.log('📧 Email de bienvenue envoyé à:', email);
+    } catch (emailError) {
+      console.error('📧 Erreur envoi email de bienvenue:', emailError.message);
+      // On continue même si l'email échoue, l'inscription est déjà faite
+    }
+    
     res.json({ success: true, message: 'Inscription à la newsletter réussie !' });
   } catch (error) {
     console.error('Erreur inscription newsletter:', error);
