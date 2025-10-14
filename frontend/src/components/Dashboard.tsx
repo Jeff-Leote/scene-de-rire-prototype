@@ -703,14 +703,30 @@ const handleDeleteLieu = async (id: number) => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailFormData)
-      });
+      // Timeout de sécurité pour éviter spinner infini si SMTP bloque
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 20000);
+
+      let response: Response;
+      try {
+        response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(emailFormData),
+          signal: controller.signal
+        });
+      } catch (err) {
+        if ((err as any)?.name === 'AbortError') {
+          toast.error('Envoi trop long (timeout 20s). Vérifiez la configuration SMTP côté serveur.');
+          return;
+        }
+        throw err;
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
 
       const data = await response.json();
 
