@@ -674,7 +674,7 @@ const handleDeleteLieu = async (id: number) => {
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSendingEmail) return; // garde-fou anti double submit
+    if (isSendingEmail) return;
     if (!emailFormData.subject || !emailFormData.message) {
       toast.error('Le sujet et le message sont requis');
       return;
@@ -688,10 +688,7 @@ const handleDeleteLieu = async (id: number) => {
         return;
       }
 
-      let response: Response;
-      console.log('POST /api/admin/newsletter/send payload:', emailFormData);
-      console.time('newsletter_send');
-      response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
+      const response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -699,29 +696,25 @@ const handleDeleteLieu = async (id: number) => {
         },
         body: JSON.stringify(emailFormData)
       });
-      console.timeEnd('newsletter_send');
-      console.log('newsletter_send status:', response.status);
-      const rawText = await response.text();
-      console.log('newsletter_send body:', rawText);
-      let data: any = {};
-      try {
-        data = rawText ? JSON.parse(rawText) : {};
-      } catch {
-        // non-JSON body, keep as text for error message
-        data = { message: rawText };
+
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json') ? await response.json() : { message: await response.text() };
+
+      if (response.status === 401) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+      if (!response.ok && response.status !== 202) {
+        throw new Error(payload?.error || payload?.message || 'Erreur lors de l\'envoi de l\'email');
       }
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || data.message || 'Erreur lors de l\'envoi de l\'email');
-      }
-
+      // Succès: gérer 200/201 (synchrone) et 202 (queued en prod)
+      const count = Number(payload?.recipientsCount) || 0;
       setIsEmailModalOpen(false);
       setEmailFormData({ subject: '', message: '', recipients: 'all' });
-      toast.success(`Email envoyé avec succès à ${data.recipientsCount} destinataires`);
+      toast.success(response.status === 202
+        ? (count > 0 ? `Email en file d'attente pour ${count} destinataire(s)` : 'Email en file d\'attente')
+        : (count > 0 ? `Email envoyé avec succès à ${count} destinataire(s)` : 'Email envoyé avec succès'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
