@@ -709,7 +709,7 @@ const handleDeleteLieu = async (id: number) => {
 
       let response: Response;
       try {
-        console.debug('POST /api/admin/newsletter/send payload:', emailFormData);
+        console.log('POST /api/admin/newsletter/send payload:', emailFormData);
         console.time('newsletter_send');
         response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
           method: 'POST',
@@ -730,9 +730,9 @@ const handleDeleteLieu = async (id: number) => {
         window.clearTimeout(timeoutId);
       }
       console.timeEnd('newsletter_send');
-      console.debug('newsletter_send status:', response.status);
+      console.log('newsletter_send status:', response.status);
       const rawText = await response.text();
-      console.debug('newsletter_send body:', rawText);
+      console.log('newsletter_send body:', rawText);
       let data: any = {};
       try {
         data = rawText ? JSON.parse(rawText) : {};
