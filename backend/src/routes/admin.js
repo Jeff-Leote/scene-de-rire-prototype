@@ -280,8 +280,6 @@ router.get('/newsletter/subscribers', async (req, res) => {
 router.post('/newsletter/send', async (req, res) => {
   try {
     const { subject, message, recipients } = req.body;
-    console.log('📨 [newsletter/send] START', new Date().toISOString());
-    console.log('📨 [newsletter/send] params:', { recipients, subjectLen: (subject||'').length, messageLen: (message||'').length });
 
     if (!subject || !message) {
       return res.status(400).json({ error: 'Sujet et message requis' });
@@ -309,20 +307,15 @@ router.post('/newsletter/send', async (req, res) => {
 
     console.log(`📧 Envoi de ${emails.length} emails newsletter`);
     console.log('📧 Sujet:', subject);
-    console.log('📧 Premier destinataire:', emails[0], '| ...');
-    console.time('📨 [newsletter/send] sendBulkEmails');
+    console.log('📧 Destinataires:', emails);
 
-    // Envoi "normal" (attendre le résultat et retourner les statistiques au client)
+    // Envoyer les emails avec le vrai service
     const results = await sendBulkEmails(emails, subject, message);
-    console.timeEnd('📨 [newsletter/send] sendBulkEmails');
+    
     const successCount = results.filter(r => r.success).length;
     const failureCount = results.filter(r => !r.success).length;
 
     console.log(`📧 Résultats: ${successCount} succès, ${failureCount} échecs`);
-    if (failureCount > 0) {
-      const firstError = results.find(r => !r.success);
-      console.warn('📧 Exemple erreur:', firstError);
-    }
 
     res.json({
       success: true,
