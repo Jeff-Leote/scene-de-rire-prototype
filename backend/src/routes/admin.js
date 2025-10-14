@@ -305,22 +305,19 @@ router.post('/newsletter/send', async (req, res) => {
     console.log('📧 Sujet:', subject);
     console.log('📧 Destinataires:', emails);
 
-    // Envoyer les emails avec le vrai service
-    const results = await sendBulkEmails(emails, subject, message);
-    
-    const successCount = results.filter(r => r.success).length;
-    const failureCount = results.filter(r => !r.success).length;
+    // Répondre immédiatement (ACK) pour éviter le timeout frontend
+    res.status(202).json({ queued: true, recipientsCount: emails.length });
 
-    console.log(`📧 Résultats: ${successCount} succès, ${failureCount} échecs`);
-
-    res.json({ 
-      success: true, 
-      recipientsCount: emails.length,
-      successCount,
-      failureCount,
-      results,
-      message: `Emails envoyés: ${successCount} succès, ${failureCount} échecs`
-    });
+    // Lancer l'envoi en arrière-plan (sans bloquer la réponse HTTP)
+    sendBulkEmails(emails, subject, message)
+      .then(results => {
+        const successCount = results.filter(r => r.success).length;
+        const failureCount = results.filter(r => !r.success).length;
+        console.log(`📧 Résultats (async): ${successCount} succès, ${failureCount} échecs`);
+      })
+      .catch(err => {
+        console.error('📧 Erreur async envoi newsletter:', err);
+      });
 
   } catch (error) {
     console.error('Erreur envoi newsletter:', error);
