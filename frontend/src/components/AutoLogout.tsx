@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMaintenance } from '@/contexts/MaintenanceContext';
 import { toast } from "@/components/ui/sonner";
 
 interface AutoLogoutProps {
@@ -7,11 +8,17 @@ interface AutoLogoutProps {
 }
 
 const AutoLogout = ({ timeout = 5 * 60 * 1000 }: AutoLogoutProps) => {
-  const { logout, token } = useAuth();
+  const { logout, token, user } = useAuth();
+  const { maintenanceEnabled } = useMaintenance();
   const timer = useRef<NodeJS.Timeout | null>(null);
   const warningTimer = useRef<NodeJS.Timeout | null>(null);
 
   const resetTimer = useCallback(() => {
+    // Si l'admin est en mode maintenance, ne pas activer le timeout
+    if (maintenanceEnabled && user?.role === 'admin') {
+      return;
+    }
+
     if (timer.current) clearTimeout(timer.current);
     if (warningTimer.current) clearTimeout(warningTimer.current);
 
@@ -25,10 +32,18 @@ const AutoLogout = ({ timeout = 5 * 60 * 1000 }: AutoLogoutProps) => {
       logout();
       toast.error("Déconnecté pour inactivité.");
     }, timeout);
-  }, [timeout, logout]);
+  }, [timeout, logout, maintenanceEnabled, user?.role]);
 
   useEffect(() => {
     if (!token) return;
+
+    // Si l'admin est en mode maintenance, désactiver complètement le timeout
+    if (maintenanceEnabled && user?.role === 'admin') {
+      // Nettoyer les timers existants
+      if (timer.current) clearTimeout(timer.current);
+      if (warningTimer.current) clearTimeout(warningTimer.current);
+      return;
+    }
 
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
 
@@ -42,7 +57,7 @@ const AutoLogout = ({ timeout = 5 * 60 * 1000 }: AutoLogoutProps) => {
       if (timer.current) clearTimeout(timer.current);
       if (warningTimer.current) clearTimeout(warningTimer.current);
     };
-  }, [token, logout, timeout, resetTimer]);
+  }, [token, logout, timeout, resetTimer, maintenanceEnabled, user?.role]);
 
   return null;
 };

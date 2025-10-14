@@ -288,17 +288,13 @@ router.post('/newsletter/send', async (req, res) => {
     let emails = [];
 
     if (recipients === 'newsletter') {
-      console.time('📨 [newsletter/send] fetch_newsletter_subscribers');
       // Récupérer les abonnés newsletter
       const [subscribers] = await db.query('SELECT email FROM newsletter_subscribers');
       emails = subscribers.map(sub => sub.email);
-      console.timeEnd('📨 [newsletter/send] fetch_newsletter_subscribers');
     } else if (recipients === 'all') {
-      console.time('📨 [newsletter/send] fetch_users');
       // Récupérer tous les utilisateurs
       const [users] = await db.query('SELECT email FROM user');
       emails = users.map(user => user.email);
-      console.timeEnd('📨 [newsletter/send] fetch_users');
     }
 
     if (emails.length === 0) {
@@ -317,8 +313,8 @@ router.post('/newsletter/send', async (req, res) => {
 
     console.log(`📧 Résultats: ${successCount} succès, ${failureCount} échecs`);
 
-    res.json({
-      success: true,
+    res.json({ 
+      success: true, 
       recipientsCount: emails.length,
       successCount,
       failureCount,
@@ -327,7 +323,7 @@ router.post('/newsletter/send', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('💥 [newsletter/send] Erreur envoi newsletter:', error);
+    console.error('Erreur envoi newsletter:', error);
     res.status(500).json({ error: 'Erreur lors de l\'envoi de la newsletter' });
   }
 });

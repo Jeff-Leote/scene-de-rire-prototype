@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMaintenance } from '@/contexts/MaintenanceContext';
 import { Link } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
 import { Spectacle, Artist, ArtistFormData, FeaturedArtist, User } from '../services/types';
@@ -16,11 +17,11 @@ interface LieuImage {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { maintenanceEnabled, setMaintenanceEnabled } = useMaintenance();
   const API_URL = import.meta.env.VITE_API_URL;
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'newsletter' | 'settings' | 'maintenance' | 'sponsorise'>('spectacles');
-  const [maintenanceEnabled, setMaintenanceEnabled] = useState<boolean>(false);
   const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,11 +130,7 @@ const Dashboard = () => {
           // Ignorer les erreurs de récupération des paramètres
         }
 
-        // Récupérer l'état maintenance (public)
-        try {
-          const m = await api.get<{ maintenance_enabled: boolean }>('/api/settings/maintenance');
-          setMaintenanceEnabled(Boolean(m.maintenance_enabled));
-        } catch {}
+        // L'état de maintenance est maintenant géré par le contexte MaintenanceContext
 
         // Charger les photos additionnelles
         await loadAdditionnalPhotos();
@@ -663,6 +660,22 @@ const handleDeleteLieu = async (id: number) => {
     }
   };
 
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
+  // Promo codes supprimés
+
   // Fonctions pour la newsletter et emails
   const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -716,7 +729,9 @@ const handleDeleteLieu = async (id: number) => {
     }
   };
 
+  // Codes promo supprimés
 
+  // Codes promo supprimés
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -1466,6 +1481,19 @@ const handleDeleteLieu = async (id: number) => {
             <p className="text-gray-300 mb-4">
               Quand la maintenance est activée, seuls les administrateurs connectés peuvent voir le site. Les utilisateurs voient une page de maintenance.
             </p>
+            {maintenanceEnabled && (
+              <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mb-4">
+                <div className="flex items-center">
+                  <i className="fa-solid fa-shield-halved text-yellow-400 mr-3"></i>
+                  <div>
+                    <p className="text-yellow-200 font-semibold">Mode maintenance actif</p>
+                    <p className="text-yellow-300 text-sm">
+                      Le timeout de déconnexion est désactivé pour les administrateurs en mode maintenance.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between bg-gray-900 rounded-lg p-4">
               <span className="text-white font-semibold">Activer la maintenance</span>
               <label className="inline-flex items-center cursor-pointer">

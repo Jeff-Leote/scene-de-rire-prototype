@@ -3,41 +3,12 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, useCart } from '@/contexts/AuthContext';
 import { HeaderProps } from '@/services/types';
-import { toast } from '@/components/ui/sonner';
 
 const Header = ({ activeItem }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [maintenance, setMaintenance] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const { cart } = useCart();
-
-  // Vérifier l'état de maintenance
-  useEffect(() => {
-    const checkMaintenance = async () => {
-      try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await fetch(`${API_URL}/api/settings/maintenance`, { credentials: 'include' });
-        const data = await res.json();
-        setMaintenance(Boolean(data?.maintenance_enabled));
-      } catch {
-        // En cas d'erreur, on assume que la maintenance n'est pas activée
-        setMaintenance(false);
-      }
-    };
-    checkMaintenance();
-  }, []);
-
-  // Gestionnaire de déconnexion avec vérification maintenance
-  const handleLogout = () => {
-    if (maintenance && user?.role === 'admin') {
-      toast.error('La maintenance est activée. Désactive-la avant de te déconnecter pour éviter de bloquer l\'accès admin.');
-      setIsUserMenuOpen(false);
-      return;
-    }
-    logout();
-    setIsUserMenuOpen(false);
-  };
   
   return (
     <>
@@ -94,7 +65,10 @@ const Header = ({ activeItem }: HeaderProps) => {
                       </Link>
                     )}
                     <button 
-                      onClick={handleLogout}
+                      onClick={() => {
+                        logout();
+                        setIsUserMenuOpen(false);
+                      }}
                       className="block w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white transition duration-300"
                     >
                       Déconnexion

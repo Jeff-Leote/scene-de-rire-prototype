@@ -26,6 +26,7 @@ import { useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, CartProvider } from './contexts/AuthContext';
 import { CSRFProvider } from './contexts/CSRFContext';
+import { MaintenanceProvider } from './contexts/MaintenanceContext';
 import AutoLogout from './components/AutoLogout';
 import { usePreloadData } from './hooks/usePreloadData';
 
@@ -150,16 +151,18 @@ const App = () => (
     <AuthProvider>
       <CartProvider>
         <CSRFProvider>
-          <AutoLogout/>
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <Sonner />
-              <AppContent />
-      </TooltipProvider>
-    </QueryClientProvider>
+          <MaintenanceProvider>
+            <AutoLogout/>
+            <QueryClientProvider client={queryClient}>
+              <TooltipProvider>
+                <Sonner />
+                <AppContent />
+              </TooltipProvider>
+            </QueryClientProvider>
+          </MaintenanceProvider>
         </CSRFProvider>
       </CartProvider>
-  </AuthProvider>
+    </AuthProvider>
   </AppErrorBoundary>
 );
 
