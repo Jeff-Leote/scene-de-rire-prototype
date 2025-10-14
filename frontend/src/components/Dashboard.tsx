@@ -709,6 +709,8 @@ const handleDeleteLieu = async (id: number) => {
 
       let response: Response;
       try {
+        console.debug('POST /api/admin/newsletter/send payload:', emailFormData);
+        console.time('newsletter_send');
         response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
           method: 'POST',
           headers: {
@@ -727,15 +729,24 @@ const handleDeleteLieu = async (id: number) => {
       } finally {
         window.clearTimeout(timeoutId);
       }
-
-      const data = await response.json();
+      console.timeEnd('newsletter_send');
+      console.debug('newsletter_send status:', response.status);
+      const rawText = await response.text();
+      console.debug('newsletter_send body:', rawText);
+      let data: any = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        // non-JSON body, keep as text for error message
+        data = { message: rawText };
+      }
 
       if (!response.ok) {
         if (response.status === 401) {
           toast.error('Session expirée. Veuillez vous reconnecter.');
           return;
         }
-        throw new Error(data.error || 'Erreur lors de l\'envoi de l\'email');
+        throw new Error(data.error || data.message || 'Erreur lors de l\'envoi de l\'email');
       }
 
       setIsEmailModalOpen(false);
