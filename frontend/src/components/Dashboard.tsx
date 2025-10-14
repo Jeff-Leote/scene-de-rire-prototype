@@ -674,7 +674,6 @@ const handleDeleteLieu = async (id: number) => {
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSendingEmail) return;
     if (!emailFormData.subject || !emailFormData.message) {
       toast.error('Le sujet et le message sont requis');
       return;
@@ -697,24 +696,19 @@ const handleDeleteLieu = async (id: number) => {
         body: JSON.stringify(emailFormData)
       });
 
-      const contentType = response.headers.get('content-type') || '';
-      const payload = contentType.includes('application/json') ? await response.json() : { message: await response.text() };
+      const data = await response.json();
 
-      if (response.status === 401) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-      if (!response.ok && response.status !== 202) {
-        throw new Error(payload?.error || payload?.message || 'Erreur lors de l\'envoi de l\'email');
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Session expirée. Veuillez vous reconnecter.');
+          return;
+        }
+        throw new Error(data.error || 'Erreur lors de l\'envoi de l\'email');
       }
 
-      // Succès: gérer 200/201 (synchrone) et 202 (queued en prod)
-      const count = Number(payload?.recipientsCount) || 0;
       setIsEmailModalOpen(false);
       setEmailFormData({ subject: '', message: '', recipients: 'all' });
-      toast.success(response.status === 202
-        ? (count > 0 ? `Email en file d'attente pour ${count} destinataire(s)` : 'Email en file d\'attente')
-        : (count > 0 ? `Email envoyé avec succès à ${count} destinataire(s)` : 'Email envoyé avec succès'));
+      toast.success(`Email envoyé avec succès à ${data.recipientsCount} destinataires`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
