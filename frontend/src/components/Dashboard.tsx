@@ -663,22 +663,6 @@ const handleDeleteLieu = async (id: number) => {
     }
   };
 
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
   // Fonctions pour la newsletter et emails
   const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -690,6 +674,7 @@ const handleDeleteLieu = async (id: number) => {
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSendingEmail) return; // garde-fou anti double submit
     if (!emailFormData.subject || !emailFormData.message) {
       toast.error('Le sujet et le message sont requis');
       return;
@@ -703,32 +688,17 @@ const handleDeleteLieu = async (id: number) => {
         return;
       }
 
-      // Timeout de sécurité pour éviter spinner infini si SMTP bloque
-      const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 20000);
-
       let response: Response;
-      try {
-        console.log('POST /api/admin/newsletter/send payload:', emailFormData);
-        console.time('newsletter_send');
-        response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(emailFormData),
-          signal: controller.signal
-        });
-      } catch (err) {
-        if ((err as any)?.name === 'AbortError') {
-          toast.error('Envoi trop long (timeout 20s). Vérifiez la configuration SMTP côté serveur.');
-          return;
-        }
-        throw err;
-      } finally {
-        window.clearTimeout(timeoutId);
-      }
+      console.log('POST /api/admin/newsletter/send payload:', emailFormData);
+      console.time('newsletter_send');
+      response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailFormData)
+      });
       console.timeEnd('newsletter_send');
       console.log('newsletter_send status:', response.status);
       const rawText = await response.text();
@@ -759,9 +729,7 @@ const handleDeleteLieu = async (id: number) => {
     }
   };
 
-  // Codes promo supprimés
 
-  // Codes promo supprimés
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
