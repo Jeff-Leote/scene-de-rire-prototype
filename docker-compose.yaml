@@ -46,7 +46,7 @@ services:
       - SMTP_PORT=587
       - SMTP_USER=junior97301@gmail.com
       - SMTP_PASS=azwrabuivhturkpq
-      - FROM_EMAIL=contact@espacecomedie.fr
+      - FROM_EMAIL=lespacecomedie@gmail.com
     volumes:
       - ./backend:/app
       - ./backend/node_modules:/app/node_modules

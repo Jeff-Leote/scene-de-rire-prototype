@@ -34,7 +34,14 @@ const createTransport = async () => {
       // Options supplémentaires pour Gmail
       tls: {
         rejectUnauthorized: false
-      }
+      },
+      // Configuration spéciale pour Render (timeout et retry)
+      connectionTimeout: 60000, // 60 secondes
+      greetingTimeout: 30000,   // 30 secondes
+      socketTimeout: 60000,     // 60 secondes
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100
     });
   } else {
     // Fallback vers Ethereal Email pour les tests
