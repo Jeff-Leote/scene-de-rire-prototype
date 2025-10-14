@@ -62,8 +62,10 @@ const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe
       const unsubscribeToken = Buffer.from(`${to}-${Date.now()}-${Math.random()}`).toString('base64');
       
       // Utiliser l'URL de production ou localhost selon l'environnement
-      const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://espacecomedie.fr' 
+      // En production, toujours utiliser l'URL de production même si NODE_ENV n'est pas défini
+      const isProduction = process.env.NODE_ENV === 'production' || process.env.FRONTEND_URL?.includes('espacecomedie.fr');
+      const baseUrl = isProduction 
+        ? (process.env.FRONTEND_URL || 'https://espacecomedie.fr')
         : (process.env.FRONTEND_URL || 'http://localhost:5173');
       
       // Pour éviter les 404 sur des routes profondes en prod, on pointe vers l'accueil
@@ -74,6 +76,10 @@ const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe
       console.log('📧 Base URL utilisée:', baseUrl);
       console.log('📧 NODE_ENV:', process.env.NODE_ENV);
       console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL);
+      console.log('📧 Variables d\'environnement email:');
+      console.log('📧 - SMTP_HOST:', process.env.SMTP_HOST ? '✓ Configuré' : '✗ Manquant');
+      console.log('📧 - SMTP_USER:', process.env.SMTP_USER ? '✓ Configuré' : '✗ Manquant');
+      console.log('📧 - FROM_EMAIL:', process.env.FROM_EMAIL || 'Non défini');
     } else {
       console.log('📧 Lien de désabonnement désactivé pour cet email');
     }
