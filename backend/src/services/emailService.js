@@ -9,6 +9,8 @@ const createTransport = async () => {
   console.log('📧 SMTP_HOST:', process.env.SMTP_HOST ? '✓ Configuré' : '✗ Manquant');
   console.log('📧 SMTP_USER:', process.env.SMTP_USER ? '✓ Configuré' : '✗ Manquant');
   console.log('📧 SMTP_PASS:', process.env.SMTP_PASS ? '✓ Configuré' : '✗ Manquant');
+  console.log('📧 SMTP_PORT:', process.env.SMTP_PORT || '587 (défaut)');
+  console.log('📧 SMTP_SECURE:', process.env.SMTP_SECURE || 'non défini');
   console.log('📧 NODE_ENV:', process.env.NODE_ENV || 'non défini');
   
   if (hasSmtpConfig) {
@@ -21,14 +23,18 @@ const createTransport = async () => {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT || 587,
-      secure: process.env.SMTP_PORT === '465',
+      secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       },
       // Ajouter des options de debug pour diagnostiquer les problèmes
       debug: process.env.NODE_ENV === 'development',
-      logger: process.env.NODE_ENV === 'development'
+      logger: process.env.NODE_ENV === 'development',
+      // Options supplémentaires pour Gmail
+      tls: {
+        rejectUnauthorized: false
+      }
     });
   } else {
     // Fallback vers Ethereal Email pour les tests
@@ -140,6 +146,16 @@ const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe
     };
 
     console.log('📧 Tentative d\'envoi via SMTP...');
+    
+    // Vérifier la connexion SMTP avant l'envoi
+    try {
+      await transporter.verify();
+      console.log('📧 ✓ Connexion SMTP vérifiée avec succès');
+    } catch (verifyError) {
+      console.error('📧 ✗ Erreur de vérification SMTP:', verifyError.message);
+      throw new Error(`Erreur de connexion SMTP: ${verifyError.message}`);
+    }
+    
     const info = await transporter.sendMail(mailOptions);
     
     // Vérifier si on utilise Ethereal (mode test)
