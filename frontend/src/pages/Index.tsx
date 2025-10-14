@@ -58,7 +58,7 @@ const Index = () => {
       <Header activeItem="Accueil" />
       <main>
         <Hero />
-        <GoogleReviewsElfsight appId="8ac2b72f-efe8-4908-8b5f-1150f5a43f23" />
+        {/*<GoogleReviewsElfsight appId="8ac2b72f-efe8-4908-8b5f-1150f5a43f23" />*/}
         <UpcomingShows />
         <FeaturedArtists />
         <ShowsCalendar />
