@@ -5,21 +5,26 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 
-// Pages
+// Pages - Import dynamique pour optimiser le chargement
+import { lazy, Suspense } from 'react';
+
+// Page d'accueil - chargement prioritaire
 import Index from './pages/Index';
-import Shows from './pages/Shows';
-import SpectacleDetail from './pages/SpectacleDetail';
-import Venue from './pages/Venue';
-import Artists from './pages/Artists';
-import Cours from './pages/Cours';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './components/Dashboard';
-import Contact from './pages/Contact';
-import Unsubscribe from './pages/Unsubscribe';
-import NotFound from './pages/NotFound';
-import Maintenance from './pages/Maintenance';
-import Sponsorise from './pages/Sponsorise';
+
+// Autres pages - chargement paresseux
+const Shows = lazy(() => import('./pages/Shows'));
+const SpectacleDetail = lazy(() => import('./pages/SpectacleDetail'));
+const Venue = lazy(() => import('./pages/Venue'));
+const Artists = lazy(() => import('./pages/Artists'));
+const Cours = lazy(() => import('./pages/Cours'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Unsubscribe = lazy(() => import('./pages/Unsubscribe'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Maintenance = lazy(() => import('./pages/Maintenance'));
+const Sponsorise = lazy(() => import('./pages/Sponsorise'));
 import { useAuth } from './contexts/AuthContext';
 
 // Components
@@ -111,38 +116,39 @@ const AppContent = () => {
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Routes>
-        {maintenance && process.env.NODE_ENV === 'production' && (!user || user.role !== 'admin') ? (
-          <>
-            <Route path="*" element={<Maintenance />} />
-          </>
-        ) : (
-          <>
-            <Route path="/" element={<Index />} />
-            <Route path="/spectacles" element={<Shows />} />
-            <Route path="/spectacles/:id" element={<SpectacleDetail />} />
-            <Route path="/le-lieu" element={<Venue />} />
-        <Route path="/cours" element={<Cours />} />
-
-            <Route path="/artistes" element={<Artists />} />
-        <Route path="/connexion" element={<Login />} />
-        <Route path="/inscription" element={<Register />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute requireAuth requireAdmin>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/contact" element={<Contact />} />
-        <Route path="/unsubscribe" element={<Unsubscribe />} />
-        <Route path="/sponsorise/:slug" element={<Sponsorise />} />
-            <Route path="*" element={<NotFound />} />
-          </>
-        )}
-          </Routes>
-        </BrowserRouter>
+      <Suspense fallback={<div className="loading"><div className="spinner"></div></div>}>
+        <Routes>
+          {maintenance && process.env.NODE_ENV === 'production' && (!user || user.role !== 'admin') ? (
+            <>
+              <Route path="*" element={<Maintenance />} />
+            </>
+          ) : (
+            <>
+              <Route path="/" element={<Index />} />
+              <Route path="/spectacles" element={<Shows />} />
+              <Route path="/spectacles/:id" element={<SpectacleDetail />} />
+              <Route path="/le-lieu" element={<Venue />} />
+              <Route path="/cours" element={<Cours />} />
+              <Route path="/artistes" element={<Artists />} />
+              <Route path="/connexion" element={<Login />} />
+              <Route path="/inscription" element={<Register />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute requireAuth requireAdmin>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
+              <Route path="/sponsorise/:slug" element={<Sponsorise />} />
+              <Route path="*" element={<NotFound />} />
+            </>
+          )}
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
 };
 
