@@ -72,15 +72,13 @@ const Venue = () => {
                   {error}
                 </div>
               ) : mainImage ? (
-                <OptimizedImage
-                  category="image_path"
-                  filename={(mainImage.image_path || '').replace(/\.(jpe?g)$/i, '.webp')}
-                  alt="comedy club interior"
+                <img
                   className="w-full h-full object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  width={1024}
-                  height={768}
-                  quality={75}
+                  src={buildImgSrc('image_path', (mainImage.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
+                  alt="comedy club interior"
+                  loading="lazy"
+                  decoding="async"
+                  onError={onImgErrorSwap}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">

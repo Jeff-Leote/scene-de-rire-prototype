@@ -347,19 +347,15 @@ const Hero = () => {
   }
 
   return (
-    <section id="hero" className="bg-black pt-24 pb-16">
-      <div className="container mx-auto px-6">
-        <div className="relative overflow-hidden rounded-lg h-[700px] mb-12">
-          <OptimizedImage
-            category="spectacles"
-            filename={slides[index].img}
+    <section id="hero" className="hero-section">
+      <div className="hero-container">
+        <div className="hero-image mb-12">
+          <img
+            src={buildImgSrc('spectacles', slides[index].img)}
             alt={slides[index].title}
-            className="absolute inset-0 w-full h-full object-cover"
-            priority={true}
-            sizes="100vw"
-            width={1920}
-            height={1080}
-            quality={75}
+            loading="eager"
+            decoding="sync"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           {/* Controls */}

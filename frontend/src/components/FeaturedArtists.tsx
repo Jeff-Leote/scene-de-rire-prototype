@@ -62,15 +62,13 @@ const FeaturedArtists = () => {
             .map((artist) => (
               <div key={artist.id} className="group">
                 <div className="relative overflow-hidden rounded-full aspect-square">
-                  <OptimizedImage
-                    category="photo_artiste"
-                    filename={artist.photo || ''}
-                    alt={`Portrait de ${artist.name}`}
+                  <img
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    width={400}
-                    height={400}
-                    quality={70}
+                    src={buildImgSrc('photo_artiste', artist.photo || '')}
+                    alt={`Portrait de ${artist.name}`}
+                    loading="lazy"
+                    decoding="async"
+                    onError={onImgErrorSwap}
                   />
                   <div className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 </div>
