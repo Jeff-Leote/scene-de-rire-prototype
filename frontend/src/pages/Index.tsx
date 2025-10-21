@@ -8,7 +8,7 @@ import UpcomingShows from "../components/UpcomingShows";
 import FeaturedArtists from "../components/FeaturedArtists";
 import ShowsCalendar from "@/components/ShowsCalendar";
 import Venue from "../components/Venue";
-import GoogleReviewsElfsight from "@/components/GoogleReviewsElfsight";
+import GoogleReviews from "@/components/GoogleReviews";
 import Testimonials from "../components/Testimonials";
 import Newsletter from "../components/Newsletter";
 import CTA from "../components/CTA";
@@ -58,7 +58,11 @@ const Index = () => {
       <Header activeItem="Accueil" />
       <main>
         <Hero />
-        {/*<GoogleReviewsElfsight appId="8ac2b72f-efe8-4908-8b5f-1150f5a43f23" />*/}
+        <GoogleReviews 
+          placeId="ChIJF94WEwDVwkcRpB4gPela0dE" 
+          apiKey="AIzaSyCMiI3gv5njJC0xPkQo9CJGyLtjXE3PUoQ" 
+          maxReviews={6}
+        />
         <UpcomingShows />
         <FeaturedArtists />
         <ShowsCalendar />
