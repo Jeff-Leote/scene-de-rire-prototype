@@ -76,13 +76,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome optimisé - seulement les icônes utilisées -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <!-- Font Awesome - chargement normal pour éviter les erreurs -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Preload des ressources critiques -->
-    <link rel="preload" href="/src/main.tsx" as="script">
-    <link rel="preload" href="/assets/img/logo-espace-comedie-lille.webp" as="image">
+    <!-- Preload des ressources critiques - supprimé pour éviter les erreurs -->
   </head>
 
   <body>
