@@ -13,8 +13,8 @@ const createTransport = async () => {
   console.log('📧 SMTP_SECURE:', process.env.SMTP_SECURE || 'non défini');
   console.log('📧 NODE_ENV:', process.env.NODE_ENV || 'non défini');
   
-  if (hasSmtpConfig) {
-    // Utiliser SMTP configuré (Gmail)
+  if (hasSmtpConfig && process.env.NODE_ENV !== 'production') {
+    // Utiliser SMTP configuré (Gmail) seulement en développement
     console.log('📧 Utilisation de SMTP configuré pour l\'envoi d\'emails');
     console.log('📧 Host:', process.env.SMTP_HOST);
     console.log('📧 Port:', process.env.SMTP_PORT || 587);
@@ -44,8 +44,8 @@ const createTransport = async () => {
       maxMessages: 100
     });
   } else {
-    // Fallback vers Ethereal Email pour les tests
-    console.log('📧 Aucune configuration SMTP trouvée, utilisation d\'Ethereal Email pour les tests');
+    // Fallback vers Ethereal Email pour les tests et production
+    console.log('📧 Utilisation d\'Ethereal Email (service de test)');
     const testAccount = await nodemailer.createTestAccount();
     console.log('📧 Compte de test Ethereal créé:', testAccount.user);
     
