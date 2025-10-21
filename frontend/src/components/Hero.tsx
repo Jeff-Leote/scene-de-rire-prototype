@@ -357,7 +357,9 @@ const Hero = () => {
             className="absolute inset-0 w-full h-full object-cover"
             priority={true}
             sizes="100vw"
-            quality={85}
+            width={1920}
+            height={1080}
+            quality={75}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           {/* Controls */}

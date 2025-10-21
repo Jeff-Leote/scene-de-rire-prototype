@@ -27,9 +27,17 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  // URL de base sans paramètres (pour éviter les erreurs srcset)
+  // Génération d'URLs optimisées avec paramètres de compression
+  const generateOptimizedUrl = (baseUrl: string, w?: number, q?: number) => {
+    const params = new URLSearchParams();
+    if (w) params.set('w', w.toString());
+    if (q) params.set('q', q.toString());
+    return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+  };
+
+  // URL de base
   const baseUrl = buildImgSrc(category, filename);
-  const optimizedUrl = baseUrl;
+  const optimizedUrl = generateOptimizedUrl(baseUrl, width, quality);
 
   const handleLoad = () => {
     setIsLoaded(true);

@@ -220,6 +220,15 @@ if (routes) {
   app.use("/api", csrfProtection);
   app.use("/api", routes);
   
+  // Route d'optimisation d'images
+  try {
+    const imageOptimizationRoutes = require("./routes/imageOptimization");
+    app.use("/api/images", imageOptimizationRoutes);
+    console.log("✅ Routes d'optimisation d'images chargées");
+  } catch (error) {
+    console.log("⚠️ Routes d'optimisation d'images non disponibles:", error.message);
+  }
+  
   
 } else {
   // Routes de fallback sans base de données

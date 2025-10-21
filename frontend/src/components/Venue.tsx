@@ -78,7 +78,9 @@ const Venue = () => {
                   alt="comedy club interior"
                   className="w-full h-full object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  quality={85}
+                  width={1024}
+                  height={768}
+                  quality={75}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
