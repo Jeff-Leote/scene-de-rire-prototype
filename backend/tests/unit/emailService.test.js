@@ -13,7 +13,8 @@ describe('Email Service', () => {
     
     mockSendMail = jest.fn();
     mockTransporter = {
-      sendMail: mockSendMail
+      sendMail: mockSendMail,
+      verify: jest.fn().mockResolvedValue(true)
     };
     
     nodemailer.createTransport.mockReturnValue(mockTransporter);

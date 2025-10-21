@@ -218,7 +218,9 @@ app.get('/api/health', async (req, res) => {
 if (routes) {
   // Protection CSRF pour les routes API seulement
   app.use("/api", csrfProtection);
-app.use("/api", routes);
+  app.use("/api", routes);
+  
+  
 } else {
   // Routes de fallback sans base de données
   app.get("/api/health", (req, res) => {
