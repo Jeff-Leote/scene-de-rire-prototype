@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LieuImage } from "../services/lieu";
 import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
+import OptimizedImage from "./OptimizedImage";
 
 const Venue = () => {
   const navigate = useNavigate();
@@ -71,11 +72,13 @@ const Venue = () => {
                   {error}
                 </div>
               ) : mainImage ? (
-                <img
-                  className="w-full h-full object-cover"
-                  src={buildImgSrc('image_path', (mainImage.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
+                <OptimizedImage
+                  category="image_path"
+                  filename={(mainImage.image_path || '').replace(/\.(jpe?g)$/i, '.webp')}
                   alt="comedy club interior"
-                  onError={onImgErrorSwap}
+                  className="w-full h-full object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  quality={85}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
