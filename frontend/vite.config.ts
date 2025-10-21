@@ -61,7 +61,10 @@ export default defineConfig(({ mode }) => ({
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
+          if (!assetInfo.name) return `assets/[name]-[hash].[ext]`;
           const extType = assetInfo.name.split('.').at(1);
+          if (!extType) return `assets/[name]-[hash].[ext]`;
+          
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
             return `assets/img/[name]-[hash].[ext]`;
           }
