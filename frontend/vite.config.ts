@@ -36,26 +36,13 @@ export default defineConfig(({ mode }) => ({
     },
     rollupOptions: {
       output: {
-        // 🔧 Code splitting intelligent et optimisé
-        manualChunks: (id) => {
-          // Vendor chunks optimisés
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
-            if (id.includes('@radix-ui')) return 'ui-vendor';
-            if (id.includes('stripe')) return 'stripe-vendor';
-            if (id.includes('date-fns') || id.includes('zod')) return 'utils-vendor';
-            if (id.includes('recharts')) return 'charts-vendor';
-            return 'vendor';
-          }
-          // Chunks par page
-          if (id.includes('/pages/')) {
-            const page = id.split('/pages/')[1].split('/')[0];
-            return `page-${page}`;
-          }
-          // Chunks par composant
-          if (id.includes('/components/')) {
-            return 'components';
-          }
+        // 🔧 Code splitting simplifié pour éviter les erreurs
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          utils: ['date-fns', 'zod', 'react-hook-form'],
+          charts: ['recharts'],
+          stripe: ['@stripe/stripe-js', '@stripe/react-stripe-js']
         },
         // 📦 Optimisation des chunks avec compression
         chunkFileNames: 'assets/js/[name]-[hash].js',
