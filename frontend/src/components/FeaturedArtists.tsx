@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { Link } from 'react-router-dom';
+import OptimizedImage from './OptimizedImage';
 import { Artist } from '../services/types';
 
 const FeaturedArtists = () => {
@@ -61,11 +62,13 @@ const FeaturedArtists = () => {
             .map((artist) => (
               <div key={artist.id} className="group">
                 <div className="relative overflow-hidden rounded-full aspect-square">
-                  <img
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    src={buildImgSrc('photo_artiste', artist.photo || '')}
+                  <OptimizedImage
+                    category="photo_artiste"
+                    filename={artist.photo || ''}
                     alt={`Portrait de ${artist.name}`}
-                    onError={onImgErrorSwap}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    quality={80}
                   />
                   <div className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 </div>

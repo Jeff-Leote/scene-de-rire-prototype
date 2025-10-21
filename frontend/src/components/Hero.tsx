@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { Link } from 'react-router-dom';
+import OptimizedImage from './OptimizedImage';
 
 type SpectacleItem = {
   id: number;
@@ -349,13 +350,14 @@ const Hero = () => {
     <section id="hero" className="bg-black pt-24 pb-16">
       <div className="container mx-auto px-6">
         <div className="relative overflow-hidden rounded-lg h-[700px] mb-12">
-          <img 
-            className="absolute inset-0 w-full h-full object-cover" 
-            src={buildImgSrc('spectacles', slides[index].img)}
-            loading="eager"
-            decoding="async"
+          <OptimizedImage
+            category="spectacles"
+            filename={slides[index].img}
             alt={slides[index].title}
-            onError={onImgErrorSwap}
+            className="absolute inset-0 w-full h-full object-cover"
+            priority={true}
+            sizes="100vw"
+            quality={85}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           {/* Controls */}
