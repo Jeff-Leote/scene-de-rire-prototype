@@ -805,7 +805,6 @@ const handleDeleteLieu = async (id: number) => {
     );
   }
 
-
   return (
     <div className="min-h-screen bg-gray-950 pt-24 pb-12">
       <div className="container mx-auto px-6">
@@ -905,16 +904,19 @@ const handleDeleteLieu = async (id: number) => {
               Sponsorisé
             </button>
           </div>
-                      {/* Boutons d'ajout selon l'onglet actif */}
-            {activeTab === 'spectacles' && (
+        </div>
+        
+        {/* Boutons d'ajout selon l'onglet actif */}
+        <div className="flex justify-end mb-6">
+          {activeTab === 'spectacles' && (
             <button
-                onClick={handleAddSpectacleClick}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
+              onClick={handleAddSpectacleClick}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full sm:w-auto justify-center"
             >
               <i className="fa-solid fa-plus"></i>
-                <span>Ajouter un spectacle</span>
-              </button>
-            )}
+              <span>Ajouter un spectacle</span>
+            </button>
+          )}
             {activeTab === 'artists' && (
               <button
                 onClick={handleAddArtistClick}
