@@ -9,13 +9,17 @@ const Header = ({ activeItem }: HeaderProps) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const { cart } = useCart();
+
+  const handleNavClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   
   return (
     <>
       <header id="header" className="bg-black text-white py-4 px-6 fixed w-full z-50">
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center" onClick={handleNavClick}>
             <img 
               src="/assets/img/logo-espace-comedie-lille.webp" 
               alt="L'Espace Comédie Lille" 
@@ -25,19 +29,19 @@ const Header = ({ activeItem }: HeaderProps) => {
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
+            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`} onClick={handleNavClick}>
               Accueil
             </Link>
-            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
+            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`} onClick={handleNavClick}>
               Programmation
             </Link>
-            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
+            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`} onClick={handleNavClick}>
               Le lieu
             </Link>
-            <Link to="/cours" className={`${activeItem === 'Cours' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
+            <Link to="/cours" className={`${activeItem === 'Cours' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`} onClick={handleNavClick}>
               Cours
             </Link>
-            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`}>
+            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'hover:text-red-500 transition duration-300'} cursor-pointer`} onClick={handleNavClick}>
               Contact
             </Link>
           </nav>
@@ -59,7 +63,10 @@ const Header = ({ activeItem }: HeaderProps) => {
                       <Link 
                         to="/dashboard" 
                         className="block px-4 py-2 hover:bg-red-500 hover:text-white transition duration-300"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          handleNavClick();
+                        }}
                       >
                         Dashboard
                       </Link>
@@ -108,20 +115,35 @@ const Header = ({ activeItem }: HeaderProps) => {
           {/* Logo mobile removed as requested */}
           
           <nav className="flex flex-col space-y-6 text-center">
-            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
+            <Link to="/" className={`${activeItem === 'Accueil' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`} onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleNavClick();
+            }}>
               Accueil
             </Link>
-            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
+            <Link to="/spectacles" className={`${activeItem === 'Spectacles' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`} onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleNavClick();
+            }}>
               Spectacles
             </Link>
-            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
+            <Link to="/le-lieu" className={`${activeItem === 'Le lieu' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`} onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleNavClick();
+            }}>
               Le lieu
             </Link>
-            <Link to="/cours" className={`${activeItem === 'Cours' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
+            <Link to="/cours" className={`${activeItem === 'Cours' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`} onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleNavClick();
+            }}>
               Cours
             </Link>
             {/* Lien texte Réservation (mobile) retiré */}
-            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`}>
+            <Link to="/contact" className={`${activeItem === 'Contact' ? 'text-red-500 text-2xl border-b-2 border-red-500 pb-1' : 'text-white text-2xl hover:text-red-500 transition duration-300'}`} onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleNavClick();
+            }}>
               Contact
             </Link>
             <a 
@@ -129,6 +151,10 @@ const Header = ({ activeItem }: HeaderProps) => {
               target="_blank" 
               rel="noopener noreferrer"
               className="bg-red-500 text-white px-6 py-3 rounded text-xl mt-4 hover:bg-red-600 transition duration-300"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleNavClick();
+              }}
             >
               Réserver
             </a>

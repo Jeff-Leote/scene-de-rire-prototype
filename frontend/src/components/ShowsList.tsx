@@ -7,6 +7,7 @@ import { Spectacle } from '../services/types';
 
 const ShowsList = () => {
   const navigate = useNavigate();
+  const [allSpectacles, setAllSpectacles] = useState<Spectacle[]>([]);
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -19,29 +20,37 @@ const ShowsList = () => {
     return heure.split(':').slice(0, 2).join(':');
   };
 
+  // Charger tous les spectacles à venir une seule fois
   useEffect(() => {
-    const fetchSpectacles = async () => {
+    const fetchAllSpectacles = async () => {
       try {
         setLoading(true);
         const { api } = await import('@/services/api');
-        const data = await api.get<{
-          spectacles: Spectacle[];
-          pagination: { total: number };
-        }>(`/api/spectacles?page=${page}&limit=${limit}`);
+        
+        // Récupérer tous les spectacles (limite élevée)
+        const response = await api.get(`/api/spectacles?page=1&limit=1000`) as any;
+        const data = response.spectacles || response || [];
 
-        if (data.spectacles && Array.isArray(data.spectacles)) {
+        if (Array.isArray(data)) {
           const now = new Date();
 
-          const filtered = data.spectacles.filter((spectacle: Spectacle) => {
-            const datePart = spectacle.date_spectacle.split("T")[0]; // assure compatibilité format ISO
+          const filtered = data.filter((spectacle: Spectacle) => {
+            const datePart = spectacle.date_spectacle.split("T")[0];
             const fullDate = new Date(`${datePart}T${spectacle.heure_spectacle}`);
             return fullDate > now;
           });
 
-          setSpectacles(filtered);
-          setTotal(data.pagination.total);
+          // Trier par date croissante
+          filtered.sort((a, b) => {
+            const dateA = new Date(`${a.date_spectacle.split("T")[0]}T${a.heure_spectacle}`);
+            const dateB = new Date(`${b.date_spectacle.split("T")[0]}T${b.heure_spectacle}`);
+            return dateA.getTime() - dateB.getTime();
+          });
+
+          setAllSpectacles(filtered);
+          setTotal(filtered.length);
         } else {
-          setError("Format de données inattendu");
+          setError("Format de données inattendu - données non tableau");
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
@@ -51,15 +60,29 @@ const ShowsList = () => {
       }
     };
 
-    fetchSpectacles();
-  }, [page]);
+    fetchAllSpectacles();
+  }, []);
+
+  // Mettre à jour les spectacles affichés quand la page change
+  useEffect(() => {
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const pageSpectacles = allSpectacles.slice(startIndex, endIndex);
+    setSpectacles(pageSpectacles);
+  }, [page, allSpectacles]);
 
   const handlePrev = () => {
-    if (page > 1) setPage((p) => p - 1);
+    if (page > 1) {
+      setPage((p) => p - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleNext = () => {
-    if (page < Math.ceil(total / limit)) setPage((p) => p + 1);
+    if (page < Math.ceil(total / limit)) {
+      setPage((p) => p + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   if (loading) {
@@ -93,7 +116,7 @@ const ShowsList = () => {
           <p className="text-gray-400 text-center">Aucun spectacle trouvé</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 mb-8">
+            <div className={`grid gap-4 sm:gap-6 mb-8 ${spectacles.length === 1 ? 'grid-cols-1 justify-center' : spectacles.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'}`}>
               {spectacles.map((spectacle) => (
                 <div
                   key={spectacle.id}

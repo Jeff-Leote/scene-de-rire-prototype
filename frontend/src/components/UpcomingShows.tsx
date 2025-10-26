@@ -36,7 +36,14 @@ const UpcomingShows = () => {
     const fetchSpectacles = async () => {
       try {
         const { api } = await import('@/services/api');
-        const data: Spectacle[] = await api.get('/api/spectacles/upcoming');
+        
+        // Récupérer plus de spectacles pour s'assurer d'avoir assez de spectacles à venir
+        const response = await api.get('/api/spectacles?page=1&limit=50') as any;
+        const data = response.spectacles || response || [];
+
+        if (!Array.isArray(data)) {
+          throw new Error('Format de données inattendu');
+        }
 
         const now = new Date();
         const filtered = data.filter((spectacle) => {
@@ -44,7 +51,14 @@ const UpcomingShows = () => {
           return fullDateTime > now;
         });
 
-        // Limiter à 3 spectacles maximum
+        // Trier par date croissante
+        filtered.sort((a, b) => {
+          const dateA = new Date(`${a.date_spectacle.split("T")[0]}T${a.heure_spectacle}`);
+          const dateB = new Date(`${b.date_spectacle.split("T")[0]}T${b.heure_spectacle}`);
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        // Prendre les 3 premiers spectacles à venir
         setSpectacles(filtered.slice(0, 3));
 
         // Disponibilités retirées
@@ -91,7 +105,7 @@ const UpcomingShows = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className={`grid gap-4 sm:gap-6 ${spectacles.length === 1 ? 'grid-cols-1 justify-center' : spectacles.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
           {spectacles.length === 0 && (
             <div className="col-span-full text-center py-12">
               <p className="text-gray-400 text-lg">Aucun spectacle à venir pour le moment.</p>
