@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Spectacle } from '../services/types';
 import { toast } from "@/components/ui/sonner";
+import { trackBookingClick } from '@/utils/googleAds';
 
 
 const SpectacleDetail = () => {
@@ -71,6 +72,9 @@ const SpectacleDetail = () => {
 
   const handleReserve = () => {
     if (!spectacle) return;
+    
+    // Envoyer la conversion Google Ads avant la redirection
+    trackBookingClick(spectacle.title);
     
     // Utiliser le lien de billetterie du spectacle s'il existe
     if (spectacle.lien_spectacle) {

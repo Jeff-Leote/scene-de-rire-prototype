@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/sonner";
 import { Spectacle, SponsoriseData, AdditionalPhoto } from "../services/types";
 import { getSpectacles } from "@/services/spectacles";
 import { api } from "@/services/api";
+import { trackBookingClick } from '@/utils/googleAds';
 
 // Les types sont désormais centralisés dans services/types.ts
 
@@ -166,6 +167,9 @@ const Sponsorise = () => {
 
   const handleReserve = () => {
     if (!data) return;
+    
+    // Envoyer la conversion Google Ads avant la redirection
+    trackBookingClick(data.title);
     
     if (data.lien_spectacle) {
       window.location.href = data.lien_spectacle;

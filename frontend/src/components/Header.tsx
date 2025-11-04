@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, useCart } from '@/contexts/AuthContext';
 import { HeaderProps } from '@/services/types';
+import { trackBookingClick } from '@/utils/googleAds';
 
 const Header = ({ activeItem }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -89,6 +90,7 @@ const Header = ({ activeItem }: HeaderProps) => {
               target="_blank" 
               rel="noopener noreferrer"
               className="hidden md:inline-block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+              onClick={() => trackBookingClick('Réservation générale')}
             >
               Réserver
             </a>
@@ -152,6 +154,7 @@ const Header = ({ activeItem }: HeaderProps) => {
               rel="noopener noreferrer"
               className="bg-red-500 text-white px-6 py-3 rounded text-xl mt-4 hover:bg-red-600 transition duration-300"
               onClick={() => {
+                trackBookingClick('Réservation générale');
                 setIsMobileMenuOpen(false);
                 handleNavClick();
               }}

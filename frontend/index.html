@@ -85,7 +85,9 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'AW-17654685757');
+      gtag('config', 'AW-17654685757', {
+        'conversion_linker': true
+      });
     </script>
     
     <!-- Preload des ressources critiques - supprimé pour éviter les erreurs -->
