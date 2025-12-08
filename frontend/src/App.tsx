@@ -104,7 +104,7 @@ const AppContent = () => {
         const res = await fetch(`${API_URL}/api/settings/maintenance`, { credentials: 'include' });
         const data = await res.json();
         setMaintenance(Boolean(data?.maintenance_enabled));
-      } catch {}
+      } catch { /* empty */ }
     };
     check();
   }, []);

@@ -4,19 +4,21 @@ import { GoogleReview, GoogleReviewsProps, GoogleReviewsService } from '../servi
 const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) => {
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setHasError(false);
 
         const reviewsData = await GoogleReviewsService.fetchReviews(placeId, apiKey, maxReviews);
         setReviews(reviewsData);
       } catch (err) {
         console.error('Erreur lors du chargement des avis:', err);
-        setError(err instanceof Error ? err.message : 'Erreur inconnue');
+        console.error('Détails de l\'erreur:', err instanceof Error ? err.message : 'Erreur inconnue');
+        setHasError(true);
+        setReviews([]);
       } finally {
         setLoading(false);
       }
@@ -25,7 +27,8 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
     if (placeId && apiKey) {
       fetchReviews();
     } else {
-      setError('Place ID ou clé API manquante');
+      console.error('Place ID ou clé API manquante');
+      setHasError(true);
       setLoading(false);
     }
   }, [placeId, apiKey, maxReviews]);
@@ -43,6 +46,11 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
     ));
   };
 
+  // Si erreur, ne rien afficher (masquer complètement la section)
+  if (hasError) {
+    return null;
+  }
+
   if (loading) {
     return (
       <section className="bg-gray-950 py-16">
@@ -57,33 +65,8 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
     );
   }
 
-  if (error) {
-    return (
-      <section className="bg-gray-950 py-16">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white mb-8">Avis Google</h2>
-          <div className="text-center text-red-400">
-            <p>{error}</p>
-            <p className="text-sm mt-2">
-              Les avis ne peuvent pas être affichés pour le moment.
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   if (reviews.length === 0) {
-    return (
-      <section className="bg-gray-950 py-16">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold text-white mb-8">Avis Google</h2>
-          <div className="text-center text-gray-400">
-            <p>Aucun avis disponible pour le moment.</p>
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (
