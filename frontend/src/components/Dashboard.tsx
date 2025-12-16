@@ -80,8 +80,12 @@ const Dashboard = () => {
       try {
         const { api } = await import('@/services/api');
 
-        // Récupérer les spectacles
-        const spectaclesData = await api.get<Spectacle[]>('/api/admin/spectacles');
+        // Récupérer les spectacles (avec pagination)
+        const spectaclesResponse = await api.get<{ data: Spectacle[], pagination?: any } | Spectacle[]>('/api/admin/spectacles');
+        // Gérer la compatibilité avec l'ancien format (array) et le nouveau format (object avec data)
+        const spectaclesData: Spectacle[] = Array.isArray(spectaclesResponse) 
+          ? spectaclesResponse 
+          : (spectaclesResponse?.data || []);
         setSpectacles(spectaclesData);
 
         // Disponibilités supprimées
@@ -114,12 +118,24 @@ const Dashboard = () => {
 
         // Codes promo supprimés
 
-        // Récupérer les abonnés newsletter
+        // Récupérer les abonnés newsletter (avec pagination)
         try {
-          const newsletterData = await api.get<string[]>('/api/admin/newsletter/subscribers');
-          setNewsletterSubscribers(newsletterData);
-        } catch {
-          // Ignorer les erreurs de récupération des abonnés
+          const newsletterResponse = await api.get<{ data: Array<{ email: string, subscribed_at: string }>, pagination?: any } | string[]>('/api/admin/newsletter/subscribers');
+          // Gérer la compatibilité avec l'ancien format (array) et le nouveau format (object avec data)
+          let newsletterEmails: string[] = [];
+          if (Array.isArray(newsletterResponse)) {
+            // Ancien format : tableau direct d'emails
+            newsletterEmails = newsletterResponse;
+          } else if (newsletterResponse && typeof newsletterResponse === 'object' && 'data' in newsletterResponse) {
+            // Nouveau format : objet avec data et pagination
+            newsletterEmails = newsletterResponse.data.map(item => 
+              typeof item === 'string' ? item : item.email
+            );
+          }
+          setNewsletterSubscribers(newsletterEmails);
+        } catch (err) {
+          console.error('Erreur lors de la récupération des abonnés newsletter:', err);
+          setNewsletterSubscribers([]);
         }
 
         // Récupérer l'email de contact

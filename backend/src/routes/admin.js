@@ -259,16 +259,57 @@ if (multer && sharp) {
 
 
 // ====== Newsletter ======
-// Récupérer tous les abonnés newsletter
+// Récupérer tous les abonnés newsletter avec pagination et sécurité
 router.get('/newsletter/subscribers', async (req, res) => {
   try {
+    // Paramètres de pagination avec valeurs par défaut sécurisées
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50)); // Max 100 par page
+    const offset = (page - 1) * limit;
+    
+    // Option pour masquer partiellement les emails (sécurité)
+    const maskEmails = req.query.mask === 'true';
+
+    // Récupérer le total pour la pagination
+    const [countResult] = await db.query(
+      'SELECT COUNT(*) as total FROM newsletter_subscribers'
+    );
+    const total = countResult[0].total;
+    const totalPages = Math.ceil(total / limit);
+
+    // Requête avec pagination et limite de sécurité
     const [subscribers] = await db.query(
-      'SELECT email, subscribed_at FROM newsletter_subscribers ORDER BY subscribed_at DESC'
+      'SELECT email, subscribed_at FROM newsletter_subscribers ORDER BY subscribed_at DESC LIMIT ? OFFSET ?',
+      [limit, offset]
     );
 
-    // Retourner seulement les emails pour simplifier
-    const emails = subscribers.map(sub => sub.email);
-    res.json(emails);
+    // Fonction pour masquer partiellement les emails (sécurité)
+    const maskEmail = (email) => {
+      if (!maskEmails) return email;
+      const [localPart, domain] = email.split('@');
+      if (!domain) return email;
+      const visibleChars = Math.max(2, Math.floor(localPart.length * 0.3));
+      const masked = localPart.substring(0, visibleChars) + '*'.repeat(localPart.length - visibleChars);
+      return `${masked}@${domain}`;
+    };
+
+    // Retourner les données avec pagination
+    const result = {
+      data: subscribers.map(sub => ({
+        email: maskEmail(sub.email),
+        subscribed_at: sub.subscribed_at
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    };
+
+    res.json(result);
 
   } catch (error) {
     console.error('Erreur récupération abonnés:', error);
@@ -405,16 +446,42 @@ router.put('/settings/maintenance', async (req, res) => {
   }
 });
 
-// Récupérer tous les spectacles (pour l'admin)
+// Récupérer tous les spectacles (pour l'admin) avec pagination et sécurité
 router.get('/spectacles', async (req, res) => {
-
   try {
+    // Paramètres de pagination avec valeurs par défaut sécurisées
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50)); // Max 200 par page
+    const offset = (page - 1) * limit;
+
+    // Récupérer le total pour la pagination
+    const [countResult] = await db.query(
+      'SELECT COUNT(*) as total FROM spectacle'
+    );
+    const total = countResult[0].total;
+    const totalPages = Math.ceil(total / limit);
+
+    // Requête avec pagination et limite de sécurité
     const [spectacles] = await db.query(`
       SELECT * FROM spectacle 
       ORDER BY date_spectacle DESC, heure_spectacle DESC
-    `);
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
 
-    res.json(spectacles);
+    // Retourner les données avec pagination
+    const result = {
+      data: spectacles,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    };
+
+    res.json(result);
   } catch (error) {
     console.error('Erreur lors de la récupération des spectacles:', error);
     res.status(500).json({ message: 'Erreur serveur' });
