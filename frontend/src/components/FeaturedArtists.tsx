@@ -1,33 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { Link } from 'react-router-dom';
 import OptimizedImage from './OptimizedImage';
 import { Artist } from '../services/types';
+import { api } from '@/services/api';
 
 const FeaturedArtists = () => {
-  const [artists, setArtists] = useState<Artist[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchArtists = async () => {
-      try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const response = await fetch(`${API_URL}/api/artistes`);
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des artistes');
-        }
-        const data = await response.json();
-        setArtists(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArtists();
-  }, []);
+  const { data: artists = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['artistes'],
+    queryFn: () => api.get<Artist[]>('/api/artistes'),
+    staleTime: 30 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000
+  });
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Une erreur est survenue') : null;
 
   if (loading) {
     return (

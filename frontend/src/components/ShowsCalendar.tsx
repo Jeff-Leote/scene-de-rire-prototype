@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
 import {
   format,
   startOfMonth,
@@ -15,40 +16,27 @@ import {
   parseISO,
 } from "date-fns";
 import { fr } from "date-fns/locale/fr";
+import { api } from '@/services/api';
 
 type Spectacle = {
   id: number;
   date_spectacle: string;
   heure_spectacle: string;
   title: string;
-  artiste_name: string;
+  artiste_name?: string;
 };
 
 const ShowsCalendar = () => {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchSpectacles = async () => {
-      try {
-        const { api } = await import('@/services/api');
-        const data = await api.get('/api/spectacles/all');
-        if (Array.isArray(data)) {
-          setSpectacles(data);
-        } else {
-          console.error("Les données reçues ne sont pas un tableau:", data);
-          setError("Format de données invalide");
-        }
-      } catch (err) {
-        console.error("Erreur lors du chargement des spectacles", err);
-        setError("Erreur lors du chargement des spectacles");
-      }
-    };
-
-    fetchSpectacles();
-  }, []);
+  const { data: raw = [], error: queryError } = useQuery({
+    queryKey: ['spectacles', 'all'],
+    queryFn: () => api.get<Spectacle[]>('/api/spectacles/all'),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000
+  });
+  const spectacles = Array.isArray(raw) ? raw : [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Erreur lors du chargement des spectacles") : null;
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));

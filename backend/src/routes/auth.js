@@ -8,16 +8,27 @@ const db = require('../db');
 const { createRateLimiters } = require('../middleware/security');
 const { loginFailure } = createRateLimiters();
 
+// En production, JWT_SECRET est obligatoire pour que l'admin puisse se connecter en sécurité
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (process.env.NODE_ENV === 'production' && !secret) return null;
+  return secret || 'Apres_lheure_cest_plus_lheure_franchement';
+};
+
 // Middleware d'authentification
 const auth = async (req, res, next) => {
   try {
+    const secret = getJwtSecret();
+    if (!secret) {
+      return res.status(503).json({ error: 'Service temporairement indisponible (configuration manquante).' });
+    }
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({ error: 'Token manquant' });
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement');
+    const decoded = jwt.verify(token, secret);
 
     const [users] = await db.query('SELECT * FROM user WHERE id = ?', [decoded.id]);
     if (users.length === 0) {
@@ -66,6 +77,10 @@ router.post('/login', loginFailure, async (req, res) => {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
     }
 
+    const secret = getJwtSecret();
+    if (!secret) {
+      return res.status(503).json({ error: 'Service temporairement indisponible (configuration manquante).' });
+    }
     const token = jwt.sign({
       id: user.id,
       email: user.email,
@@ -73,7 +88,7 @@ router.post('/login', loginFailure, async (req, res) => {
       firstName: user.prenom,
       lastName: user.nom,
       role: user.role
-    }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '3h' });
+    }, secret, { expiresIn: '3h' });
 
     return res.status(200).json({
       message: 'Connexion réussie !',
@@ -157,6 +172,10 @@ router.put('/update-profile', auth, async (req, res) => {
     
     await db.query(sql, [civility, firstName, lastName, email, id]);
 
+    const secret = getJwtSecret();
+    if (!secret) {
+      return res.status(503).json({ error: 'Service temporairement indisponible (configuration manquante).' });
+    }
     const token = jwt.sign({
       id,
       email,
@@ -164,7 +183,7 @@ router.put('/update-profile', auth, async (req, res) => {
       firstName,
       lastName,
       role: existingUser[0].role
-    }, process.env.JWT_SECRET || 'Apres_lheure_cest_plus_lheure_franchement', { expiresIn: '3h' });
+    }, secret, { expiresIn: '3h' });
 
     return res.status(200).json({
       message: 'Profil mis à jour avec succès !',

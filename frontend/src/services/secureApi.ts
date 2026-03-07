@@ -17,12 +17,6 @@ interface ApiResponse<T = any> {
   message?: string
 }
 
-interface ApiError {
-  message: string
-  status: number
-  code?: string
-}
-
 // Classe pour gérer les erreurs API
 class ApiError extends Error {
   constructor(
@@ -213,46 +207,6 @@ export class SecureApiService {
       method: 'POST',
       body: JSON.stringify(contactData)
     }, 'contact')
-  }
-
-  // ====== MÉTHODES RÉSERVATIONS ======
-
-  /**
-   * Création d'une session de paiement
-   */
-  async createReservationCheckout(data: any): Promise<{ url: string }> {
-    return this.request('/api/reservations/checkout', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-  }
-
-  /**
-   * Vérification du statut de paiement
-   */
-  async checkPaymentStatus(sessionId: string): Promise<any> {
-    return this.request(`/api/reservations/status/${sessionId}`)
-  }
-
-  /**
-   * Récupération des réservations utilisateur
-   */
-  async getUserReservations(userId: number): Promise<any> {
-    return this.request(`/api/reservations/user/${userId}`)
-  }
-
-  /**
-   * Vérification de la disponibilité d'un spectacle
-   */
-  async checkSpectacleAvailability(spectacleId: number): Promise<any> {
-    return this.request(`/api/reservations/availability/${spectacleId}`)
-  }
-
-  /**
-   * Validation d'un ticket
-   */
-  async validateTicket(reservationId: string): Promise<any> {
-    return this.request(`/api/reservations/validate/${reservationId}`)
   }
 
   // ====== MÉTHODES SPECTACLES ======

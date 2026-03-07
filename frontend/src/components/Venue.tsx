@@ -1,32 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
 import { LieuImage } from "../services/lieu";
 import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
 import OptimizedImage from "./OptimizedImage";
+import { api } from '@/services/api';
 
 const Venue = () => {
   const navigate = useNavigate();
-  const [mainImage, setMainImage] = useState<LieuImage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchMainImage = async () => {
-      try {
-        const API_URL = import.meta.env.VITE_API_URL;
-        const res = await fetch(`${API_URL}/api/lieu/images/main`);
-        if (!res.ok) throw new Error("Erreur lors du chargement de l'image principale du lieu");
-        const data: LieuImage | null = await res.json();
-        setMainImage(data);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMainImage();
-  }, []);
+  const { data: mainImage = null, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['venue', 'main'],
+    queryFn: () => api.get<LieuImage | null>('/api/lieu/images/main'),
+    staleTime: 60 * 60 * 1000,
+    gcTime: 4 * 60 * 60 * 1000
+  });
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Erreur inconnue") : null;
 
   return (
     <section id="venue" className="bg-gray-950 py-16">

@@ -1,17 +1,21 @@
-import { useEffect, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { Spectacle } from '../services/types';
+import { api } from '@/services/api';
 
 const UpcomingShows = () => {
   const navigate = useNavigate();
-  const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // Disponibilités retirées
-  const [availability] = useState<Record<number, { places_restantes: number; places_total: number }>>({});
+  const { data: raw = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['spectacles', 'upcoming'],
+    queryFn: () => api.get<Spectacle[]>('/api/spectacles/upcoming'),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000
+  });
+  const spectacles = Array.isArray(raw) ? raw.slice(0, 3) : [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Erreur inconnue') : null;
 
   const formatHeure = (heure: string) => {
     return heure.split(':').slice(0, 2).join(':');
@@ -31,47 +35,6 @@ const UpcomingShows = () => {
       return value;
     }
   };
-
-  useEffect(() => {
-    const fetchSpectacles = async () => {
-      try {
-        const { api } = await import('@/services/api');
-        
-        // Récupérer plus de spectacles pour s'assurer d'avoir assez de spectacles à venir
-        const response = await api.get('/api/spectacles?page=1&limit=50') as any;
-        const data = response.spectacles || response || [];
-
-        if (!Array.isArray(data)) {
-          throw new Error('Format de données inattendu');
-        }
-
-        const now = new Date();
-        const filtered = data.filter((spectacle) => {
-          const fullDateTime = new Date(`${spectacle.date_spectacle.split("T")[0]}T${spectacle.heure_spectacle}`);
-          return fullDateTime > now;
-        });
-
-        // Trier par date croissante
-        filtered.sort((a, b) => {
-          const dateA = new Date(`${a.date_spectacle.split("T")[0]}T${a.heure_spectacle}`);
-          const dateB = new Date(`${b.date_spectacle.split("T")[0]}T${b.heure_spectacle}`);
-          return dateA.getTime() - dateB.getTime();
-        });
-
-        // Prendre les 3 premiers spectacles à venir
-        setSpectacles(filtered.slice(0, 3));
-
-        // Disponibilités retirées
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSpectacles();
-  }, []);
 
   if (loading)
     return (
@@ -130,11 +93,6 @@ const UpcomingShows = () => {
                 <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-xl font-bold">
                   {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
                 </div>
-                {availability[spectacle.id] && availability[spectacle.id].places_restantes <= 0 && (
-                  <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                    Complet
-                  </div>
-                )}
               </div>
               
               {/* Section texte compacte en bas */}

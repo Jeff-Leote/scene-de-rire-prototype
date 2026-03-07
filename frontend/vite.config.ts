@@ -41,8 +41,7 @@ export default defineConfig(({ mode }) => ({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
           utils: ['date-fns', 'zod', 'react-hook-form'],
-          charts: ['recharts'],
-          stripe: ['@stripe/stripe-js', '@stripe/react-stripe-js']
+          charts: ['recharts']
         },
         // 📦 Optimisation des chunks avec compression
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -74,7 +73,6 @@ export default defineConfig(({ mode }) => ({
       'react', 'react-dom', 'react-router-dom',
       '@tanstack/react-query', 'date-fns', 'zod'
     ],
-    exclude: ['@stripe/stripe-js'] // Exclure Stripe du pré-bundling
   },
   // 🚀 OPTIMISATIONS CSS
   css: {

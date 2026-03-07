@@ -3,7 +3,6 @@ const helmet = require('helmet');
 const hpp = require('hpp');
 const xss = require('xss-clean');
 const sanitizeHtml = require('sanitize-html');
-const { body, validationResult } = require('express-validator');
 
 // 🔧 Configuration des limites de taux ULTRA-PERMISSIVE pour la production
 const createRateLimiters = () => {
@@ -147,46 +146,6 @@ const sanitizeInput = (req, res, next) => {
   next();
 };
 
-// Middleware de validation des erreurs (optimisé)
-const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      error: 'Données invalides',
-      details: errors.array().map(err => ({
-        field: err.path,
-        message: err.msg,
-        value: err.value
-      }))
-    });
-  }
-  next();
-};
-
-// 🔧 Validations communes optimisées
-const commonValidations = {
-  email: body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Format d\'email invalide'),
-  
-  password: body('password')
-    .isLength({ min: 8 })
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial'),
-  
-  name: body('name')
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .matches(/^[a-zA-ZÀ-ÿ\s'-]+$/)
-    .withMessage('Le nom doit contenir entre 2 et 50 caractères et ne peut contenir que des lettres, espaces, tirets et apostrophes'),
-  
-  phone: body('phone')
-    .optional()
-    .matches(/^[\+]?[0-9\s\-\(\)]{10,15}$/)
-    .withMessage('Format de téléphone invalide')
-};
-
 // 🔧 Configuration Helmet optimisée pour la performance
 const helmetConfig = helmet({
   // Désactiver certaines protections pour améliorer les performances
@@ -224,19 +183,11 @@ const csrfProtection = (req, res, next) => {
       fullPath === '/api/lieu' ||
       fullPath === '/api/contact' ||
       // Admin content CRUD (protégé par JWT)
-      isAdminPath ||
-      // 🔧 EXEMPTION POUR LES PAIEMENTS STRIPE
-      fullPath === '/api/reservations/checkout' ||
-      fullPath.startsWith('/api/reservations/')) {
+      isAdminPath) {
 
-    // 🔧 LOGGING POUR DÉBOGUER LES EXEMPTIONS CSRF (non verbeux)
     if (isAdminPath && process.env.NODE_ENV !== 'production') {
       console.log(`🛡️ CSRF exempté (admin): ${req.method} ${originalUrl}`);
     }
-    if (fullPath.includes('reservations')) {
-      console.log(`💳 CSRF exempté pour paiement: ${req.method} ${fullPath}`);
-    }
-
     return next();
   }
   
@@ -298,7 +249,5 @@ module.exports = {
   sanitizeInput,
   helmetConfig,
   csrfProtection,
-  securityLogger,
-  handleValidationErrors,
-  commonValidations
+  securityLogger
 };

@@ -48,39 +48,36 @@ const allowedOrigins = [
 app.use(helmetConfig);
 
 // 2. CORS - Contrôle d'accès cross-origin (PRODUCTION)
+const isProd = process.env.NODE_ENV === 'production';
 app.use(cors({
   origin: function(origin, callback){
-    // 🔧 LOGGING POUR DÉBOGUER LES PROBLÈMES CORS
-    console.log(`🌍 CORS - Origine demandée: ${origin}`);
-    
+    if (!isProd) {
+      console.log(`🌍 CORS - Origine demandée: ${origin}`);
+    }
     if (!origin) {
-      console.log('✅ CORS - Pas d\'origine (requête locale)');
+      if (!isProd) console.log('✅ CORS - Pas d\'origine (requête locale)');
       return callback(null, true);
     }
-    
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log(`✅ CORS - Origine autorisée: ${origin}`);
+      if (!isProd) console.log(`✅ CORS - Origine autorisée: ${origin}`);
       return callback(null, true);
     }
-    
-    // 🔧 VÉRIFICATION DES SOUS-DOMAINES
     const isSubdomain = allowedOrigins.some(allowed => {
       if (allowed.includes('espacecomedie')) {
         return origin.includes('espacecomedie');
       }
       return false;
     });
-    
     if (isSubdomain) {
-      console.log(`✅ CORS - Sous-domaine autorisé: ${origin}`);
+      if (!isProd) console.log(`✅ CORS - Sous-domaine autorisé: ${origin}`);
       return callback(null, true);
     }
-    
-    console.warn(`❌ CORS - Origine non autorisée: ${origin}`);
-    console.log(`📋 Origines autorisées:`, allowedOrigins);
-    
-      const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
-      return callback(new Error(msg), false);
+    if (!isProd) {
+      console.warn(`❌ CORS - Origine non autorisée: ${origin}`);
+      console.log(`📋 Origines autorisées:`, allowedOrigins);
+    }
+    const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
+    return callback(new Error(msg), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -161,20 +158,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🔧 Endpoint de test pour vérifier le rate limiting
-app.get('/api/rate-limit-test', (req, res) => {
-  res.json({
-    message: 'Rate limiting test réussi !',
-    timestamp: new Date().toISOString(),
-    ip: req.ip,
-    userAgent: req.get('User-Agent'),
-    rateLimitInfo: {
-      remaining: req.headers['x-ratelimit-remaining'],
-      reset: req.headers['x-ratelimit-reset'],
-      limit: req.headers['x-ratelimit-limit']
-    }
+// Endpoint de test rate limiting (dev uniquement — désactivé en production pour la sécurité)
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/rate-limit-test', (req, res) => {
+    res.json({
+      message: 'Rate limiting test réussi !',
+      timestamp: new Date().toISOString(),
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      rateLimitInfo: {
+        remaining: req.headers['x-ratelimit-remaining'],
+        reset: req.headers['x-ratelimit-reset'],
+        limit: req.headers['x-ratelimit-limit']
+      }
+    });
   });
-});
+}
 
 // 🔧 Endpoint de santé pour vérifier la DB et les performances
 app.get('/api/health', async (req, res) => {
@@ -279,27 +278,12 @@ if (routes) {
   app.get("/api/spectacles/all", (req, res) => {
     res.json([]);
   });
-  
-  app.get("/api/reservations/availability/:id", (req, res) => {
-    res.json({
-      spectacle_id: req.params.id,
-      available: false,
-      remaining_seats: 0,
-      total_seats: 0
-    });
-  });
-  
-  app.post("/api/reservations/checkout", (req, res) => {
-    res.status(503).json({
-      error: "Service temporairement indisponible",
-      message: "Base de données non connectée"
-    });
-  });
 }
 
 // 🎯 SERVIR LES FICHIERS STATIQUES DU FRONTEND (SPA) ET LES UPLOADS
 const path = require('path');
 const fs = require('fs');
+const { getInitialDataForHome } = require('./initialData');
 
 // Uploads gérés directement par les routes admin avec Supabase (prod) ou frontend/public (dev)
 
@@ -401,22 +385,47 @@ app.get('/vite.svg', (req, res) => {
   return res.status(204).end();
 });
 
+// Option B : injection des données initiales pour la page d'accueil (contenu avant affichage)
+const distIndexPath = path.join(__dirname, '../../frontend/dist/index.html');
+app.get('/', async (req, res) => {
+  try {
+    let html = fs.readFileSync(distIndexPath, 'utf-8');
+    const data = await getInitialDataForHome();
+    if (data) {
+      const script = `<script>window.__INITIAL_DATA__=${JSON.stringify(data).replace(/<\/script>/gi, '<\\/script>')};</script>`;
+      html = html.replace('<!--INITIAL_DATA-->', script);
+      const firstImg = data.spectaclesUpcoming?.[0]?.img;
+      let preload = '';
+      if (firstImg && typeof firstImg === 'string') {
+        const href = /^https?:\/\//i.test(firstImg)
+          ? firstImg
+          : `/assets/img/spectacles/${encodeURIComponent(firstImg.replace(/\.(jpe?g|png)$/i, '.webp'))}`;
+        preload = `<link rel="preload" as="image" href="${href}" />`;
+      }
+      html = html.replace('<!--PRELOAD_HERO-->', preload);
+    } else {
+      html = html.replace('<!--INITIAL_DATA-->', '');
+      html = html.replace('<!--PRELOAD_HERO-->', '');
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (e) {
+    try {
+      res.sendFile(distIndexPath);
+    } catch (e2) {
+      res.status(500).send('Erreur serveur');
+    }
+  }
+});
+
 // Servir les fichiers statiques du frontend buildé
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 
-// Route de base - rediriger vers le frontend
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
-});
-
 // 🎯 ROUTING SPA - Toutes les routes non-API redirigent vers index.html
 app.get('*', (req, res) => {
-  // Si c'est une route API, laisser passer
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API route not found' });
   }
-  
-  // Pour toutes les autres routes, servir le fichier index.html (SPA routing)
   res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
 
@@ -491,6 +500,9 @@ if (require.main === module) {
     console.log(`🚀 Serveur démarré sur le port ${PORT}`);
     console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
     console.log(`⏰ Heure de démarrage: ${new Date().toISOString()}`);
+    if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+      console.warn('⚠️ Production: JWT_SECRET n\'est pas défini — l\'authentification admin renverra 503.');
+    }
   });
 }
 

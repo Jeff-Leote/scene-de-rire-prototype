@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { Link } from 'react-router-dom';
 import OptimizedImage from './OptimizedImage';
@@ -71,6 +72,7 @@ const getTitleFromUnknown = (val: unknown): string => {
 };
 
 const Hero = () => {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -90,10 +92,54 @@ const Hero = () => {
       try {
         setLoading(true);
         setError(null);
+
+        // 0) Données initiales (SSR / Option B): utiliser le cache React Query pour éviter le premier fetch client
+        const initialUpcoming = queryClient.getQueryData(['spectacles', 'upcoming']);
+        if (initialUpcoming != null) {
+          const upItems = extractItems(initialUpcoming);
+          if (Array.isArray(upItems) && upItems.length > 0) {
+            const fastNormalized: SpectacleItem[] = upItems.map((val: unknown) => {
+              const it = isObject(val) ? val : {};
+              const idCandidate = it.id ?? it.spectacle_id ?? it._id;
+              const idNum = toNumber(idCandidate) ?? -1;
+              return {
+                id: idNum,
+                title: toStringSafe(it.title ?? it.nom ?? it.name ?? ''),
+                img: toStringSafe(it.img ?? it.image ?? it.photo ?? ''),
+                date_spectacle: toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? ''),
+                heure_spectacle: toStringSafe(it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00'),
+                lieu: toStringSafe(it.lieu ?? it.venue ?? ''),
+                lien_spectacle: toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? ''),
+              };
+            }).filter(it => it.id > 0 && it.title && it.date_spectacle);
+            const order: string[] = [];
+            const groups = new Map<string, SpectacleItem[]>();
+            for (const s of fastNormalized) {
+              if (!groups.has(s.title)) order.push(s.title);
+              groups.set(s.title, [...(groups.get(s.title) || []), s]);
+            }
+            const nowFast = new Date();
+            const perShowNextFast: Slide[] = [];
+            for (const title of order) {
+              const items = (groups.get(title) || []).map(it => ({ ...it, dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`) }));
+              items.sort((a, b) => a.dt.getTime() - b.dt.getTime());
+              const next = items.find(it => it.dt >= nowFast) || items[0];
+              if (next) perShowNextFast.push({ id: next.id, title: next.title, img: next.img, nextDate: next.date_spectacle, nextTime: next.heure_spectacle });
+            }
+            const fastSlides = perShowNextFast.slice(0, MAX_SLIDES);
+            if (fastSlides.length) {
+              setSlides(fastSlides);
+              setIndex(0);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
         const { api } = await import('@/services/api');
         const startedAt = Date.now();
 
-        // 0) Cache: essayer d'utiliser une version en cache récente
+        // 1) Cache sessionStorage: essayer d'utiliser une version en cache récente
         try {
           const cachedRaw = sessionStorage.getItem(CACHE_KEY);
           if (cachedRaw) {
@@ -283,7 +329,7 @@ const Hero = () => {
     let alive = true;
     (async () => { if (alive) await fetchSlides(); })();
     return () => { alive = false; };
-  }, []);
+  }, [queryClient]);
 
   // Auto-advance avec réinitialisation
   useEffect(() => {

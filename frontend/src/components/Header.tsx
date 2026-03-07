@@ -1,7 +1,7 @@
 //src/components/Header.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth, useCart } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { HeaderProps } from '@/services/types';
 import { trackBookingClick } from '@/utils/googleAds';
 
@@ -9,7 +9,6 @@ const Header = ({ activeItem }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
-  const { cart } = useCart();
 
   const handleNavClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

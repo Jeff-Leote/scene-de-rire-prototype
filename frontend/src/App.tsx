@@ -24,10 +24,11 @@ import { useAuth } from './contexts/AuthContext';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider, CartProvider } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { CSRFProvider } from './contexts/CSRFContext';
 import { MaintenanceProvider } from './contexts/MaintenanceContext';
 import AutoLogout from './components/AutoLogout';
+import { InitialDataHydrator, hydrateQueryClientFromInitialData } from './components/InitialDataHydrator';
 import { usePreloadData } from './hooks/usePreloadData';
 
 // 🚀 Configuration React Query ultra-optimisée pour la production
@@ -62,6 +63,12 @@ const queryClient = new QueryClient({
     }
   }
 });
+
+// Option B : hydratation synchrone du cache avec les données injectées côté serveur (avant premier rendu)
+if (typeof window !== 'undefined' && window.__INITIAL_DATA__) {
+  hydrateQueryClientFromInitialData(queryClient, window.__INITIAL_DATA__);
+  delete window.__INITIAL_DATA__;
+}
 
 class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }>{
   constructor(props: { children: React.ReactNode }) {
@@ -146,13 +153,13 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <AppErrorBoundary>
-    <AuthProvider>
-      <CartProvider>
+    <AppErrorBoundary>
+      <AuthProvider>
         <CSRFProvider>
           <MaintenanceProvider>
             <AutoLogout/>
             <QueryClientProvider client={queryClient}>
+              <InitialDataHydrator />
               <TooltipProvider>
                 <Sonner />
                 <AppContent />
@@ -160,9 +167,8 @@ const App = () => (
             </QueryClientProvider>
           </MaintenanceProvider>
         </CSRFProvider>
-      </CartProvider>
-    </AuthProvider>
-  </AppErrorBoundary>
+      </AuthProvider>
+    </AppErrorBoundary>
 );
 
 export default App;

@@ -74,17 +74,6 @@ export interface ProtectedRouteProps {
   requireAdmin?: boolean;
 }
 
-// Interfaces pour le panier
-export interface CartItem {
-  id: number;
-  title: string;
-  date_spectacle: string;
-  heure_spectacle: string;
-  prix: number;
-  img: string;
-  lieu: string;
-}
-
 // Interfaces pour les avis
 export interface Avis {
   id: number;
@@ -150,13 +139,6 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
-}
-
-export interface CartContextType {
-  cart: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: number) => void;
-  clearCart: () => void;
 }
 
 // Interface pour l'artiste à l'affiche (Hero)

@@ -11,9 +11,8 @@ Fichier centralisé contenant toutes les interfaces TypeScript utilisées dans l
 - **User** : Interface pour les utilisateurs
 - **Spectacle** : Interface pour les spectacles
 - **Artist** : Interface pour les artistes
-- **Reservation** : Interface pour les réservations
-- **CartItem** : Interface pour les éléments du panier
-- **Paiement** : Interface pour les paiements
+- **Reservation** : Interface pour les réservations (données admin)
+- **Paiement** : Interface pour les paiements (données admin)
 - **Avis** : Interface pour les avis
 
 #### Interfaces de formulaires :
@@ -22,7 +21,6 @@ Fichier centralisé contenant toutes les interfaces TypeScript utilisées dans l
 
 #### Interfaces de contexte :
 - **AuthContextType** : Type pour le contexte d'authentification
-- **CartContextType** : Type pour le contexte du panier
 
 #### Interfaces spécialisées :
 - **FeaturedArtist** : Interface pour l'artiste à l'affiche (Hero)
@@ -34,25 +32,18 @@ Service pour la gestion des spectacles :
 - `fetchSpectacles()` : Récupère tous les spectacles (version alternative)
 - `fetchSpectacleById(id)` : Récupère un spectacle par ID
 
-### `reservation.ts`
-Service pour la gestion des réservations :
-- `getUserReservations()` : Récupère les réservations d'un utilisateur
-- `createReservation()` : Crée une nouvelle réservation
-- `deleteReservation()` : Supprime une réservation
-
 ## Utilisation
 
 Pour utiliser les types dans vos composants :
 
 ```typescript
-import { Spectacle, Artist, Reservation } from '../services/types';
+import { Spectacle, Artist } from '../services/types';
 ```
 
 Pour utiliser les services :
 
 ```typescript
 import { getSpectacles } from '../services/spectacles';
-import { getUserReservations } from '../services/reservation';
 ```
 
 ## Avantages de cette organisation

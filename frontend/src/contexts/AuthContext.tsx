@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from "@/components/ui/sonner";
-import { User, AuthContextType, CartItem, CartContextType } from '../services/types';
+import { User, AuthContextType } from '../services/types';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -24,7 +24,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('cart'); // Vider le panier lors de la déconnexion
     setToken(null);
     setUser(null);
   };
@@ -61,48 +60,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-// Panier (Cart) Context
-
-const CartContext = createContext<CartContextType>({
-  cart: [],
-  addToCart: () => {},
-  removeFromCart: () => {},
-  clearCart: () => {},
-});
-
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const stored = localStorage.getItem('cart');
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
-
-  // Vider le panier quand l'utilisateur se déconnecte
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setCart([]);
-    }
-  }, [isAuthenticated]);
-
-  const addToCart = (item: CartItem) => {
-    setCart((prev) => {
-      if (prev.find((i) => i.id === item.id)) return prev;
-      return [...prev, item];
-    });
-  };
-  const removeFromCart = (id: number) => setCart((prev) => prev.filter((i) => i.id !== id));
-  const clearCart = () => setCart([]);
-
-  return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
-      {children}
-    </CartContext.Provider>
-  );
-};
-
-export const useCart = () => useContext(CartContext);
