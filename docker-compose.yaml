@@ -3,8 +3,8 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: espace_comedie
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4;'
@@ -13,8 +13,6 @@ services:
     volumes:
       - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - mysql_data:/var/lib/mysql
-    
-    
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -23,7 +21,7 @@ services:
       - "8081:80"
     environment:
       PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
 
   backend:
     build:
@@ -32,21 +30,20 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - PORT=5000
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - DB_NAME=espace_comedie
-      - STRIPE_SECRET_KEY=sk_test_51RdoIJPXUg296p0SlqBGFT9Ne9YaG7NCaXdUqN9TxT5R83Xjo6ycEwxnCxN6hPiE7Dx7MdAB9NjgcZzPJjHJXaiE003t1kve0j
-      - FRONTEND_URL=http://localhost:5173
-      - NODE_ENV=development
-      - JWT_SECRET=Apres_lheure_cest_plus_lheure_franchement
+      - PORT=${PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - NODE_ENV=${NODE_ENV}
+      - JWT_SECRET=${JWT_SECRET}
       # Configuration SMTP Gmail (local et production)
-      - SMTP_HOST=smtp.gmail.com
-      - SMTP_PORT=587
-      - SMTP_USER=junior97301@gmail.com
-      - SMTP_PASS=azwrabuivhturkpq
-      - FROM_EMAIL=lespacecomedie@gmail.com
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - FROM_EMAIL=${FROM_EMAIL}
     volumes:
       - ./backend:/app
       - ./backend/node_modules:/app/node_modules
@@ -60,7 +57,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.simple
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     volumes:
@@ -68,7 +65,7 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - VITE_API_URL=http://localhost:5000
+      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       - backend
 

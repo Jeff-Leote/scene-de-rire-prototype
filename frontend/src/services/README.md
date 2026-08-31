@@ -11,8 +11,6 @@ Fichier centralisé contenant toutes les interfaces TypeScript utilisées dans l
 - **User** : Interface pour les utilisateurs
 - **Spectacle** : Interface pour les spectacles
 - **Artist** : Interface pour les artistes
-- **Reservation** : Interface pour les réservations (données admin)
-- **Paiement** : Interface pour les paiements (données admin)
 - **Avis** : Interface pour les avis
 
 #### Interfaces de formulaires :

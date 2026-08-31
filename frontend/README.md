@@ -35,7 +35,6 @@ frontend/
 ├── src/
 │   ├── components/          # Composants React
 │   │   ├── ui/             # Composants UI (shadcn)
-│   │   ├── Newsletter.tsx  # Newsletter sécurisée
 │   │   ├── Header.tsx      # Navigation
 │   │   └── ...
 │   ├── pages/              # Pages de l'application
@@ -141,23 +140,11 @@ VITE_API_URL=http://localhost:5000  # URL de l'API backend
 - Calendrier des événements
 - Recherche et filtrage
 
-### 🎫 Système de Réservation
-- Réservation en ligne sécurisée
-- Paiement via Stripe
-- Génération de QR codes
-- Validation des billets
-
 ### 👥 Gestion des Utilisateurs
 - Inscription/Connexion sécurisée
 - Profil utilisateur
 - Historique des réservations
 - Gestion des préférences
-
-### 📧 Newsletter Sécurisée
-- Inscription à la newsletter
-- Validation stricte des emails
-- Protection contre le spam
-- Gestion des désabonnements
 
 ### 🏢 Administration
 - Dashboard administrateur
@@ -185,9 +172,9 @@ const isAllowed = checkRateLimitForAction('login', 5, 15 * 60 * 1000)
 
 ### Validation Stricte
 ```typescript
-import { newsletterFormSchema } from '@/utils/security'
+import { contactFormSchema } from '@/utils/security'
 
-const validatedData = newsletterFormSchema.parse({ email: userEmail })
+const validatedData = contactFormSchema.parse(formData)
 ```
 
 ## 📚 Documentation
@@ -196,7 +183,6 @@ const validatedData = newsletterFormSchema.parse({ email: userEmail })
 - 📖 [Implémentation Sécurité](SECURITY_IMPLEMENTATION.md) - Guide technique
 - 📖 [Configuration Production](../PRODUCTION_SETUP.md) - Déploiement
 - 📖 [Configuration Email](../EMAIL_CONFIG.md) - Configuration SMTP
-- 📖 [Configuration Stripe](../STRIPE_CONFIG.md) - Paiements
 
 ## 🤝 Contribution
 

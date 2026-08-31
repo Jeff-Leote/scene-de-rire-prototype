@@ -140,46 +140,6 @@ describe('SecureApiService', () => {
     })
   })
 
-  describe('Newsletter Methods', () => {
-    it('should subscribe to newsletter', async () => {
-      const mockResponse = { message: 'Inscription réussie' }
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: true,
-        headers: { get: () => 'application/json' },
-        json: () => Promise.resolve(mockResponse)
-      })
-
-      const result = await apiService.subscribeNewsletter('test@example.com')
-      expect(result).toEqual(mockResponse)
-      expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/newsletter/subscribe',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ email: 'test@example.com' })
-        })
-      )
-    })
-
-    it('should unsubscribe from newsletter', async () => {
-      const mockResponse = { message: 'Désinscription réussie' }
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: true,
-        headers: { get: () => 'application/json' },
-        json: () => Promise.resolve(mockResponse)
-      })
-
-      const result = await apiService.unsubscribeNewsletter('test@example.com', 'token123')
-      expect(result).toEqual(mockResponse)
-      expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/newsletter/unsubscribe',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ email: 'test@example.com', token: 'token123' })
-        })
-      )
-    })
-  })
-
   describe('Contact Methods', () => {
     it('should send contact message', async () => {
       const mockResponse = { message: 'Message envoyé' }
@@ -276,49 +236,6 @@ describe('SecureApiService', () => {
     })
   })
 
-  describe('Admin Methods', () => {
-    it('should get newsletter subscribers', async () => {
-      const mockResponse = [{ email: 'test1@example.com' }, { email: 'test2@example.com' }]
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: true,
-        headers: { get: () => 'application/json' },
-        json: () => Promise.resolve(mockResponse)
-      })
-
-      const result = await apiService.getNewsletterSubscribers()
-      expect(result).toEqual(mockResponse)
-      expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/admin/newsletter/subscribers',
-        expect.any(Object)
-      )
-    })
-
-    it('should send newsletter email', async () => {
-      const mockResponse = { message: 'Email envoyé' }
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: true,
-        headers: { get: () => 'application/json' },
-        json: () => Promise.resolve(mockResponse)
-      })
-
-      const emailData = {
-        subject: 'Newsletter',
-        message: 'Hello subscribers',
-        recipients: ['test@example.com']
-      }
-
-      const result = await apiService.sendNewsletterEmail(emailData)
-      expect(result).toEqual(mockResponse)
-      expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/admin/newsletter/send',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify(emailData)
-        })
-      )
-    })
-  })
-
   describe('Error Handling', () => {
     it('should handle 400 errors', async () => {
       ;(fetch as any).mockResolvedValueOnce({
@@ -345,7 +262,7 @@ describe('SecureApiService', () => {
         status: 403
       })
 
-      await expect(apiService.getNewsletterSubscribers()).rejects.toThrow('Accès interdit')
+      await expect(apiService.getArtists()).rejects.toThrow('Accès interdit')
     })
 
     it('should handle 404 errors', async () => {

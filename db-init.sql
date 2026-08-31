@@ -33,17 +33,6 @@ CREATE TABLE user (
 );
 
 -- =====================================================
--- TABLE NEWSLETTER SUBSCRIBERS
--- =====================================================
-CREATE TABLE newsletter_subscribers (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_email (email),
-  INDEX idx_subscribed_at (subscribed_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================
 -- TABLE ARTISTES
 -- =====================================================
 CREATE TABLE artiste (
@@ -208,96 +197,219 @@ INSERT INTO artiste (name, photo) VALUES
 ('Alexandra Pizzagali', 'alexandra pizzagali photo.webp'),
 ('Julien Santini', 'julien santini photo.webp');
 
--- 3. Spectacles de test
+-- 3. Spectacles de test (mise à jour programmation à partir d'avril 2026)
+-- Règles:
+-- - Retrait de "Un Ado..." et "Chéri..." à partir d'avril 2026
+-- - Tchatcheur full semaine avec nouveaux créneaux jeudi 20:00 et dimanche 18:30
+-- - La connerie humaine (LCH) conservée dimanche 20:00 sauf juillet/août 2026
+-- - Périodes:
+--   * Avril 2026 -> Juin 2026
+--   * Juillet 2026 (allégé)
+--   * Août 2026 (allégé)
+--   * Septembre 2026 -> Juin 2027 (même grille qu'avril-juin)
 
--- Générateur de dates (0..999 jours) sans CTE, compatible MySQL/MariaDB plus anciens
--- u, t, h forment un compteur de 0 à 999 ; on limite à 365 jours
+-- Tchatcheur (avril -> juin 2026) : lundi à vendredi à 20:00
 INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
 SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
   'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
-  DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
   '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
 FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
 JOIN category_spectacle cat ON cat.code = '1'
-WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
-  AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) IN (2,3,4,6);
+WHERE DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-04-01' AND '2026-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) IN (2,3,4,5,6);
 
+-- Tchatcheur (avril -> juin 2026) : samedi 17:30, 19:00, 20:30
 INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
 SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
   'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
-  DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
   '17:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
 FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
 JOIN category_spectacle cat ON cat.code = '1'
-WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
-  AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
-
--- Kaci dans La connerie humaine — dimanches 20:00 jusqu'au 28/06/2026
-INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
-SELECT 'Kaci dans La connerie humaine', '/assets/img/spectacles/Kaci dans la connerie humaine.webp',
-  'Autant vous prévenir... Il vaut mieux aimer rire de tout pour espérer passer un bon moment dans ce spectacle.\nAvec une écriture cynique et finement provocatrice, Kaci prend un malin plaisir à aborder tous les sujets dont il n''est pas très moral de rire... À première vue.\n\nRenversant le politiquement correct, les tabous et les bien-pensant, voici enfin un spectacle qui fait du bien là où ça fait mal !\n\nLe Saviez-vous ?\nOn a pu apercevoir Kaci en première partie d''Ahmed Sylla. Kaci est actuellement en tournée dans toute la France et chaque année au festival d''Avignon.\n\nA savoir :\n.  Durée du spectcale : 70 minutes\n . A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n\n',
-  DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
-  '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/kaci-dans-la-connerie-humaine', cat.id
-FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
-CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
-CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
-JOIN category_spectacle cat ON cat.code = '4'
-WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
-  AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 1;
-
--- Un Ado peut en cacher un autre — dimanches 17:00 sur 12 mois
-INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
-SELECT 'Un Ado peut en cacher un autre', '/assets/img/spectacles/Un Ado peut en cacher un autre.webp',
-  'Marina vit seule. Enfin presque seule. Elle est accompagnée de Sandro, son seul et unique enfant qui entre dans l''adolescence.\nMarina a du mal avec ce gamin. Tout ce qu''il regarde, tout ce qu''il écoute, tout ce qui l''intéresse lui semble incohérent et sans intérêt. Les ados n''étaient pas comme ça de son temps. Selon elle, ils étaient bien plus raisonnables et sérieux...\n\nSauf qu''un jour Sandro est projeté de l''autre côté du miroir. Il se retrouve au début des années 90, avec sa mère... Redevenue adolescente. Et elle était loin d''être si raisonnable qu''elle le disait...\n\nAttention toute ressemblance avec des personnages existants ou ayant existé serait purement fortuites.\n\nA savoir :\n . Durée du spectcale : 70 minutes\n . A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n . La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n\n',
-  DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
-  '17:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/un-ado-peut-en-cacher-un-autre18', cat.id
-FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
-CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
-CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
-JOIN category_spectacle cat ON cat.code = '2'
-WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
-  AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 1;
-
--- Chéri je t'ai trompé (et c'est pas ça le pire...) — dimanches 18:30 sur 12 mois
-INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
-SELECT 'Chéri je t''ai trompé (et c''est pas ça le pire...)', '/assets/img/spectacles/Chéri je t''ai trompé (et c''est pas ça le pire...).webp',
-  'Un fonctionnaire raciste va vivre le pire cauchemar de sa vie : sa conjointe le trompe avec un sans-papiers...\nÉric, un haut fonctionnaire raciste va vivre le pire cauchemar de sa vie lorsqu''il va découvrir que sa conjointe, Eva, le trompe avec Lahcen, un sans-papiers maghrébin embauché pour faire des travaux dans leur appartement. \n\nRésultat : une comédie déjantée, une situation hilarante, beaucoup de rire mais aussi un suspens et des rebondissements incroyables. \n\nLe saviez-vous ?\nUne comédie qui a déjà cumulé plus de 500 000 spectateurs. \nChéri je t''ai trompé a reçu plusieurs prix, et est actuellement en tournée dans toute la France. \nGrand succès au Festival d''Avignon.\n\nA savoir : \n. Durée du spectcale : 75 minutes \n. A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n. La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.',
-  DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
-  '18:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/cheri-je-tai-trompe-et-cest-pas-ca-le-pire2', cat.id
-FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
-CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
-CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
-JOIN category_spectacle cat ON cat.code = '3'
-WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
-  AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 1;
+WHERE DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-04-01' AND '2026-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
 
 INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
 SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
   'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
-  DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
   '19:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
 FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
 JOIN category_spectacle cat ON cat.code = '1'
-WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
-  AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+WHERE DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-04-01' AND '2026-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
 
 INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
 SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
   'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
-  DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
   '20:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
 FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
 CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
 JOIN category_spectacle cat ON cat.code = '1'
-WHERE DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY) <= '2026-06-28'
-  AND DAYOFWEEK(DATE_ADD(CURDATE(), INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+WHERE DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-04-01' AND '2026-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+
+-- Tchatcheur (avril -> juin 2026) : dimanche 18:30
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '18:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-04-01' AND '2026-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 1;
+
+-- LCH (avril -> juin 2026) : dimanche 20:00
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Kaci dans La connerie humaine', '/assets/img/spectacles/Kaci dans la connerie humaine.webp',
+  'Autant vous prévenir... Il vaut mieux aimer rire de tout pour espérer passer un bon moment dans ce spectacle.\nAvec une écriture cynique et finement provocatrice, Kaci prend un malin plaisir à aborder tous les sujets dont il n''est pas très moral de rire... À première vue.\n\nRenversant le politiquement correct, les tabous et les bien-pensant, voici enfin un spectacle qui fait du bien là où ça fait mal !\n\nLe Saviez-vous ?\nOn a pu apercevoir Kaci en première partie d''Ahmed Sylla. Kaci est actuellement en tournée dans toute la France et chaque année au festival d''Avignon.\n\nA savoir :\n.  Durée du spectcale : 70 minutes\n . A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n\n',
+  DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/kaci-dans-la-connerie-humaine', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '4'
+WHERE DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-04-01' AND '2026-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-04-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 1;
+
+-- Juillet 2026 : Tchatcheur mer 20:00, ven 20:00, sam 20:00 (pas de LCH)
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-07-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-07-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-07-01' AND '2026-07-31'
+  AND DAYOFWEEK(DATE_ADD('2026-07-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) IN (4,6,7);
+
+-- Août 2026 : Tchatcheur mer 20:00, ven 20:00, sam 19:00 + 20:30 (pas de LCH)
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-08-01' AND '2026-08-31'
+  AND DAYOFWEEK(DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) IN (4,6);
+
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '19:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-08-01' AND '2026-08-31'
+  AND DAYOFWEEK(DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-08-01' AND '2026-08-31'
+  AND DAYOFWEEK(DATE_ADD('2026-08-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+
+-- Septembre 2026 -> Juin 2027 : même grille qu'avril -> juin
+-- Tchatcheur lundi -> vendredi 20:00
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-09-01' AND '2027-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) IN (2,3,4,5,6);
+
+-- Tchatcheur samedi 17:30, 19:00, 20:30
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '17:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-09-01' AND '2027-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '19:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-09-01' AND '2027-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-09-01' AND '2027-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 7;
+
+-- Tchatcheur dimanche 18:30
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '18:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-09-01' AND '2027-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 1;
+
+-- LCH dimanche 20:00 (septembre 2026 -> juin 2027)
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Kaci dans La connerie humaine', '/assets/img/spectacles/Kaci dans la connerie humaine.webp',
+  'Autant vous prévenir... Il vaut mieux aimer rire de tout pour espérer passer un bon moment dans ce spectacle.\nAvec une écriture cynique et finement provocatrice, Kaci prend un malin plaisir à aborder tous les sujets dont il n''est pas très moral de rire... À première vue.\n\nRenversant le politiquement correct, les tabous et les bien-pensant, voici enfin un spectacle qui fait du bien là où ça fait mal !\n\nLe Saviez-vous ?\nOn a pu apercevoir Kaci en première partie d''Ahmed Sylla. Kaci est actuellement en tournée dans toute la France et chaque année au festival d''Avignon.\n\nA savoir :\n.  Durée du spectcale : 70 minutes\n . A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n\n',
+  DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/kaci-dans-la-connerie-humaine', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '4'
+WHERE DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2026-09-01' AND '2027-06-30'
+  AND DAYOFWEEK(DATE_ADD('2026-09-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) = 1;
 
 -- Spectacles exceptionnels du 31 décembre 2025
 -- Un Ado peut en cacher un autre - 17:00
@@ -313,6 +425,19 @@ SELECT 'Chéri je t''ai trompé (et c''est pas ça le pire...)', '/assets/img/sp
   'Un fonctionnaire raciste va vivre le pire cauchemar de sa vie : sa conjointe le trompe avec un sans-papiers...\nÉric, un haut fonctionnaire raciste va vivre le pire cauchemar de sa vie lorsqu''il va découvrir que sa conjointe, Eva, le trompe avec Lahcen, un sans-papiers maghrébin embauché pour faire des travaux dans leur appartement. \n\nRésultat : une comédie déjantée, une situation hilarante, beaucoup de rire mais aussi un suspens et des rebondissements incroyables. \n\nLe saviez-vous ?\nUne comédie qui a déjà cumulé plus de 500 000 spectateurs. \nChéri je t''ai trompé a reçu plusieurs prix, et est actuellement en tournée dans toute la France. \nGrand succès au Festival d''Avignon.\n\nA savoir : \n. Durée du spectcale : 75 minutes \n. A l''Espace comédie vous avez aussi la possibilité de consommer des boissons et des planches apéritives pendant, avant ou après les spectacles.\n. La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.',
   '2025-12-31', '18:30:00', 'L''espace Comédie', 'https://www.billetweb.fr/cheri-je-tai-trompe-et-cest-pas-ca-le-pire2', cat.id
 FROM category_spectacle cat WHERE cat.code = '3';
+
+-- Juillet-Août 2027 : Tchatcheur mercredi/vendredi/samedi 20:00 (grille anticipée, même horaire pour les deux mois)
+INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle, category_id)
+SELECT 'Tchatcheur comedy club', '/assets/img/spectacles/Tchatcheur comedy club.webp',
+  'Premier Comedy Club de stand-up à Lille, qui depuis 2017 a vu défiler des stars de l''humour comme Paul Mirabel, Ilyes Djadel, Fanny Ruwet...\n\nVéritable révélateur de talents, depuis sa création en 2017, le Tchatcheur comedy club est le temple du stand up à Lille. On ne compte plus les nombreuses stars de l''humour actuelles qui sont venues fouler notre scène. A chaque séance plusieurs humoristes se succèdent : certains sont connus, d''autres n''attendent qu''à se faire connaître, mais une chose est sûre : ils sont tous talentueux et vous feront rire aux éclats !.\n\nIls ont déjà joué au Tchatcheur comedy club : Paul Mirabel, Inès Reg, Ilyes Djadel, Fanny Ruwet, David Voinson, Lilia Benchabane, Nordine Ganso, Tareek, Amine Radi, Mahé etc. .\n\nÀ savoir :\n- Le billet comporte une consommation incluse. \n- Durée du spectcale : 70 minutes. \n- Toutes les séances sont en libre participation pour rémunérer les artistes (espèces, Lydia ou PayPal), les artistes ne sont rémunérés que par le public à la fin du spectacle.\n- Les séances du Tchatcheur Comedy Club proposent entre 5 et 7 humoristes par séance, qui changent à chaque fois. Nous ne divulguons pas le nom des artistes programmés, préférant laisser la surprise au public de les découvrir le jour J.\n- La salle est parfaitement climatisée, afin de vous garantir une température agréable pour apprécier le show.\n- Vous avez la possibilité de consommer des planches apéritives sur place, pendant, avant ou après le spectacle. ',
+  DATE_ADD('2027-07-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) AS d,
+  '20:00:00', 'L''espace Comédie', 'https://www.billetweb.fr/tchatcheur-comedy-club1', cat.id
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) u
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t
+CROSS JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) h
+JOIN category_spectacle cat ON cat.code = '1'
+WHERE DATE_ADD('2027-07-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY) BETWEEN '2027-07-01' AND '2027-08-31'
+  AND DAYOFWEEK(DATE_ADD('2027-07-01', INTERVAL (u.n + t.n*10 + h.n*100) DAY)) IN (4,6,7);
 
 -- 8. Images du lieu de test
 INSERT INTO lieu (image_path, is_main) VALUES

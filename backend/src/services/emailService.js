@@ -61,42 +61,14 @@ const createTransport = async () => {
   }
 };
 
-// Fonction pour envoyer un email (attachments optionnels, showUnsubscribe optionnel)
-const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe = true) => {
+// Fonction pour envoyer un email (attachments optionnels)
+const sendEmail = async (to, subject, message, attachments = []) => {
   try {
     console.log('📧 Début envoi email à:', to);
     console.log('📧 Sujet:', subject);
-    
+
     const transporter = await createTransport();
-    
-    // Générer un lien de désabonnement unique avec token sécurisé (seulement si showUnsubscribe = true)
-    let unsubscribeUrl = '';
-    if (showUnsubscribe) {
-      const unsubscribeToken = Buffer.from(`${to}-${Date.now()}-${Math.random()}`).toString('base64');
-      
-      // Utiliser l'URL de production ou localhost selon l'environnement
-      // En production, toujours utiliser l'URL de production même si NODE_ENV n'est pas défini
-      const isProduction = process.env.NODE_ENV === 'production' || process.env.FRONTEND_URL?.includes('espacecomedie.fr');
-      const baseUrl = isProduction 
-        ? (process.env.FRONTEND_URL || 'https://espacecomedie.fr')
-        : (process.env.FRONTEND_URL || 'http://localhost:5173');
-      
-      // Pour éviter les 404 sur des routes profondes en prod, on pointe vers l'accueil
-      // puis on laisse le client rediriger vers /unsubscribe via Index.tsx
-      unsubscribeUrl = `${baseUrl}/?unsubscribe=1&email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
-      
-      console.log('📧 URL de désabonnement générée:', unsubscribeUrl);
-      console.log('📧 Base URL utilisée:', baseUrl);
-      console.log('📧 NODE_ENV:', process.env.NODE_ENV);
-      console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL);
-      console.log('📧 Variables d\'environnement email:');
-      console.log('📧 - SMTP_HOST:', process.env.SMTP_HOST ? '✓ Configuré' : '✗ Manquant');
-      console.log('📧 - SMTP_USER:', process.env.SMTP_USER ? '✓ Configuré' : '✗ Manquant');
-      console.log('📧 - FROM_EMAIL:', process.env.FROM_EMAIL || 'Non défini');
-    } else {
-      console.log('📧 Lien de désabonnement désactivé pour cet email');
-    }
-    
+
     const mailOptions = {
       from: process.env.FROM_EMAIL || process.env.SMTP_USER || 'Espace Comédie <noreply@espacecomedie.fr>',
       to: to,
@@ -107,7 +79,7 @@ const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe
             <tr>
               <td style="background:#111111;padding:24px 24px 20px 24px;text-align:center;">
                 <div style="font-size:24px;line-height:28px;color:#facc15;font-weight:800;letter-spacing:.5px;">Espace Comédie</div>
-                <div style="font-size:12px;color:#e5e7eb;opacity:.85;margin-top:6px;">Spectacles • Réservations • Newsletter</div>
+                <div style="font-size:12px;color:#e5e7eb;opacity:.85;margin-top:6px;">Spectacles • Comédie • Lille</div>
               </td>
             </tr>
             <tr>
@@ -131,15 +103,7 @@ const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe
               <td style="padding:0 24px 24px 24px;">
                 <div style="font-size:12px;line-height:18px;color:#6b7280;">
                   Cet email a été envoyé par <strong>Espace Comédie</strong>.<br/>
-                  Pour toute question, écrivez-nous à <a href="mailto:contact@espacecomedie.fr" style="color:#111111;text-decoration:underline;">contact@espacecomedie.fr</a>.<br/>
-                  <br/>
-                  ${showUnsubscribe ? `
-                  <div style="margin-top: 16px; padding: 12px; background-color: #f9fafb; border-radius: 6px; border-left: 4px solid #dc2626;">
-                    <p style="margin: 0; font-size: 11px; color: #6b7280;">
-                      <a href="${unsubscribeUrl}" style="color:#dc2626;text-decoration:underline;font-weight:600;">Se désabonner de la newsletter</a>
-                    </p>
-                  </div>
-                  ` : ''}
+                  Pour toute question, écrivez-nous à <a href="mailto:contact@espacecomedie.fr" style="color:#111111;text-decoration:underline;">contact@espacecomedie.fr</a>.
                 </div>
               </td>
             </tr>
@@ -201,36 +165,6 @@ const sendEmail = async (to, subject, message, attachments = [], showUnsubscribe
   }
 };
 
-// Fonction pour envoyer des emails en masse
-const sendBulkEmails = async (recipients, subject, message) => {
-  console.log('📧 Début envoi en masse à', recipients.length, 'destinataires');
-  console.log('📧 Destinataires:', recipients);
-  console.log('📧 Sujet:', subject);
-  console.log('📧 Message:', message);
-  const results = [];
-  
-  for (const recipient of recipients) {
-    try {
-      console.log('📧 Envoi à:', recipient);
-      const result = await sendEmail(recipient, subject, message);
-      results.push({ email: recipient, success: true, messageId: result.messageId });
-      console.log('📧 ✓ Succès pour:', recipient, '- MessageId:', result.messageId);
-    } catch (error) {
-      console.error('📧 ✗ Échec pour:', recipient, '- Erreur:', error.message);
-      console.error('📧 ✗ Détails erreur:', error);
-      results.push({ email: recipient, success: false, error: error.message });
-    }
-  }
-  
-  const successCount = results.filter(r => r.success).length;
-  const failureCount = results.filter(r => !r.success).length;
-  
-  console.log('📧 Résultats envoi en masse:', successCount, 'succès,', failureCount, 'échecs');
-  
-  return results;
-};
-
 module.exports = {
-  sendEmail,
-  sendBulkEmails
+  sendEmail
 };

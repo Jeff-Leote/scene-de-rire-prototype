@@ -16,7 +16,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './components/Dashboard';
 import Contact from './pages/Contact';
-import Unsubscribe from './pages/Unsubscribe';
 import NotFound from './pages/NotFound';
 import Maintenance from './pages/Maintenance';
 import Sponsorise from './pages/Sponsorise';
@@ -142,7 +141,6 @@ const AppContent = () => {
               }
             />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/sponsorise/:slug" element={<Sponsorise />} />
             <Route path="*" element={<NotFound />} />
           </>

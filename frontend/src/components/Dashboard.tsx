@@ -21,7 +21,7 @@ const Dashboard = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'newsletter' | 'settings' | 'maintenance' | 'sponsorise'>('spectacles');
+  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'settings' | 'maintenance' | 'sponsorise'>('spectacles');
   const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,16 +65,6 @@ const Dashboard = () => {
   const [newPhotoPath, setNewPhotoPath] = useState<string>('');
   const [newPhotoOrder, setNewPhotoOrder] = useState<string>('');
 
-  // Newsletter et emails
-  const [newsletterSubscribers, setNewsletterSubscribers] = useState<string[]>([]);
-  const [emailFormData, setEmailFormData] = useState({
-    subject: '',
-    message: '',
-    recipients: 'all' // 'all' ou 'newsletter'
-  });
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -114,28 +104,6 @@ const Dashboard = () => {
         } catch (err) {
           console.error('Erreur lors de la récupération des utilisateurs:', err);
           setUsers([]);
-        }
-
-        // Codes promo supprimés
-
-        // Récupérer les abonnés newsletter (avec pagination)
-        try {
-          const newsletterResponse = await api.get<{ data: Array<{ email: string, subscribed_at: string }>, pagination?: any } | string[]>('/api/admin/newsletter/subscribers');
-          // Gérer la compatibilité avec l'ancien format (array) et le nouveau format (object avec data)
-          let newsletterEmails: string[] = [];
-          if (Array.isArray(newsletterResponse)) {
-            // Ancien format : tableau direct d'emails
-            newsletterEmails = newsletterResponse;
-          } else if (newsletterResponse && typeof newsletterResponse === 'object' && 'data' in newsletterResponse) {
-            // Nouveau format : objet avec data et pagination
-            newsletterEmails = newsletterResponse.data.map(item => 
-              typeof item === 'string' ? item : item.email
-            );
-          }
-          setNewsletterSubscribers(newsletterEmails);
-        } catch (err) {
-          console.error('Erreur lors de la récupération des abonnés newsletter:', err);
-          setNewsletterSubscribers([]);
         }
 
         // Récupérer l'email de contact
@@ -676,79 +644,6 @@ const handleDeleteLieu = async (id: number) => {
     }
   };
 
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Promo codes supprimés
-
-  // Fonctions pour la newsletter et emails
-  const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEmailFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSendEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailFormData.subject || !emailFormData.message) {
-      toast.error('Le sujet et le message sont requis');
-      return;
-    }
-
-    try {
-      setIsSendingEmail(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Session expirée. Veuillez vous reconnecter.');
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/api/admin/newsletter/send`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailFormData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error('Session expirée. Veuillez vous reconnecter.');
-          return;
-        }
-        throw new Error(data.error || 'Erreur lors de l\'envoi de l\'email');
-      }
-
-      setIsEmailModalOpen(false);
-      setEmailFormData({ subject: '', message: '', recipients: 'all' });
-      toast.success(`Email envoyé avec succès à ${data.recipientsCount} destinataires`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
-  // Codes promo supprimés
-
-  // Codes promo supprimés
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -760,45 +655,6 @@ const handleDeleteLieu = async (id: number) => {
 
   const formatTime = (timeString: string) => {
     return timeString.substring(0, 5); // Retourne HH:MM
-  };
-
-  const getStatusBadge = (paiementStatut: boolean, montantPaye: number) => {
-    // Si le paiement est marqué comme réussi et qu'il y a un montant payé
-    if (paiementStatut && montantPaye > 0) {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-500 text-white shadow-sm">
-          <span className="mr-1">✓</span>
-          Payé
-        </span>
-      );
-    }
-    // Si le paiement est marqué comme échoué ou montant = 0
-    else if (!paiementStatut && montantPaye > 0) {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-500 text-white shadow-sm">
-          <span className="mr-1">✗</span>
-          Annulé
-        </span>
-      );
-    }
-    // Si pas de paiement associé (réservation sans paiement)
-    else if (montantPaye === 0 || montantPaye === null) {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-500 text-white shadow-sm">
-          <span className="mr-1">?</span>
-          Sans paiement
-        </span>
-      );
-    }
-    // Sinon, en attente
-    else {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-orange-500 text-white shadow-sm">
-          <span className="mr-1">⏱</span>
-          En attente
-        </span>
-      );
-    }
   };
 
   if (loading) {
@@ -878,17 +734,6 @@ const handleDeleteLieu = async (id: number) => {
             >
               Photos
             </button>
-            {/* Onglet Codes Promo supprimé */}
-            <button
-              onClick={() => setActiveTab('newsletter')}
-              className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'newsletter'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
-              } transition duration-300`}
-            >
-              Newsletter
-            </button>
             <button
               onClick={() => setActiveTab('settings')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
@@ -942,23 +787,6 @@ const handleDeleteLieu = async (id: number) => {
                 <span>Ajouter un artiste</span>
               </button>
             )}
-            {/* Bouton codes promo supprimé */}
-            {activeTab === 'newsletter' && (
-              <button
-                onClick={() => {
-                  setEmailFormData({
-                    subject: '',
-                    message: '',
-                    recipients: 'all'
-                  });
-                  setIsEmailModalOpen(true);
-                }}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
-              >
-                <i className="fa-solid fa-envelope"></i>
-                <span>Envoyer un email</span>
-            </button>
-          )}
         </div>
 
         {/* Content */}
@@ -1168,85 +996,6 @@ const handleDeleteLieu = async (id: number) => {
                 ))}
               </div>
             )}
-          </div>
-        )}
-
-        {/* Bloc Codes Promo supprimé */}
-
-        {activeTab === 'newsletter' && (
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Gestion de la Newsletter</h2>
-            
-            {/* Statistiques */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gray-900 rounded-lg p-6">
-                <div className="flex items-center">
-                  <div className="p-3 rounded-full bg-red-500 text-white">
-                    <i className="fa-solid fa-users text-xl"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-gray-400 text-sm">Abonnés Newsletter</p>
-                    <p className="text-white text-2xl font-bold">{newsletterSubscribers.length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-900 rounded-lg p-6">
-                <div className="flex items-center">
-                  <div className="p-3 rounded-full bg-green-400 text-black">
-                    <i className="fa-solid fa-user text-xl"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-gray-400 text-sm">Utilisateurs Totaux</p>
-                    <p className="text-white text-2xl font-bold">{users.length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-900 rounded-lg p-6">
-                <div className="flex items-center">
-                  <div className="p-3 rounded-full bg-blue-400 text-black">
-                    <i className="fa-solid fa-envelope text-xl"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-gray-400 text-sm">Taux d'Abonnement</p>
-                    <p className="text-white text-2xl font-bold">
-                      {users.length > 0 ? Math.round((newsletterSubscribers.length / users.length) * 100) : 0}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Liste des abonnés */}
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-white mb-4">Liste des abonnés à la newsletter</h3>
-              {newsletterSubscribers.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">Aucun abonné à la newsletter</p>
-              ) : (
-                <div className="space-y-3">
-                  {newsletterSubscribers.map((email, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
-                          <i className="fa-solid fa-envelope text-black"></i>
-                      </div>
-                        <div className="ml-4">
-                          <p className="text-white font-semibold">{email}</p>
-                          <p className="text-gray-400 text-sm">Abonné à la newsletter</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <i className="fa-solid fa-check mr-1"></i>
-                          Actif
-                        </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            </div>
           </div>
         )}
 
@@ -1831,92 +1580,6 @@ const handleDeleteLieu = async (id: number) => {
         )}
 
         {/* Modal d'envoi d'email */}
-        {isEmailModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">Envoyer un email</h2>
-              <form onSubmit={handleSendEmail} className="space-y-4">
-                <div>
-                  <label className="block text-white mb-2">Destinataires</label>
-                  <select
-                    name="recipients"
-                    value={emailFormData.recipients}
-                    onChange={handleEmailInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  >
-                    <option value="all">Tous les utilisateurs ({users.length})</option>
-                    <option value="newsletter">Abonnés newsletter ({newsletterSubscribers.length})</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Sujet</label>
-                  <input
-                    type="text"
-                    name="subject"
-                    value={emailFormData.subject}
-                    onChange={handleEmailInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    placeholder="Sujet de l'email"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Message</label>
-                  <textarea
-                    name="message"
-                    value={emailFormData.message}
-                    onChange={handleEmailInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    rows={8}
-                    placeholder="Contenu de votre message..."
-                    required
-                  />
-                </div>
-                <div className="bg-red-500 text-white p-4 rounded-lg">
-                  <p className="font-semibold mb-2">⚠️ Attention</p>
-                  <p className="text-sm">
-                    Cet email sera envoyé à {emailFormData.recipients === 'all' ? users.length : newsletterSubscribers.length} destinataire(s).
-                    Assurez-vous que votre message est approprié et respecte les règles de confidentialité.
-                  </p>
-                </div>
-                <div className="flex justify-end space-x-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEmailModalOpen(false);
-                      setEmailFormData({ subject: '', message: '', recipients: 'all' });
-                    }}
-                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSendingEmail}
-                    className={`px-4 py-2 rounded transition duration-300 ${
-                      isSendingEmail
-                        ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                        : 'bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                  >
-                    {isSendingEmail ? (
-                      <span className="flex items-center">
-                        <i className="fa-solid fa-spinner fa-spin mr-2"></i>
-                        Envoi en cours...
-                      </span>
-                    ) : (
-                      <span className="flex items-center">
-                        <i className="fa-solid fa-paper-plane mr-2"></i>
-                        Envoyer
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

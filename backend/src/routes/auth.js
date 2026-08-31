@@ -139,9 +139,10 @@ router.post('/register', async (req, res) => {
 
 // Update profile route
 router.put('/update-profile', auth, async (req, res) => {
-  const { id, civility, firstName, lastName, email } = req.body;
+  const id = req.user.id; // Toujours l'utilisateur authentifié, jamais une valeur fournie par le client
+  const { civility, firstName, lastName, email } = req.body;
 
-  if (!id || !civility || !firstName || !lastName || !email) {
+  if (!civility || !firstName || !lastName || !email) {
     return res.status(400).json({ error: 'Tous les champs sont requis.' });
   }
 
@@ -216,11 +217,7 @@ router.get("/me", auth, async (req, res) => {
 
 // Delete account route
 router.delete('/delete-account', auth, async (req, res) => {
-  const { id } = req.body;
-
-  if (!id) {
-    return res.status(400).json({ error: 'ID utilisateur requis.' });
-  }
+  const id = req.user.id; // Toujours l'utilisateur authentifié, jamais une valeur fournie par le client
 
   try {
     // Vérifier si l'utilisateur existe

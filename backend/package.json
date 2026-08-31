@@ -5,19 +5,13 @@
   "main": "server.js",
   "scripts": {
     "start": "node src/server.js",
-    "start:prod": "node start-production.js",
     "dev": "nodemon src/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "security:audit": "npm audit",
     "security:fix": "npm audit fix",
-    "performance:check": "node -e \"console.log('Vérification des performances...'); console.log('Mémoire:', Math.round(process.memoryUsage().heapUsed / 1024 / 1024), 'MB');\"",
-    "diagnostic": "node diagnostic.js",
-    "test:performance": "node test-performance.js",
-    "test:cors": "node test-cors.js",
-    "test:stripe": "node test-stripe.js",
-    "test:payment": "node test-payment.js"
+    "performance:check": "node -e \"console.log('Vérification des performances...'); console.log('Mémoire:', Math.round(process.memoryUsage().heapUsed / 1024 / 1024), 'MB');\""
   },
   "keywords": [],
   "author": "",
@@ -39,7 +33,6 @@
     "sanitize-html": "^2.10.0",
     "sharp": "^0.34.4",
     "sqlstring": "^2.3.3",
-    "stripe": "^12.0.0",
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {

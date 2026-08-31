@@ -33,7 +33,6 @@ class ApiError extends Error {
 const RATE_LIMITS = {
   login: { maxAttempts: 5, windowMs: 15 * 60 * 1000 }, // 5 tentatives en 15 minutes
   register: { maxAttempts: 3, windowMs: 60 * 60 * 1000 }, // 3 tentatives en 1 heure
-  newsletter: { maxAttempts: 10, windowMs: 60 * 60 * 1000 }, // 10 tentatives en 1 heure
   contact: { maxAttempts: 5, windowMs: 60 * 60 * 1000 }, // 5 tentatives en 1 heure
   default: { maxAttempts: 100, windowMs: 60 * 1000 } // 100 tentatives par minute
 }
@@ -175,28 +174,6 @@ export class SecureApiService {
     return this.request('/api/auth/me')
   }
 
-  // ====== MÉTHODES NEWSLETTER ======
-
-  /**
-   * Inscription à la newsletter
-   */
-  async subscribeNewsletter(email: string): Promise<{ message: string }> {
-    return this.request('/api/newsletter/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({ email })
-    }, 'newsletter')
-  }
-
-  /**
-   * Désinscription de la newsletter
-   */
-  async unsubscribeNewsletter(email: string, token: string): Promise<{ message: string }> {
-    return this.request('/api/newsletter/unsubscribe', {
-      method: 'POST',
-      body: JSON.stringify({ email, token })
-    })
-  }
-
   // ====== MÉTHODES CONTACT ======
 
   /**
@@ -241,24 +218,6 @@ export class SecureApiService {
     return this.request(`/api/artistes/${id}`)
   }
 
-  // ====== MÉTHODES ADMIN (si autorisé) ======
-
-  /**
-   * Récupération des abonnés newsletter (admin)
-   */
-  async getNewsletterSubscribers(): Promise<any[]> {
-    return this.request('/api/admin/newsletter/subscribers')
-  }
-
-  /**
-   * Envoi d'email newsletter (admin)
-   */
-  async sendNewsletterEmail(data: any): Promise<{ message: string }> {
-    return this.request('/api/admin/newsletter/send', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-  }
 }
 
 // Instance singleton du service API

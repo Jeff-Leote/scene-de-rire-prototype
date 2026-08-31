@@ -29,13 +29,6 @@ export const phoneSchema = z
   .string()
   .regex(/^(\+33|0)[1-9](\d{8})$/, 'Numéro de téléphone invalide')
 
-// Schema pour la validation des codes promo
-export const promoCodeSchema = z
-  .string()
-  .min(1, 'Code promo requis')
-  .max(20, 'Code promo trop long')
-  .regex(/^[A-Z0-9]+$/, 'Code promo invalide (lettres majuscules et chiffres uniquement)')
-
 // ====== SANITISATION ======
 
 /**
@@ -288,13 +281,6 @@ export const registerFormSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
   path: ["confirmPassword"]
-})
-
-/**
- * Valide un formulaire de newsletter
- */
-export const newsletterFormSchema = z.object({
-  email: emailSchema
 })
 
 /**
