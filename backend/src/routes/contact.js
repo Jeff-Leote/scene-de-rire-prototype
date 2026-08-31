@@ -5,7 +5,9 @@ const { sendEmail } = require('../services/emailService');
 
 async function getRecipientEmail() {
   try {
-    const [rows] = await db.query("CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )");
+    const [rows] = await db.query(
+      'CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )'
+    );
     // Read current value
     const [res] = await db.query('SELECT value FROM settings WHERE `key` = ? LIMIT 1', ['contact_recipient_email']);
     if (Array.isArray(res) && res.length > 0 && res[0].value) {
@@ -18,8 +20,6 @@ async function getRecipientEmail() {
   return process.env.CONTACT_RECIPIENT_EMAIL || process.env.FROM_EMAIL || process.env.SMTP_USER;
 }
 
-
-
 router.post('/', async (req, res) => {
   try {
     const { firstName, lastName, email, subject, message } = req.body || {};
@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
 
     const toEmail = await getRecipientEmail();
     if (!toEmail) {
-      return res.status(500).json({ error: "Adresse de réception non configurée." });
+      return res.status(500).json({ error: 'Adresse de réception non configurée.' });
     }
 
     console.log('📧 Envoi email contact:', { from: email, to: toEmail, subject });

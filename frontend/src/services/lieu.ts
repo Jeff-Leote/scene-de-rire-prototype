@@ -16,4 +16,4 @@ export async function fetchGalleryLieuImages(): Promise<LieuImage[]> {
 
 export async function fetchAllLieuImages(): Promise<LieuImage[]> {
   return api.get<LieuImage[]>('/api/lieu/images');
-} 
+}

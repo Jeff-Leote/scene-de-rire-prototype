@@ -1,18 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import { Spectacle } from '../services/types';
 import { api } from '@/services/api';
 
 const UpcomingShows = () => {
   const navigate = useNavigate();
-  const { data: raw = [], isLoading: loading, error: queryError } = useQuery({
+  const {
+    data: raw = [],
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
     queryKey: ['spectacles', 'upcoming'],
     queryFn: () => api.get<Spectacle[]>('/api/spectacles/upcoming'),
     staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000
+    gcTime: 10 * 60 * 1000,
   });
   const spectacles = Array.isArray(raw) ? raw.slice(0, 3) : [];
   const error = queryError ? (queryError instanceof Error ? queryError.message : 'Erreur inconnue') : null;
@@ -28,7 +32,7 @@ const UpcomingShows = () => {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
       });
       return str.charAt(0).toUpperCase() + str.slice(1);
     } catch {
@@ -57,7 +61,7 @@ const UpcomingShows = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Prochains spectacles</h2>
             <div className="flex items-center">
-              <span 
+              <span
                 className="text-red-500 hover:text-red-400 cursor-pointer flex items-center transition duration-300 text-sm sm:text-base font-medium"
                 onClick={() => navigate('/spectacles')}
               >
@@ -68,7 +72,9 @@ const UpcomingShows = () => {
           </div>
         </div>
 
-        <div className={`grid gap-4 sm:gap-6 ${spectacles.length === 1 ? 'grid-cols-1 justify-center' : spectacles.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+        <div
+          className={`grid gap-4 sm:gap-6 ${spectacles.length === 1 ? 'grid-cols-1 justify-center' : spectacles.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}
+        >
           {spectacles.length === 0 && (
             <div className="col-span-full text-center py-12">
               <p className="text-gray-400 text-lg">Aucun spectacle à venir pour le moment.</p>
@@ -84,26 +90,25 @@ const UpcomingShows = () => {
               {/* Image qui occupe la majeure partie de la carte */}
               <div className="relative flex-1 min-h-[36rem] w-full">
                 <img
-                  src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
+                  src={buildImgSrc('spectacles', spectacle.img || undefined) || '/assets/placeholder.jpg'}
                   alt={spectacle.title}
                   className="w-full h-full object-cover"
                   onError={onImgErrorSwap}
                 />
                 {/* Badge de date en haut à droite */}
                 <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-xl font-bold">
-                  {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
+                  {format(new Date(spectacle.date_spectacle), 'd MMM', { locale: fr }).toUpperCase()}
                 </div>
               </div>
-              
+
               {/* Section texte compacte en bas */}
               <div className="p-4 bg-gray-900">
-                <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">
-                  {spectacle.title}
-                </h3>
+                <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{spectacle.title}</h3>
                 <p className="text-gray-400 text-sm mb-3">
-                  {format(new Date(spectacle.date_spectacle), "EEEE d MMMM", { locale: fr })} - {formatHeure(spectacle.heure_spectacle)}
+                  {format(new Date(spectacle.date_spectacle), 'EEEE d MMMM', { locale: fr })} -{' '}
+                  {formatHeure(spectacle.heure_spectacle)}
                 </p>
-                <button 
+                <button
                   className="w-full bg-black text-white py-2 px-4 rounded font-semibold hover:bg-red-500 transition duration-300"
                   onClick={(e) => {
                     e.stopPropagation();

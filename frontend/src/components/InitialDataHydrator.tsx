@@ -24,22 +24,31 @@ declare global {
  * Remplit le cache React Query avec les données injectées côté serveur (Option B).
  * À appeler de façon synchrone au boot pour que le premier rendu ait déjà les données.
  */
-export function hydrateQueryClientFromInitialData(
-  queryClient: QueryClient,
-  data: InitialDataShape
-): void {
+export function hydrateQueryClientFromInitialData(queryClient: QueryClient, data: InitialDataShape): void {
   const opts = { staleTime: STALE_TIME, gcTime: GC_TIME };
   if (data.spectaclesUpcoming !== undefined) {
     queryClient.setQueryData(['spectacles', 'upcoming'], data.spectaclesUpcoming);
-    queryClient.prefetchQuery({ queryKey: ['spectacles', 'upcoming'], queryFn: () => Promise.resolve(data.spectaclesUpcoming), ...opts });
+    queryClient.prefetchQuery({
+      queryKey: ['spectacles', 'upcoming'],
+      queryFn: () => Promise.resolve(data.spectaclesUpcoming),
+      ...opts,
+    });
   }
   if (data.artistFeatured !== undefined) {
     queryClient.setQueryData(['artist', 'featured'], data.artistFeatured);
-    queryClient.prefetchQuery({ queryKey: ['artist', 'featured'], queryFn: () => Promise.resolve(data.artistFeatured), ...opts });
+    queryClient.prefetchQuery({
+      queryKey: ['artist', 'featured'],
+      queryFn: () => Promise.resolve(data.artistFeatured),
+      ...opts,
+    });
   }
   if (data.venueImages !== undefined) {
     queryClient.setQueryData(['venue', 'images'], data.venueImages);
-    queryClient.prefetchQuery({ queryKey: ['venue', 'images'], queryFn: () => Promise.resolve(data.venueImages), ...opts });
+    queryClient.prefetchQuery({
+      queryKey: ['venue', 'images'],
+      queryFn: () => Promise.resolve(data.venueImages),
+      ...opts,
+    });
   }
   if (data.venueMain !== undefined) {
     queryClient.setQueryData(['venue', 'main'], data.venueMain);
@@ -47,7 +56,11 @@ export function hydrateQueryClientFromInitialData(
   }
   if (data.spectaclesList !== undefined) {
     queryClient.setQueryData(['spectacles', 'list', '1', '9'], data.spectaclesList);
-    queryClient.prefetchQuery({ queryKey: ['spectacles', 'list', '1', '9'], queryFn: () => Promise.resolve(data.spectaclesList), ...opts });
+    queryClient.prefetchQuery({
+      queryKey: ['spectacles', 'list', '1', '9'],
+      queryFn: () => Promise.resolve(data.spectaclesList),
+      ...opts,
+    });
   }
   if (data.artistes !== undefined) {
     queryClient.setQueryData(['artistes'], data.artistes);
@@ -55,7 +68,11 @@ export function hydrateQueryClientFromInitialData(
   }
   if (data.spectaclesAll !== undefined) {
     queryClient.setQueryData(['spectacles', 'all'], data.spectaclesAll);
-    queryClient.prefetchQuery({ queryKey: ['spectacles', 'all'], queryFn: () => Promise.resolve(data.spectaclesAll), ...opts });
+    queryClient.prefetchQuery({
+      queryKey: ['spectacles', 'all'],
+      queryFn: () => Promise.resolve(data.spectaclesAll),
+      ...opts,
+    });
   }
 }
 

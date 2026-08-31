@@ -1,10 +1,9 @@
-
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import CTA from "../components/CTA";
-import React, { useEffect, useState } from "react";
-import { fetchGalleryLieuImages, LieuImage } from "../services/lieu";
-import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import CTA from '../components/CTA';
+import React, { useEffect, useState } from 'react';
+import { fetchGalleryLieuImages, LieuImage } from '../services/lieu';
+import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 
 const Venue = () => {
   const [imagesList, setImages] = useState<LieuImage[]>([]);
@@ -18,7 +17,7 @@ const Venue = () => {
         const data: LieuImage[] = await api.get('/api/lieu/images/gallery');
         setImages(data);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+        const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -33,12 +32,12 @@ const Venue = () => {
       <main>
         {/* Hero Section */}
         <section id="hero-banner" className="relative h-[700px] w-full overflow-hidden">
-            <img 
-              className="absolute w-full h-full object-cover opacity-80" 
-              style={{ objectPosition: 'center top' }}
-              src="/assets/img/banniere lieu.webp" 
-              alt="L'Espace Comédie Lille - scène et salle" 
-            />
+          <img
+            className="absolute w-full h-full object-cover opacity-80"
+            style={{ objectPosition: 'center top' }}
+            src="/assets/img/banniere lieu.webp"
+            alt="L'Espace Comédie Lille - scène et salle"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           <div className="container mx-auto px-4 md:px-8 relative h-full flex flex-col justify-end">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-red-500 mb-4">
@@ -55,7 +54,8 @@ const Venue = () => {
           <div className="container mx-auto px-4 md:px-8">
             <div className="max-w-4xl mx-auto text-center">
               <p className="text-xl md:text-2xl mb-8 leading-relaxed">
-                Situé en plein cœur de la ville, L'Espace Comédie vous accueille pour des soirées de rire et de découvertes humoristiques dans une ambiance conviviale et intimiste.
+                Situé en plein cœur de la ville, L'Espace Comédie vous accueille pour des soirées de rire et de
+                découvertes humoristiques dans une ambiance conviviale et intimiste.
               </p>
               <div className="flex items-center justify-center text-red-500 text-xl">
                 <i className="fa-solid fa-location-dot text-3xl mr-3"></i>
@@ -97,11 +97,12 @@ const Venue = () => {
               <h2 className="text-3xl font-bold text-red-500 mb-8 flex items-center">
                 <i className="fa-solid fa-route mr-3"></i>Comment venir ?
               </h2>
-              
+
               <p className="text-lg mb-8 leading-relaxed">
-                À deux pas du centre-ville, L'Espace Comédie est facilement accessible en transports en commun ou à pied.
+                À deux pas du centre-ville, L'Espace Comédie est facilement accessible en transports en commun ou à
+                pied.
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 <div className="bg-gray-900 p-6 rounded-lg">
                   <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
@@ -126,13 +127,13 @@ const Venue = () => {
                     </li>
                   </ul>
                 </div>
-                
+
                 <div className="bg-gray-900 p-6 rounded-lg">
                   <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
                     <i className="fa-solid fa-car mr-2"></i>En voiture
                   </h3>
                   <ul className="space-y-3">
-                  <li className="flex items-start">
+                    <li className="flex items-start">
                       <i className="fa-solid fa-road mt-1 mr-3 text-red-500"></i>
                       <span>Stationnement payant dans les rues avoisinantes</span>
                     </li>
@@ -195,7 +196,7 @@ const Venue = () => {
           <div className="container mx-auto px-4 md:px-8">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-red-500 mb-12 text-center">Infos pratiques</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 <div className="bg-gray-900 p-6 rounded-lg">
                   <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
@@ -210,12 +211,10 @@ const Venue = () => {
                       <span>Fermeture</span>
                       <span>23h00</span>
                     </li>
-                    <li className="text-red-500 text-sm mt-4">
-                      Les horaires peuvent varier selon les événements
-                    </li>
+                    <li className="text-red-500 text-sm mt-4">Les horaires peuvent varier selon les événements</li>
                   </ul>
                 </div>
-                
+
                 <div className="bg-gray-900 p-6 rounded-lg">
                   <h3 className="text-xl font-semibold text-red-500 mb-4 flex items-center">
                     <i className="fa-solid fa-building-user mr-2"></i>Notre espace
@@ -232,7 +231,7 @@ const Venue = () => {
                   </ul>
                 </div>
               </div>
-              
+
               {/* FAQ */}
               <div className="bg-gray-900 p-8 rounded-lg">
                 <h3 className="text-xl font-semibold text-red-500 mb-6 flex items-center">
@@ -241,19 +240,38 @@ const Venue = () => {
                 <div className="space-y-6">
                   <div className="border-b border-gray-800 pb-4">
                     <h4 className="text-lg font-medium mb-2">Où se situe l’Espace Comédie ?</h4>
-                    <p className="text-gray-300">L’Espace Comédie se trouve au 136 rue Solférino, en plein cœur de Lille. La salle se trouve au sous-sol du Jager, l’entrée se fait directement par le Jager. Un parking est à proximité pour se garer facilement.</p>
+                    <p className="text-gray-300">
+                      L’Espace Comédie se trouve au 136 rue Solférino, en plein cœur de Lille. La salle se trouve au
+                      sous-sol du Jager, l’entrée se fait directement par le Jager. Un parking est à proximité pour se
+                      garer facilement.
+                    </p>
                   </div>
                   <div className="border-b border-gray-800 pb-4">
                     <h4 className="text-lg font-medium mb-2">Faut-il réserver ?</h4>
-                    <p className="text-gray-300">Oui, on recommande de réserver en ligne sur notre billetterie sécurisée. Vous recevrez vos billets par e-mail, il suffira de les présenter à l’entrée (version papier ou sur téléphone). Il est parfois possible de payer sur place si des places restent disponibles.</p>
+                    <p className="text-gray-300">
+                      Oui, on recommande de réserver en ligne sur notre billetterie sécurisée. Vous recevrez vos billets
+                      par e-mail, il suffira de les présenter à l’entrée (version papier ou sur téléphone). Il est
+                      parfois possible de payer sur place si des places restent disponibles.
+                    </p>
                   </div>
                   <div className="border-b border-gray-800 pb-4">
                     <h4 className="text-lg font-medium mb-2">Est-il possible de boire et/ou manger sur place ?</h4>
-                    <p className="text-gray-300">Oui ! A l’Espace Comédie vous pouvez profiter de boissons et de planches apéritives pendant, avant ou après les spectacles. Les boissons sont servies et facturées exclusivement par le Jager, titulaire de la licence IV.</p>
+                    <p className="text-gray-300">
+                      Oui ! A l’Espace Comédie vous pouvez profiter de boissons et de planches apéritives pendant, avant
+                      ou après les spectacles. Les boissons sont servies et facturées exclusivement par le Jager,
+                      titulaire de la licence IV.
+                    </p>
                   </div>
                   <div>
-                    <h4 className="text-lg font-medium mb-2">L’Espace Comédie est-il accessible aux personnes à mobilité réduite (PMR) ?</h4>
-                    <p className="text-gray-300">Notre salle se situe au sous-sol, sans ascenseur. L’accès peut donc être difficile pour certaines personnes à mobilité réduite. Nous avons déjà accueilli des spectateurs en fauteuil, aidés par notre équipe pour descendre les escaliers. Si vous êtes concerné, n’hésitez pas à nous contacter en amont afin que nous puissions vous accompagner dans les meilleures conditions possibles.</p>
+                    <h4 className="text-lg font-medium mb-2">
+                      L’Espace Comédie est-il accessible aux personnes à mobilité réduite (PMR) ?
+                    </h4>
+                    <p className="text-gray-300">
+                      Notre salle se situe au sous-sol, sans ascenseur. L’accès peut donc être difficile pour certaines
+                      personnes à mobilité réduite. Nous avons déjà accueilli des spectateurs en fauteuil, aidés par
+                      notre équipe pour descendre les escaliers. Si vous êtes concerné, n’hésitez pas à nous contacter
+                      en amont afin que nous puissions vous accompagner dans les meilleures conditions possibles.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -261,7 +279,7 @@ const Venue = () => {
           </div>
         </section>
 
-       {/* Témoignages
+        {/* Témoignages
         <section className="py-12 bg-gray-950">
           <div className="container mx-auto px-4 md:px-8">
             <h2 className="text-3xl font-bold text-red-500 mb-10 text-center">Ce qu'en disent nos spectateurs</h2>

@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import { Spectacle } from '../services/types';
 
 const ShowsList = () => {
@@ -26,34 +26,34 @@ const ShowsList = () => {
       try {
         setLoading(true);
         const { api } = await import('@/services/api');
-        
+
         // Récupérer tous les spectacles (limite élevée)
-        const response = await api.get(`/api/spectacles?page=1&limit=1000`) as any;
+        const response = (await api.get(`/api/spectacles?page=1&limit=1000`)) as any;
         const data = response.spectacles || response || [];
 
         if (Array.isArray(data)) {
           const now = new Date();
 
           const filtered = data.filter((spectacle: Spectacle) => {
-            const datePart = spectacle.date_spectacle.split("T")[0];
+            const datePart = spectacle.date_spectacle.split('T')[0];
             const fullDate = new Date(`${datePart}T${spectacle.heure_spectacle}`);
             return fullDate > now;
           });
 
           // Trier par date croissante
           filtered.sort((a, b) => {
-            const dateA = new Date(`${a.date_spectacle.split("T")[0]}T${a.heure_spectacle}`);
-            const dateB = new Date(`${b.date_spectacle.split("T")[0]}T${b.heure_spectacle}`);
+            const dateA = new Date(`${a.date_spectacle.split('T')[0]}T${a.heure_spectacle}`);
+            const dateB = new Date(`${b.date_spectacle.split('T')[0]}T${b.heure_spectacle}`);
             return dateA.getTime() - dateB.getTime();
           });
 
           setAllSpectacles(filtered);
           setTotal(filtered.length);
         } else {
-          setError("Format de données inattendu - données non tableau");
+          setError('Format de données inattendu - données non tableau');
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+        const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -116,7 +116,9 @@ const ShowsList = () => {
           <p className="text-gray-400 text-center">Aucun spectacle trouvé</p>
         ) : (
           <>
-            <div className={`grid gap-4 sm:gap-6 mb-8 ${spectacles.length === 1 ? 'grid-cols-1 justify-center' : spectacles.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'}`}>
+            <div
+              className={`grid gap-4 sm:gap-6 mb-8 ${spectacles.length === 1 ? 'grid-cols-1 justify-center' : spectacles.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'}`}
+            >
               {spectacles.map((spectacle) => (
                 <div
                   key={spectacle.id}
@@ -126,26 +128,25 @@ const ShowsList = () => {
                   {/* Image qui occupe la majeure partie de la carte */}
                   <div className="relative flex-1 min-h-[36rem] w-full">
                     <img
-                      src={buildImgSrc('spectacles', spectacle.img || undefined) || "/assets/placeholder.jpg"}
+                      src={buildImgSrc('spectacles', spectacle.img || undefined) || '/assets/placeholder.jpg'}
                       alt={spectacle.title}
                       className="w-full h-full object-cover"
                       onError={onImgErrorSwap}
                     />
                     {/* Badge de date en haut à droite */}
                     <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-xl font-bold">
-                      {format(new Date(spectacle.date_spectacle), "d MMM", { locale: fr }).toUpperCase()}
+                      {format(new Date(spectacle.date_spectacle), 'd MMM', { locale: fr }).toUpperCase()}
                     </div>
                   </div>
-                  
+
                   {/* Section texte compacte en bas */}
                   <div className="p-4 bg-gray-900">
-                    <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">
-                      {spectacle.title}
-                    </h3>
+                    <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{spectacle.title}</h3>
                     <p className="text-gray-400 text-sm mb-3">
-                      {format(new Date(spectacle.date_spectacle), "EEEE d MMMM", { locale: fr })} - {formatHeure(spectacle.heure_spectacle)}
+                      {format(new Date(spectacle.date_spectacle), 'EEEE d MMMM', { locale: fr })} -{' '}
+                      {formatHeure(spectacle.heure_spectacle)}
                     </p>
-                    <button 
+                    <button
                       className="w-full bg-black text-white py-2 px-4 rounded font-semibold hover:bg-red-500 transition duration-300"
                       onClick={(e) => {
                         e.stopPropagation();

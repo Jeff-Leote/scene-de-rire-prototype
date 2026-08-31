@@ -65,7 +65,7 @@ router.post('/login', loginFailure, async (req, res) => {
 
   try {
     const [users] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
-    
+
     if (users.length === 0) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
     }
@@ -81,14 +81,18 @@ router.post('/login', loginFailure, async (req, res) => {
     if (!secret) {
       return res.status(503).json({ error: 'Service temporairement indisponible (configuration manquante).' });
     }
-    const token = jwt.sign({
-      id: user.id,
-      email: user.email,
-      civility: user.civility,
-      firstName: user.prenom,
-      lastName: user.nom,
-      role: user.role
-    }, secret, { expiresIn: '3h' });
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        civility: user.civility,
+        firstName: user.prenom,
+        lastName: user.nom,
+        role: user.role,
+      },
+      secret,
+      { expiresIn: '3h' }
+    );
 
     return res.status(200).json({
       message: 'Connexion réussie !',
@@ -99,8 +103,8 @@ router.post('/login', loginFailure, async (req, res) => {
         civility: user.civility,
         firstName: user.prenom,
         lastName: user.nom,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
     return res.status(500).json({ error: 'Erreur lors de la connexion.', details: error.message });
@@ -117,7 +121,7 @@ router.post('/register', async (req, res) => {
 
   try {
     const [existingUsers] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
-    
+
     if (existingUsers.length > 0) {
       return res.status(409).json({ error: 'Email déjà utilisé.' });
     }
@@ -127,13 +131,13 @@ router.post('/register', async (req, res) => {
 
     const sql = `INSERT INTO user (civility, prenom, nom, dateNaissance, email, password)
                  VALUES (?, ?, ?, ?, ?, ?)`;
-    
+
     const values = [civility, firstName, lastName, formattedDate, email, hashedPassword];
     await db.query(sql, values);
 
     return res.status(201).json({ message: 'Utilisateur créé avec succès 🎉' });
   } catch (error) {
-    return res.status(500).json({ error: 'Erreur lors de l\'inscription.', details: error.message });
+    return res.status(500).json({ error: "Erreur lors de l'inscription.", details: error.message });
   }
 });
 
@@ -149,16 +153,13 @@ router.put('/update-profile', auth, async (req, res) => {
   try {
     // Vérifier si l'utilisateur existe
     const [existingUser] = await db.query('SELECT * FROM user WHERE id = ?', [id]);
-    
+
     if (existingUser.length === 0) {
       return res.status(404).json({ error: 'Utilisateur non trouvé.' });
     }
 
     // Vérifier si l'email est déjà utilisé par un autre utilisateur
-    const [existingUsers] = await db.query(
-      'SELECT * FROM user WHERE email = ? AND id != ?',
-      [email, id]
-    );
+    const [existingUsers] = await db.query('SELECT * FROM user WHERE email = ? AND id != ?', [email, id]);
 
     if (existingUsers.length > 0) {
       return res.status(409).json({ error: 'Cet email est déjà utilisé par un autre compte.' });
@@ -170,21 +171,25 @@ router.put('/update-profile', auth, async (req, res) => {
                      nom = ?, 
                      email = ?
                  WHERE id = ?`;
-    
+
     await db.query(sql, [civility, firstName, lastName, email, id]);
 
     const secret = getJwtSecret();
     if (!secret) {
       return res.status(503).json({ error: 'Service temporairement indisponible (configuration manquante).' });
     }
-    const token = jwt.sign({
-      id,
-      email,
-      civility,
-      firstName,
-      lastName,
-      role: existingUser[0].role
-    }, secret, { expiresIn: '3h' });
+    const token = jwt.sign(
+      {
+        id,
+        email,
+        civility,
+        firstName,
+        lastName,
+        role: existingUser[0].role,
+      },
+      secret,
+      { expiresIn: '3h' }
+    );
 
     return res.status(200).json({
       message: 'Profil mis à jour avec succès !',
@@ -195,8 +200,8 @@ router.put('/update-profile', auth, async (req, res) => {
         civility,
         firstName,
         lastName,
-        role: existingUser[0].role
-      }
+        role: existingUser[0].role,
+      },
     });
   } catch (error) {
     return res.status(500).json({ error: 'Erreur lors de la mise à jour du profil.', details: error.message });
@@ -204,14 +209,14 @@ router.put('/update-profile', auth, async (req, res) => {
 });
 
 // Vérifie si le token est encore valide et l'utilisateur toujours en base
-router.get("/me", auth, async (req, res) => {
+router.get('/me', auth, async (req, res) => {
   return res.status(200).json({
     id: req.user.id,
     email: req.user.email,
     civility: req.user.civility,
     firstName: req.user.prenom,
     lastName: req.user.nom,
-    role: req.user.role
+    role: req.user.role,
   });
 });
 
@@ -222,7 +227,7 @@ router.delete('/delete-account', auth, async (req, res) => {
   try {
     // Vérifier si l'utilisateur existe
     const [existingUser] = await db.query('SELECT * FROM user WHERE id = ?', [id]);
-    
+
     if (existingUser.length === 0) {
       return res.status(404).json({ error: 'Utilisateur non trouvé.' });
     }

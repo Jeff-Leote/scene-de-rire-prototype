@@ -23,9 +23,7 @@ type Slide = {
 };
 
 // ---- Helpers de parsing sûrs (évite `any`) ----
-const isObject = (val: unknown): val is Record<string, unknown> => (
-  typeof val === 'object' && val !== null
-);
+const isObject = (val: unknown): val is Record<string, unknown> => typeof val === 'object' && val !== null;
 
 const toNumber = (val: unknown): number | null => {
   if (typeof val === 'number' && Number.isFinite(val)) return val;
@@ -98,20 +96,24 @@ const Hero = () => {
         if (initialUpcoming != null) {
           const upItems = extractItems(initialUpcoming);
           if (Array.isArray(upItems) && upItems.length > 0) {
-            const fastNormalized: SpectacleItem[] = upItems.map((val: unknown) => {
-              const it = isObject(val) ? val : {};
-              const idCandidate = it.id ?? it.spectacle_id ?? it._id;
-              const idNum = toNumber(idCandidate) ?? -1;
-              return {
-                id: idNum,
-                title: toStringSafe(it.title ?? it.nom ?? it.name ?? ''),
-                img: toStringSafe(it.img ?? it.image ?? it.photo ?? ''),
-                date_spectacle: toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? ''),
-                heure_spectacle: toStringSafe(it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00'),
-                lieu: toStringSafe(it.lieu ?? it.venue ?? ''),
-                lien_spectacle: toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? ''),
-              };
-            }).filter(it => it.id > 0 && it.title && it.date_spectacle);
+            const fastNormalized: SpectacleItem[] = upItems
+              .map((val: unknown) => {
+                const it = isObject(val) ? val : {};
+                const idCandidate = it.id ?? it.spectacle_id ?? it._id;
+                const idNum = toNumber(idCandidate) ?? -1;
+                return {
+                  id: idNum,
+                  title: toStringSafe(it.title ?? it.nom ?? it.name ?? ''),
+                  img: toStringSafe(it.img ?? it.image ?? it.photo ?? ''),
+                  date_spectacle: toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? ''),
+                  heure_spectacle: toStringSafe(
+                    it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00'
+                  ),
+                  lieu: toStringSafe(it.lieu ?? it.venue ?? ''),
+                  lien_spectacle: toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? ''),
+                };
+              })
+              .filter((it) => it.id > 0 && it.title && it.date_spectacle);
             const order: string[] = [];
             const groups = new Map<string, SpectacleItem[]>();
             for (const s of fastNormalized) {
@@ -121,10 +123,20 @@ const Hero = () => {
             const nowFast = new Date();
             const perShowNextFast: Slide[] = [];
             for (const title of order) {
-              const items = (groups.get(title) || []).map(it => ({ ...it, dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`) }));
+              const items = (groups.get(title) || []).map((it) => ({
+                ...it,
+                dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`),
+              }));
               items.sort((a, b) => a.dt.getTime() - b.dt.getTime());
-              const next = items.find(it => it.dt >= nowFast) || items[0];
-              if (next) perShowNextFast.push({ id: next.id, title: next.title, img: next.img, nextDate: next.date_spectacle, nextTime: next.heure_spectacle });
+              const next = items.find((it) => it.dt >= nowFast) || items[0];
+              if (next)
+                perShowNextFast.push({
+                  id: next.id,
+                  title: next.title,
+                  img: next.img,
+                  nextDate: next.date_spectacle,
+                  nextTime: next.heure_spectacle,
+                });
             }
             const fastSlides = perShowNextFast.slice(0, MAX_SLIDES);
             if (fastSlides.length) {
@@ -144,7 +156,7 @@ const Hero = () => {
           const cachedRaw = sessionStorage.getItem(CACHE_KEY);
           if (cachedRaw) {
             const cached = JSON.parse(cachedRaw) as { ts: number; slides: Slide[] };
-            if (cached && Array.isArray(cached.slides) && (startedAt - cached.ts) < CACHE_TTL_MS) {
+            if (cached && Array.isArray(cached.slides) && startedAt - cached.ts < CACHE_TTL_MS) {
               setSlides(cached.slides.slice(0, MAX_SLIDES));
               setIndex(0);
               setLoading(false);
@@ -156,27 +168,33 @@ const Hero = () => {
         const aggregate: unknown[] = [];
         try {
           // Course entre la 1ère page et un timeout pour réduire le ressenti
-          const timeout = new Promise<unknown>((_, rej) => setTimeout(() => rej(new Error('first_page_timeout')), FAST_FALLBACK_MS));
+          const timeout = new Promise<unknown>((_, rej) =>
+            setTimeout(() => rej(new Error('first_page_timeout')), FAST_FALLBACK_MS)
+          );
           const first = await Promise.race([api.get('/api/spectacles'), timeout]).catch(async (e) => {
             if ((e as Error)?.message === 'first_page_timeout') {
               // si timeout, tenter directement upcoming pour affichage immédiat
               const upFast = await api.get('/api/spectacles/upcoming');
               const upItemsFast = extractItems(upFast);
               if (upItemsFast.length) {
-                const fastNormalized: SpectacleItem[] = upItemsFast.map((val: unknown) => {
-                  const it = isObject(val) ? val : {};
-                  const idCandidate = it.id ?? it.spectacle_id ?? it._id;
-                  const idNum = toNumber(idCandidate) ?? -1;
-                  return {
-                    id: idNum,
-                    title: toStringSafe(it.title ?? it.nom ?? it.name ?? ''),
-                    img: toStringSafe(it.img ?? it.image ?? it.photo ?? ''),
-                    date_spectacle: toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? ''),
-                    heure_spectacle: toStringSafe(it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00'),
-                    lieu: toStringSafe(it.lieu ?? it.venue ?? ''),
-                    lien_spectacle: toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? ''),
-                  };
-                }).filter(it => it.id > 0 && it.title && it.date_spectacle);
+                const fastNormalized: SpectacleItem[] = upItemsFast
+                  .map((val: unknown) => {
+                    const it = isObject(val) ? val : {};
+                    const idCandidate = it.id ?? it.spectacle_id ?? it._id;
+                    const idNum = toNumber(idCandidate) ?? -1;
+                    return {
+                      id: idNum,
+                      title: toStringSafe(it.title ?? it.nom ?? it.name ?? ''),
+                      img: toStringSafe(it.img ?? it.image ?? it.photo ?? ''),
+                      date_spectacle: toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? ''),
+                      heure_spectacle: toStringSafe(
+                        it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00'
+                      ),
+                      lieu: toStringSafe(it.lieu ?? it.venue ?? ''),
+                      lien_spectacle: toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? ''),
+                    };
+                  })
+                  .filter((it) => it.id > 0 && it.title && it.date_spectacle);
 
                 const order: string[] = [];
                 const groups = new Map<string, SpectacleItem[]>();
@@ -187,10 +205,20 @@ const Hero = () => {
                 const nowFast = new Date();
                 const perShowNextFast: Slide[] = [];
                 for (const title of order) {
-                  const items = (groups.get(title) || []).map(it => ({ ...it, dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`) }));
+                  const items = (groups.get(title) || []).map((it) => ({
+                    ...it,
+                    dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`),
+                  }));
                   items.sort((a, b) => a.dt.getTime() - b.dt.getTime());
-                  const next = items.find(it => it.dt >= nowFast) || items[0];
-                  if (next) perShowNextFast.push({ id: next.id, title: next.title, img: next.img, nextDate: next.date_spectacle, nextTime: next.heure_spectacle });
+                  const next = items.find((it) => it.dt >= nowFast) || items[0];
+                  if (next)
+                    perShowNextFast.push({
+                      id: next.id,
+                      title: next.title,
+                      img: next.img,
+                      nextDate: next.date_spectacle,
+                      nextTime: next.heure_spectacle,
+                    });
                 }
                 const fastSlides = perShowNextFast.slice(0, MAX_SLIDES);
                 if (fastSlides.length) {
@@ -215,7 +243,7 @@ const Hero = () => {
 
           if (pagesToFetch.length > 0) {
             const results = await Promise.allSettled(
-              pagesToFetch.map(p => api.get(`/api/spectacles?page=${p}&limit=${limit}`))
+              pagesToFetch.map((p) => api.get(`/api/spectacles?page=${p}&limit=${limit}`))
             );
             for (const r of results) {
               if (r.status === 'fulfilled') {
@@ -234,30 +262,40 @@ const Hero = () => {
           const up = await api.get('/api/spectacles/upcoming');
           rawList = extractItems(up);
         }
-        if (!Array.isArray(rawList) || rawList.length === 0) { setSlides([]); return; }
+        if (!Array.isArray(rawList) || rawList.length === 0) {
+          setSlides([]);
+          return;
+        }
 
         // Normaliser pour tolérer champs manquants/incohérents
-        const normalized: SpectacleItem[] = rawList.map((val: unknown) => {
-          const it = isObject(val) ? val : {};
-          const idCandidate = it.id ?? it.spectacle_id ?? it._id;
-          const idNum = toNumber(idCandidate);
-          const title = toStringSafe(it.title ?? it.nom ?? it.name ?? '');
-          const img = toStringSafe(it.img ?? it.image ?? it.photo ?? '');
-          const date_spectacle = toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? '');
-          const heure_spectacle = toStringSafe(it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00');
-          const lieu = toStringSafe(it.lieu ?? it.venue ?? '');
-          const lien_spectacle = toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? '');
-          return {
-            id: idNum ?? -1,
-            title,
-            img,
-            date_spectacle,
-            heure_spectacle,
-            lieu,
-            lien_spectacle,
-          };
-        }).filter((it: SpectacleItem) => Number.isFinite(it.id) && it.id > 0 && !!it.title && !!it.date_spectacle);
-        if (normalized.length === 0) { setSlides([]); return; }
+        const normalized: SpectacleItem[] = rawList
+          .map((val: unknown) => {
+            const it = isObject(val) ? val : {};
+            const idCandidate = it.id ?? it.spectacle_id ?? it._id;
+            const idNum = toNumber(idCandidate);
+            const title = toStringSafe(it.title ?? it.nom ?? it.name ?? '');
+            const img = toStringSafe(it.img ?? it.image ?? it.photo ?? '');
+            const date_spectacle = toStringSafe(it.date_spectacle ?? it.date ?? it.dateSpectacle ?? '');
+            const heure_spectacle = toStringSafe(
+              it.heure_spectacle ?? it.heure ?? it.time ?? it.heureSpectacle ?? '00:00:00'
+            );
+            const lieu = toStringSafe(it.lieu ?? it.venue ?? '');
+            const lien_spectacle = toStringSafe(it.lien_spectacle ?? it.link ?? it.bookingUrl ?? '');
+            return {
+              id: idNum ?? -1,
+              title,
+              img,
+              date_spectacle,
+              heure_spectacle,
+              lieu,
+              lien_spectacle,
+            };
+          })
+          .filter((it: SpectacleItem) => Number.isFinite(it.id) && it.id > 0 && !!it.title && !!it.date_spectacle);
+        if (normalized.length === 0) {
+          setSlides([]);
+          return;
+        }
 
         const now = new Date();
         // 1) Préserver l'ordre de la base: utiliser l'ordre d'apparition du titre
@@ -272,13 +310,13 @@ const Hero = () => {
         // 2) Pour chaque spectacle (titre), choisir la prochaine date >= now
         const perShowNext: Slide[] = [];
         for (const title of order) {
-          const items = (groups.get(title) || []).map(it => ({
+          const items = (groups.get(title) || []).map((it) => ({
             ...it,
-            dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`)
+            dt: new Date(`${it.date_spectacle}T${it.heure_spectacle}`),
           }));
           // Trier par date croissante à l'intérieur du spectacle
           items.sort((a, b) => a.dt.getTime() - b.dt.getTime());
-          const next = items.find(it => it.dt >= now);
+          const next = items.find((it) => it.dt >= now);
           if (next) {
             perShowNext.push({
               id: next.id,
@@ -303,12 +341,19 @@ const Hero = () => {
 
         // Respect strict: 1 slide par spectacle (ordre DB), prochaine date disponible
         const finalSlides = perShowNext.slice(0, MAX_SLIDES);
-        setSlides(prev => {
+        setSlides((prev) => {
           // éviter update si identique (minimise re-render)
           const sameLength = prev.length === finalSlides.length;
-          const same = sameLength && prev.every((s, i) =>
-            s.id === finalSlides[i].id && s.title === finalSlides[i].title && s.img === finalSlides[i].img && s.nextDate === finalSlides[i].nextDate && s.nextTime === finalSlides[i].nextTime
-          );
+          const same =
+            sameLength &&
+            prev.every(
+              (s, i) =>
+                s.id === finalSlides[i].id &&
+                s.title === finalSlides[i].title &&
+                s.img === finalSlides[i].img &&
+                s.nextDate === finalSlides[i].nextDate &&
+                s.nextTime === finalSlides[i].nextTime
+            );
           return same ? prev : finalSlides;
         });
         setIndex(0);
@@ -327,31 +372,35 @@ const Hero = () => {
 
     // Abort si démontage pour éviter setState après unmount
     let alive = true;
-    (async () => { if (alive) await fetchSlides(); })();
-    return () => { alive = false; };
+    (async () => {
+      if (alive) await fetchSlides();
+    })();
+    return () => {
+      alive = false;
+    };
   }, [queryClient]);
 
   // Auto-advance avec réinitialisation
   useEffect(() => {
     if (slides.length <= 1) return;
-    
+
     let timer: NodeJS.Timeout;
-    
+
     const startTimer = () => {
-      timer = setInterval(() => setIndex(prev => (prev + 1) % slides.length), 6000);
+      timer = setInterval(() => setIndex((prev) => (prev + 1) % slides.length), 6000);
     };
-    
+
     const resetTimer = () => {
       if (timer) clearInterval(timer);
       startTimer();
     };
-    
+
     // Démarrer le timer initial
     startTimer();
-    
+
     // Fonction pour réinitialiser le timer (sera exposée via ref)
     (window as any).resetCarouselTimer = resetTimer;
-    
+
     return () => {
       if (timer) clearInterval(timer);
       delete (window as any).resetCarouselTimer;
@@ -438,7 +487,10 @@ const Hero = () => {
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                 <span className="text-white text-sm sm:text-base">
                   {new Date(`${slides[index].nextDate}T${slides[index].nextTime}`).toLocaleDateString('fr-FR', {
-                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
                   })}
                 </span>
                 <span className="text-red-500 text-sm sm:text-base font-medium">
@@ -451,19 +503,19 @@ const Hero = () => {
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-2">
                 {slides[index].title}
-            </h1>
+              </h1>
             </div>
 
             {/* Boutons d'action avec responsive amélioré */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Link 
+              <Link
                 to={`/spectacles/${slides[index].id}`}
                 className="bg-red-500 text-white px-4 sm:px-6 py-3 rounded hover:bg-red-600 transition duration-300 flex items-center justify-center sm:justify-start font-medium"
-                >
+              >
                 <i className="fa-solid fa-ticket-alt mr-2"></i>
                 Réserver maintenant
-                </Link>
-              <Link 
+              </Link>
+              <Link
                 to={`/spectacles/${slides[index].id}`}
                 className="border border-red-500 text-red-500 px-4 sm:px-6 py-3 rounded hover:bg-red-500 hover:text-white transition duration-300 flex items-center justify-center sm:justify-start font-medium"
               >
@@ -492,24 +544,24 @@ const Hero = () => {
 
         {/* Section de présentation textuelle pour l'indexation Google */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-            L'Espace Comédie Lille
-          </h1>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">L'Espace Comédie Lille</h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-4 max-w-4xl mx-auto">
             La référence pour découvrir et réserver les meilleurs spectacles d'humour à Lille
           </p>
           <p className="text-lg text-gray-400 mb-8 max-w-3xl mx-auto">
-            Située en plein cœur de la ville, notre salle offre une expérience intime et chaleureuse pour apprécier les meilleurs humoristes dans des conditions optimales. Stand-up, comédies et soirées exceptionnelles vous attendent.
+            Située en plein cœur de la ville, notre salle offre une expérience intime et chaleureuse pour apprécier les
+            meilleurs humoristes dans des conditions optimales. Stand-up, comédies et soirées exceptionnelles vous
+            attendent.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
+            <Link
               to="/spectacles"
               className="bg-red-500 text-white px-8 py-4 rounded-lg hover:bg-red-600 transition duration-300 font-medium text-lg"
             >
               <i className="fa-solid fa-calendar-alt mr-2"></i>
               Voir la programmation
             </Link>
-            <Link 
+            <Link
               to="/le-lieu"
               className="border border-red-500 text-red-500 px-8 py-4 rounded-lg hover:bg-red-500 hover:text-white transition duration-300 font-medium text-lg"
             >

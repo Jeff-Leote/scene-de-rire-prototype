@@ -27,4 +27,4 @@ const ProtectedRoute = ({ children, requireAuth = false, requireAdmin = false }:
   return <>{children}</>;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;

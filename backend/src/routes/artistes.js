@@ -29,26 +29,26 @@ router.get('/featured', async (req, res) => {
       LIMIT 1
     `);
     if (rows.length === 0) {
-      return res.status(404).json({ error: "Aucun spectacle à venir" });
+      return res.status(404).json({ error: 'Aucun spectacle à venir' });
     }
     const spectacle = rows[0];
     const response = {
       id: 1,
       name: "Artiste à l'affiche",
-      photo: "default-artist.jpg",
+      photo: 'default-artist.jpg',
       next_show: {
         id: spectacle.next_show_id,
         title: spectacle.next_show_title,
         date: spectacle.next_show_date,
         time: spectacle.next_show_time,
-        image: spectacle.next_show_image
-      }
+        image: spectacle.next_show_image,
+      },
     };
     res.json(response);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'artiste à l'affiche:", error);
-    res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 
-module.exports = router; 
+module.exports = router;

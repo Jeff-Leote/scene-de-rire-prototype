@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { toast } from "@/components/ui/sonner";
+import { toast } from '@/components/ui/sonner';
 import { User, AuthContextType } from '../services/types';
 
 const AuthContext = createContext<AuthContextType>({
@@ -8,7 +8,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   login: () => {},
-  logout: () => {}
+  logout: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userData = await api.get<User>('/api/auth/me');
         setUser(userData);
       } catch (err) {
-        toast.error("Votre session a expiré ou votre compte a été supprimé.");
+        toast.error('Votre session a expiré ou votre compte a été supprimé.');
         logout();
       } finally {
         setIsLoading(false);

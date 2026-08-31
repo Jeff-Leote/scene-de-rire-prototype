@@ -10,7 +10,11 @@ const getDefaultBaseUrl = (): string => {
 
   if (typeof window !== 'undefined') {
     const { protocol, hostname } = window.location;
-    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('172.');
+    const isLocal =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('172.');
     if (isLocal) {
       return `${protocol}//localhost:5000`;
     }
@@ -35,21 +39,18 @@ class ApiService {
   /**
    * Effectue une requête HTTP avec gestion automatique des tokens CSRF
    */
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     // Récupérer automatiquement le token CSRF
     const csrfToken = getCSRFToken();
-    
+
     // Préparer les en-têtes avec le token CSRF
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
       ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
-      ...options.headers as Record<string, string>
+      ...(options.headers as Record<string, string>),
     };
 
     // Ajouter le token d'authentification si disponible
@@ -62,7 +63,7 @@ class ApiService {
       const response = await fetch(url, {
         ...options,
         headers,
-        credentials: 'include' // Inclure les cookies
+        credentials: 'include', // Inclure les cookies
       });
 
       // Gestion des erreurs HTTP
@@ -111,7 +112,7 @@ class ApiService {
       if (contentType && contentType.includes('application/json')) {
         return await response.json();
       } else {
-        return await response.text() as T;
+        return (await response.text()) as T;
       }
     } catch (error) {
       // Re-lancer l'erreur avec plus de contexte
@@ -133,7 +134,7 @@ class ApiService {
   async post<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 
@@ -142,7 +143,7 @@ class ApiService {
   async put<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 
@@ -157,7 +158,7 @@ class ApiService {
   async patch<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 
@@ -169,7 +170,7 @@ class ApiService {
   async uploadFile<T>(endpoint: string, file: File, additionalData?: Record<string, any>): Promise<T> {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
         formData.append(key, value);
@@ -178,7 +179,7 @@ class ApiService {
 
     const csrfToken = getCSRFToken();
     const headers: Record<string, string> = {
-      ...(csrfToken && { 'X-CSRF-Token': csrfToken })
+      ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
     };
 
     const token = localStorage.getItem('token');
@@ -190,7 +191,7 @@ class ApiService {
       method: 'POST',
       headers,
       body: formData,
-      credentials: 'include'
+      credentials: 'include',
     });
 
     if (!response.ok) {

@@ -1,0 +1,17 @@
+# Dépendances et builds
+node_modules
+**/node_modules
+frontend/dist
+backend/coverage
+frontend/coverage
+
+# Composants shadcn/ui générés automatiquement (ne pas reformater à la main,
+# régénérés par la CLI shadcn — un diff massif ici n'apporte rien)
+frontend/src/components/ui
+
+# Lockfiles (format généré par npm, ne pas toucher)
+package-lock.json
+**/package-lock.json
+
+# SQL (Prettier n'a pas de plugin SQL fiable ici)
+*.sql

@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from "@/components/ui/sonner";
+import { toast } from '@/components/ui/sonner';
 import { Link, useLocation } from 'react-router-dom';
 
 const MyAccount = () => {
@@ -18,38 +18,36 @@ const MyAccount = () => {
   const location = useLocation();
   const API_URL = import.meta.env.VITE_API_URL;
 
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/update-profile`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: user?.id,
-          ...formData
+          ...formData,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la mise à jour du profil");
+        throw new Error(data.error || 'Erreur lors de la mise à jour du profil');
       }
 
       // Mettre à jour le contexte d'authentification avec les nouvelles informations
       login(data.token, data.user);
-      
-      toast.success("Profil mis à jour avec succès !");
+
+      toast.success('Profil mis à jour avec succès !');
       setIsEditing(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -58,9 +56,9 @@ const MyAccount = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -68,25 +66,25 @@ const MyAccount = () => {
     setIsDeleting(true);
     try {
       const response = await fetch(`${API_URL}/api/auth/delete-account`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          id: user?.id
+          id: user?.id,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Erreur lors de la suppression du compte");
+        throw new Error(data.error || 'Erreur lors de la suppression du compte');
       }
 
-      toast.success("Compte supprimé avec succès");
+      toast.success('Compte supprimé avec succès');
       logout();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erreur lors de la suppression du compte";
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression du compte';
       toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
@@ -104,8 +102,8 @@ const MyAccount = () => {
               <h1 className="text-4xl font-bold text-white mb-2">Mon Compte</h1>
               <p className="text-gray-400">Gérez vos informations personnelles</p>
             </div>
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 flex items-center space-x-2"
             >
               <span>←</span>
@@ -119,14 +117,16 @@ const MyAccount = () => {
               <div className="absolute bottom-0 left-0 p-8">
                 <div className="flex items-center space-x-4">
                   <div className="w-24 h-24 rounded-full bg-gray-900 border-4 border-white overflow-hidden">
-                    <img 
+                    <img
                       src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=random`}
                       alt={`${user?.firstName} ${user?.lastName}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">{user?.firstName} {user?.lastName}</h2>
+                    <h2 className="text-2xl font-bold text-white">
+                      {user?.firstName} {user?.lastName}
+                    </h2>
                     <p className="text-gray-200">{user?.email}</p>
                   </div>
                 </div>
@@ -245,14 +245,14 @@ const MyAccount = () => {
             </div>
           </div>
 
-
           {/* Section de suppression du compte */}
           <div className="bg-gray-900 rounded-lg overflow-hidden">
             <div className="p-8">
               <div className="text-center">
                 <h3 className="text-xl font-semibold text-red-500 mb-4">Supprimer mon compte</h3>
                 <p className="text-gray-400 mb-6">
-                  La suppression de votre compte est une action irréversible. Toutes vos données seront définitivement supprimées.
+                  La suppression de votre compte est une action irréversible. Toutes vos données seront définitivement
+                  supprimées.
                 </p>
                 <button
                   onClick={() => setShowDeleteConfirmation(true)}
@@ -270,7 +270,8 @@ const MyAccount = () => {
               <div className="bg-gray-900 p-8 rounded-lg max-w-md w-full mx-4">
                 <h3 className="text-2xl font-semibold text-red-500 mb-4">Confirmer la suppression</h3>
                 <p className="text-gray-300 mb-6">
-                  Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et toutes vos données seront définitivement supprimées.
+                  Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et toutes vos données
+                  seront définitivement supprimées.
                 </p>
                 <div className="flex justify-end space-x-4">
                   <button
@@ -297,4 +298,4 @@ const MyAccount = () => {
   );
 };
 
-export default MyAccount; 
+export default MyAccount;

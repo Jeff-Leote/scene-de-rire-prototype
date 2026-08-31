@@ -13,10 +13,10 @@ router.get('/optimize/:category/:filename', async (req, res) => {
   try {
     const { category, filename } = req.params;
     const { w, h, q = 80 } = req.query;
-    
+
     // Chemin vers l'image originale
     const originalPath = path.join(__dirname, '../../frontend/public/assets/img', category, filename);
-    
+
     // Vérifier si l'image existe
     try {
       await fs.access(originalPath);
@@ -51,7 +51,7 @@ router.get('/optimize/:category/:filename', async (req, res) => {
     if (width || height) {
       pipeline = pipeline.resize(width, height, {
         fit: 'cover',
-        withoutEnlargement: true
+        withoutEnlargement: true,
       });
     }
 
@@ -63,10 +63,9 @@ router.get('/optimize/:category/:filename', async (req, res) => {
 
     // Envoyer l'image optimisée
     res.sendFile(optimizedPath);
-
   } catch (error) {
-    console.error('Erreur lors de l\'optimisation:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'optimisation de l\'image' });
+    console.error("Erreur lors de l'optimisation:", error);
+    res.status(500).json({ error: "Erreur lors de l'optimisation de l'image" });
   }
 });
 
@@ -78,52 +77,48 @@ router.post('/batch-optimize', async (req, res) => {
   try {
     const { category } = req.body;
     const imagesDir = path.join(__dirname, '../../frontend/public/assets/img', category);
-    
+
     const files = await fs.readdir(imagesDir);
-    const imageFiles = files.filter(file => 
-      /\.(jpe?g|png|webp)$/i.test(file)
-    );
+    const imageFiles = files.filter((file) => /\.(jpe?g|png|webp)$/i.test(file));
 
     const results = [];
-    
+
     for (const file of imageFiles) {
       const inputPath = path.join(imagesDir, file);
       const outputDir = path.join(__dirname, '../../frontend/public/assets/img-optimized', category);
       await fs.mkdir(outputDir, { recursive: true });
-      
+
       const outputPath = path.join(outputDir, file.replace(/\.(jpe?g|png)$/i, '.webp'));
-      
+
       try {
-        await sharp(inputPath)
-          .webp({ quality: 75 })
-          .toFile(outputPath);
-        
+        await sharp(inputPath).webp({ quality: 75 }).toFile(outputPath);
+
         const originalStats = await fs.stat(inputPath);
         const optimizedStats = await fs.stat(outputPath);
-        
+
         results.push({
           file,
           originalSize: originalStats.size,
           optimizedSize: optimizedStats.size,
           savings: originalStats.size - optimizedStats.size,
-          percentage: Math.round(((originalStats.size - optimizedStats.size) / originalStats.size) * 100)
+          percentage: Math.round(((originalStats.size - optimizedStats.size) / originalStats.size) * 100),
         });
       } catch (error) {
         results.push({
           file,
-          error: error.message
+          error: error.message,
         });
       }
     }
-    
+
     res.json({
       success: true,
       results,
-      message: 'Optimisation par lot terminée'
+      message: 'Optimisation par lot terminée',
     });
   } catch (error) {
-    console.error('Erreur lors de l\'optimisation par lot:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'optimisation par lot' });
+    console.error("Erreur lors de l'optimisation par lot:", error);
+    res.status(500).json({ error: "Erreur lors de l'optimisation par lot" });
   }
 });
 

@@ -17,8 +17,9 @@
     "build": "npm run build:frontend",
     "build:frontend": "cd frontend && npm run build",
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
-    "ping:railway": "node railway-ping.js",
-    "ping:local": "node local-ping.js"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "ping:railway": "node railway-ping.js"
   },
   "keywords": [
     "comedy",
@@ -35,6 +36,7 @@
     "npm": ">=8.0.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "prettier": "^3.9.6"
   }
 }

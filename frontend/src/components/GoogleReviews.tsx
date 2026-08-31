@@ -16,7 +16,7 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
         setReviews(reviewsData);
       } catch (err) {
         console.error('Erreur lors du chargement des avis:', err);
-        console.error('Détails de l\'erreur:', err instanceof Error ? err.message : 'Erreur inconnue');
+        console.error("Détails de l'erreur:", err instanceof Error ? err.message : 'Erreur inconnue');
         setHasError(true);
         setReviews([]);
       } finally {
@@ -35,12 +35,7 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, index) => (
-      <span
-        key={index}
-        className={`text-lg ${
-          index < rating ? 'text-yellow-400' : 'text-gray-400'
-        }`}
-      >
+      <span key={index} className={`text-lg ${index < rating ? 'text-yellow-400' : 'text-gray-400'}`}>
         ★
       </span>
     ));
@@ -72,10 +67,8 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
   return (
     <section className="bg-gray-950 py-16">
       <div className="container mx-auto px-6">
-        <h2 className="text-3xl font-bold text-white mb-8 text-center">
-          Avis Google
-        </h2>
-        
+        <h2 className="text-3xl font-bold text-white mb-8 text-center">Avis Google</h2>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviews.map((review, index) => (
             <div
@@ -95,22 +88,16 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
                   />
                 )}
                 <div className="flex-1">
-                  <h3 className="text-white font-semibold">
-                    {review.author_name}
-                  </h3>
+                  <h3 className="text-white font-semibold">{review.author_name}</h3>
                   <div className="flex items-center mt-1">
                     {renderStars(review.rating)}
-                    <span className="text-gray-400 text-sm ml-2">
-                      {review.relative_time_description}
-                    </span>
+                    <span className="text-gray-400 text-sm ml-2">{review.relative_time_description}</span>
                   </div>
                 </div>
               </div>
 
               {/* Contenu de l'avis */}
-              <p className="text-gray-300 text-sm leading-relaxed line-clamp-4">
-                {review.text}
-              </p>
+              <p className="text-gray-300 text-sm leading-relaxed line-clamp-4">{review.text}</p>
 
               {/* Lien vers l'avis Google */}
               {review.author_url && (
@@ -121,12 +108,7 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
                   className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm mt-3 transition-colors"
                 >
                   Voir sur Google
-                  <svg
-                    className="w-4 h-4 ml-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -148,12 +130,8 @@ const GoogleReviews = ({ placeId, apiKey, maxReviews = 5 }: GoogleReviewsProps) 
             rel="noopener noreferrer"
             className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"
           >
-            <svg
-              className="w-5 h-5 mr-2"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
             Voir tous les avis sur Google Maps
           </a>

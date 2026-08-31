@@ -3,7 +3,7 @@ import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMaintenance } from '@/contexts/MaintenanceContext';
 import { Link } from 'react-router-dom';
-import { toast } from "@/components/ui/sonner";
+import { toast } from '@/components/ui/sonner';
 import { Spectacle, Artist, ArtistFormData, FeaturedArtist, User } from '../services/types';
 
 interface LieuImage {
@@ -21,7 +21,9 @@ const Dashboard = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [activeTab, setActiveTab] = useState<'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'settings' | 'maintenance' | 'sponsorise'>('spectacles');
+  const [activeTab, setActiveTab] = useState<
+    'spectacles' | 'artists' | 'lieu' | 'users' | 'photos' | 'settings' | 'maintenance' | 'sponsorise'
+  >('spectacles');
   const [contactEmail, setContactEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ const Dashboard = () => {
   const [selectedSpectacle, setSelectedSpectacle] = useState<Spectacle | null>(null);
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user', id: number } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ type: 'spectacle' | 'artist' | 'user'; id: number } | null>(null);
   const [spectacleFormData, setSpectacleFormData] = useState({
     title: '',
     img: '/assets/img/spectacles/',
@@ -45,11 +47,11 @@ const Dashboard = () => {
     recurrence_weekday: 0,
     recurrence_time: '17:00',
     recurrence_start: '',
-    recurrence_end: ''
+    recurrence_end: '',
   });
   const [artistFormData, setArtistFormData] = useState({
     name: '',
-    photo: ''
+    photo: '',
   });
   // L'affiche retiré
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -59,9 +61,11 @@ const Dashboard = () => {
   const [selectedLieu, setSelectedLieu] = useState<LieuImage | null>(null);
   const [lieuFormData, setLieuFormData] = useState({ image_path: '', is_main: false });
   const [users, setUsers] = useState<User[]>([]);
-  
+
   // Photos additionnels (admin)
-  const [additionnalPhotos, setAdditionnalPhotos] = useState<Array<{ id: number; image_path: string; sort_order: number | null }>>([]);
+  const [additionnalPhotos, setAdditionnalPhotos] = useState<
+    Array<{ id: number; image_path: string; sort_order: number | null }>
+  >([]);
   const [newPhotoPath, setNewPhotoPath] = useState<string>('');
   const [newPhotoOrder, setNewPhotoOrder] = useState<string>('');
 
@@ -71,11 +75,13 @@ const Dashboard = () => {
         const { api } = await import('@/services/api');
 
         // Récupérer les spectacles (avec pagination)
-        const spectaclesResponse = await api.get<{ data: Spectacle[], pagination?: any } | Spectacle[]>('/api/admin/spectacles');
+        const spectaclesResponse = await api.get<{ data: Spectacle[]; pagination?: any } | Spectacle[]>(
+          '/api/admin/spectacles'
+        );
         // Gérer la compatibilité avec l'ancien format (array) et le nouveau format (object avec data)
-        const spectaclesData: Spectacle[] = Array.isArray(spectaclesResponse) 
-          ? spectaclesResponse 
-          : (spectaclesResponse?.data || []);
+        const spectaclesData: Spectacle[] = Array.isArray(spectaclesResponse)
+          ? spectaclesResponse
+          : spectaclesResponse?.data || [];
         setSpectacles(spectaclesData);
 
         // Disponibilités supprimées
@@ -92,7 +98,7 @@ const Dashboard = () => {
         try {
           const lieuData = await api.get<LieuImage[]>('/api/lieu/images');
           if (Array.isArray(lieuData)) setLieuImages(lieuData);
-            else setLieuImages([]);
+          else setLieuImages([]);
         } catch {
           setLieuImages([]);
         }
@@ -118,7 +124,6 @@ const Dashboard = () => {
 
         // Charger les photos additionnelles
         await loadAdditionnalPhotos();
-
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -133,14 +138,14 @@ const Dashboard = () => {
 
   const handleEditSpectacleClick = (spectacle: Spectacle) => {
     setSelectedSpectacle(spectacle);
-    
+
     // Debug: afficher le format de date reçu
     console.log('🔍 Date reçue du spectacle:', {
       original: spectacle.date_spectacle,
       type: typeof spectacle.date_spectacle,
-      heure: spectacle.heure_spectacle
+      heure: spectacle.heure_spectacle,
     });
-    
+
     // Formater la date pour l'input HTML (YYYY-MM-DD)
     const formatDateForInput = (dateString: string) => {
       if (!dateString) return '';
@@ -171,7 +176,7 @@ const Dashboard = () => {
       recurrence_weekday: 0,
       recurrence_time: '17:00',
       recurrence_start: '',
-      recurrence_end: ''
+      recurrence_end: '',
     });
     setIsSpectacleModalOpen(true);
   };
@@ -180,24 +185,26 @@ const Dashboard = () => {
     setSelectedArtist(artist);
     setArtistFormData({
       name: artist.name,
-      photo: artist.photo
+      photo: artist.photo,
     });
     setIsArtistModalOpen(true);
   };
 
-  const handleSpectacleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleSpectacleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setSpectacleFormData(prev => ({
+    setSpectacleFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleArtistInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setArtistFormData(prev => ({
+    setArtistFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -216,7 +223,7 @@ const Dashboard = () => {
       recurrence_weekday: 0,
       recurrence_time: '17:00',
       recurrence_start: '',
-      recurrence_end: ''
+      recurrence_end: '',
     });
     setIsSpectacleModalOpen(true);
   };
@@ -226,7 +233,7 @@ const Dashboard = () => {
     setSelectedArtist(null);
     setArtistFormData({
       name: '',
-      photo: ''
+      photo: '',
     });
     setIsArtistModalOpen(true);
   };
@@ -236,60 +243,65 @@ const Dashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const url = isAddingSpectacle 
+      const url = isAddingSpectacle
         ? `${API_URL}/api/admin/spectacles`
         : `${API_URL}/api/admin/spectacles/${selectedSpectacle?.id}`;
-      
-      const requestBody = spectacleFormData.recurrence_enabled ? {
-        title: spectacleFormData.title,
-        img: spectacleFormData.img,
-        description: spectacleFormData.description,
-        lieu: spectacleFormData.lieu,
-        lien_spectacle: spectacleFormData.lien_spectacle || null,
-        recurrence: {
-          enabled: true,
-          weekday: Number(spectacleFormData.recurrence_weekday),
-          time: spectacleFormData.recurrence_time,
-          startDate: spectacleFormData.recurrence_start,
-          endDate: spectacleFormData.recurrence_end,
-        }
-      } : {
-        title: spectacleFormData.title,
-        img: spectacleFormData.img,
-        description: spectacleFormData.description,
-        date_spectacle: spectacleFormData.date_spectacle,
-        heure_spectacle: spectacleFormData.heure_spectacle,
-        lieu: spectacleFormData.lieu,
-        lien_spectacle: spectacleFormData.lien_spectacle || null,
-      };
 
-// Avoid logging credentials in plain text.
-console.debug('Spectacle request:', {
-  url,
-  method: isAddingSpectacle ? 'POST' : 'PUT',
-  body: requestBody   // header & token intentionally omitted
-});
-      
+      const requestBody = spectacleFormData.recurrence_enabled
+        ? {
+            title: spectacleFormData.title,
+            img: spectacleFormData.img,
+            description: spectacleFormData.description,
+            lieu: spectacleFormData.lieu,
+            lien_spectacle: spectacleFormData.lien_spectacle || null,
+            recurrence: {
+              enabled: true,
+              weekday: Number(spectacleFormData.recurrence_weekday),
+              time: spectacleFormData.recurrence_time,
+              startDate: spectacleFormData.recurrence_start,
+              endDate: spectacleFormData.recurrence_end,
+            },
+          }
+        : {
+            title: spectacleFormData.title,
+            img: spectacleFormData.img,
+            description: spectacleFormData.description,
+            date_spectacle: spectacleFormData.date_spectacle,
+            heure_spectacle: spectacleFormData.heure_spectacle,
+            lieu: spectacleFormData.lieu,
+            lien_spectacle: spectacleFormData.lien_spectacle || null,
+          };
+
+      // Avoid logging credentials in plain text.
+      console.debug('Spectacle request:', {
+        url,
+        method: isAddingSpectacle ? 'POST' : 'PUT',
+        body: requestBody, // header & token intentionally omitted
+      });
+
       const response = await fetch(url, {
         method: isAddingSpectacle ? 'POST' : 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Réponse d\'erreur du backend:', errorData);
-        throw new Error(errorData.error || (isAddingSpectacle ? 'Erreur lors de l\'ajout du spectacle' : 'Erreur lors de la modification du spectacle'));
+        console.error("Réponse d'erreur du backend:", errorData);
+        throw new Error(
+          errorData.error ||
+            (isAddingSpectacle ? "Erreur lors de l'ajout du spectacle" : 'Erreur lors de la modification du spectacle')
+        );
       }
 
       const updatedSpectacle = await response.json();
       if (isAddingSpectacle) {
-        setSpectacles(prev => [...prev, updatedSpectacle]);
+        setSpectacles((prev) => [...prev, updatedSpectacle]);
       } else {
-        setSpectacles(prev => prev.map(s => s.id === updatedSpectacle.id ? updatedSpectacle : s));
+        setSpectacles((prev) => prev.map((s) => (s.id === updatedSpectacle.id ? updatedSpectacle : s)));
       }
       // Disponibilités supprimées
       setIsSpectacleModalOpen(false);
@@ -311,20 +323,20 @@ console.debug('Spectacle request:', {
       }
 
       const artistData = {
-        ...artistFormData
+        ...artistFormData,
       };
 
-      const url = isAddingArtist 
+      const url = isAddingArtist
         ? `${API_URL}/api/admin/artiste`
         : `${API_URL}/api/admin/artiste/${selectedArtist?.id}`;
-      
+
       const response = await fetch(url, {
         method: isAddingArtist ? 'POST' : 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(artistData)
+        body: JSON.stringify(artistData),
       });
 
       if (!response.ok) {
@@ -333,14 +345,17 @@ console.debug('Spectacle request:', {
           toast.error('Session expirée. Veuillez vous reconnecter.');
           return;
         }
-        throw new Error(data.error || (isAddingArtist ? 'Erreur lors de l\'ajout de l\'artiste' : 'Erreur lors de la modification de l\'artiste'));
+        throw new Error(
+          data.error ||
+            (isAddingArtist ? "Erreur lors de l'ajout de l'artiste" : "Erreur lors de la modification de l'artiste")
+        );
       }
 
       const updatedArtist = await response.json();
       if (isAddingArtist) {
-        setArtists(prev => [...prev, updatedArtist]);
+        setArtists((prev) => [...prev, updatedArtist]);
       } else {
-        setArtists(prev => prev.map(a => a.id === updatedArtist.id ? updatedArtist : a));
+        setArtists((prev) => prev.map((a) => (a.id === updatedArtist.id ? updatedArtist : a)));
       }
       setIsArtistModalOpen(false);
       setIsAddingArtist(false);
@@ -354,12 +369,12 @@ console.debug('Spectacle request:', {
     if (type === 'lieu') {
       if (!window.confirm('Supprimer cette image ?')) return;
       fetch(`${API_URL}/api/lieu/images/${id}`, { method: 'DELETE' })
-        .then(res => {
+        .then((res) => {
           if (!res.ok) throw new Error('Erreur lors de la suppression');
-          setLieuImages((prev: LieuImage[]) => prev.filter(image => image.id !== id));
+          setLieuImages((prev: LieuImage[]) => prev.filter((image) => image.id !== id));
           toast.success('Image supprimée');
         })
-        .catch(err => toast.error(err.message || 'Erreur'));
+        .catch((err) => toast.error(err.message || 'Erreur'));
       return;
     }
     setItemToDelete({ type, id });
@@ -372,7 +387,7 @@ console.debug('Spectacle request:', {
     try {
       const token = localStorage.getItem('token');
       let url = '';
-      
+
       switch (itemToDelete.type) {
         case 'spectacle':
           url = `${API_URL}/api/admin/spectacles/${itemToDelete.id}`;
@@ -384,15 +399,15 @@ console.debug('Spectacle request:', {
           url = `${API_URL}/api/admin/users/${itemToDelete.id}`;
           break;
         default:
-          throw new Error('Type d\'élément non reconnu');
+          throw new Error("Type d'élément non reconnu");
       }
 
       const response = await fetch(url, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -402,17 +417,19 @@ console.debug('Spectacle request:', {
 
       switch (itemToDelete.type) {
         case 'spectacle':
-        setSpectacles(prev => prev.filter(s => s.id !== itemToDelete.id));
+          setSpectacles((prev) => prev.filter((s) => s.id !== itemToDelete.id));
           break;
         case 'artist':
-        setArtists(prev => prev.filter(a => a.id !== itemToDelete.id));
+          setArtists((prev) => prev.filter((a) => a.id !== itemToDelete.id));
           break;
         case 'user':
-          setUsers(prev => prev.filter(u => u.id !== itemToDelete.id));
+          setUsers((prev) => prev.filter((u) => u.id !== itemToDelete.id));
           break;
       }
 
-      toast.success(`${itemToDelete.type === 'spectacle' ? 'Spectacle' : itemToDelete.type === 'artist' ? 'Artiste' : 'Utilisateur'} supprimé avec succès`);
+      toast.success(
+        `${itemToDelete.type === 'spectacle' ? 'Spectacle' : itemToDelete.type === 'artist' ? 'Artiste' : 'Utilisateur'} supprimé avec succès`
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -430,7 +447,7 @@ console.debug('Spectacle request:', {
     try {
       const formData = new FormData();
       formData.append('name', selectedArtist.name);
-      
+
       // Gestion des photos
       const photoInput = document.querySelector('input[name="photo"]') as HTMLInputElement;
       if (photoInput?.files?.[0]) {
@@ -446,9 +463,9 @@ console.debug('Spectacle request:', {
       const response = await fetch(`${API_URL}/api/admin/artiste/${selectedArtist.id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -457,11 +474,11 @@ console.debug('Spectacle request:', {
           toast.error('Session expirée. Veuillez vous reconnecter.');
           return;
         }
-        throw new Error(data.error || 'Erreur lors de la modification de l\'artiste');
+        throw new Error(data.error || "Erreur lors de la modification de l'artiste");
       }
 
       const data = await response.json();
-      setArtists(artists.map(a => a.id === selectedArtist.id ? data : a));
+      setArtists(artists.map((a) => (a.id === selectedArtist.id ? data : a)));
       setSelectedArtist(null);
       setIsEditModalOpen(false);
       toast.success('Artiste modifié avec succès');
@@ -470,87 +487,78 @@ console.debug('Spectacle request:', {
     }
   };
 
-
-
-const handleEditLieuClick = (img: LieuImage) => {
-  setSelectedLieu(img);
-  setLieuFormData({
-    image_path: img.image_path,
-    is_main: img.is_main,
-  });
-  setIsLieuModalOpen(true);
-};
-
-const handleLieuInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
-  setLieuFormData(prev => ({ ...prev, [name]: value }));
-};
-
-const handleLieuSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('Session expirée. Veuillez vous reconnecter.');
-      return;
-    }
-
-    const url = `${API_URL}/api/lieu/images/${selectedLieu?.id}`;
-    const method = 'PUT';
-
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(lieuFormData),
+  const handleEditLieuClick = (img: LieuImage) => {
+    setSelectedLieu(img);
+    setLieuFormData({
+      image_path: img.image_path,
+      is_main: img.is_main,
     });
+    setIsLieuModalOpen(true);
+  };
 
-    if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
-    const data = await response.json();
+  const handleLieuInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLieuFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-      setLieuImages(prev =>
-        prev.map(img => (img.id === data.id ? data : img))
-      );
+  const handleLieuSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
 
-    setIsLieuModalOpen(false);
-    toast.success('Image enregistrée');
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Erreur';
-    toast.error(errorMessage);
-  }
-};
+      const url = `${API_URL}/api/lieu/images/${selectedLieu?.id}`;
+      const method = 'PUT';
 
-const handleDeleteLieu = async (id: number) => {
-  if (!window.confirm('Supprimer cette image ?')) return;
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('Session expirée. Veuillez vous reconnecter.');
-      return;
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(lieuFormData),
+      });
+
+      if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
+      const data = await response.json();
+
+      setLieuImages((prev) => prev.map((img) => (img.id === data.id ? data : img)));
+
+      setIsLieuModalOpen(false);
+      toast.success('Image enregistrée');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur';
+      toast.error(errorMessage);
     }
+  };
 
-    const response = await fetch(
-      `${API_URL}/api/lieu/images/${id}`,
-      {
+  const handleDeleteLieu = async (id: number) => {
+    if (!window.confirm('Supprimer cette image ?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/lieu/images/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      }
-    );
+      });
 
-    if (!response.ok) throw new Error('Erreur lors de la suppression');
-    setLieuImages(prev => prev.filter(img => img.id !== id));
-    toast.success('Image supprimée');
-  } catch (err) {
-    toast.error(
-      err instanceof Error ? err.message : 'Une erreur est survenue'
-    );
-  }
-};
+      if (!response.ok) throw new Error('Erreur lors de la suppression');
+      setLieuImages((prev) => prev.filter((img) => img.id !== id));
+      toast.success('Image supprimée');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
 
   const handleToggleUserStatus = async (user: User) => {
     try {
@@ -570,10 +578,10 @@ const handleDeleteLieu = async (id: number) => {
       const response = await fetch(`${API_URL}/api/admin/users/${user.id}/status`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isActive: newStatus })
+        body: JSON.stringify({ isActive: newStatus }),
       });
 
       if (!response.ok) {
@@ -582,9 +590,7 @@ const handleDeleteLieu = async (id: number) => {
       }
 
       // Mettre à jour l'utilisateur dans la liste
-      setUsers(prev => prev.map(u => 
-        u.id === user.id ? { ...u, isActive: newStatus } : u
-      ));
+      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, isActive: newStatus } : u)));
 
       toast.success(`Utilisateur ${action} avec succès`);
     } catch (err) {
@@ -596,8 +602,9 @@ const handleDeleteLieu = async (id: number) => {
   const loadAdditionnalPhotos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/photos/admin/spectacle/1`, { // Utilise un ID fictif car la route retourne toutes les photos
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`${API_URL}/api/photos/admin/spectacle/1`, {
+        // Utilise un ID fictif car la route retourne toutes les photos
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur chargement photos');
@@ -611,14 +618,14 @@ const handleDeleteLieu = async (id: number) => {
   const handleAddPhoto = async () => {
     try {
       if (!newPhotoPath) {
-        toast.error('Indiquez le chemin de l\'image');
+        toast.error("Indiquez le chemin de l'image");
         return;
       }
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/api/photos/admin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ image_path: newPhotoPath, sort_order: newPhotoOrder ? parseInt(newPhotoOrder) : null })
+        body: JSON.stringify({ image_path: newPhotoPath, sort_order: newPhotoOrder ? parseInt(newPhotoOrder) : null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur ajout photo');
@@ -634,7 +641,10 @@ const handleDeleteLieu = async (id: number) => {
   const handleDeletePhoto = async (photoId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/photos/admin/${photoId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_URL}/api/photos/admin/${photoId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur suppression photo');
       await loadAdditionnalPhotos();
@@ -649,7 +659,7 @@ const handleDeleteLieu = async (id: number) => {
     return date.toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -682,24 +692,22 @@ const handleDeleteLieu = async (id: number) => {
       <div className="container mx-auto px-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold text-white">Dashboard Administrateur</h1>
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 flex items-center space-x-2 w-full sm:w-auto justify-center"
           >
             <i className="fa-solid fa-arrow-left"></i>
             <span>Retour au site</span>
           </Link>
         </div>
-        
+
         {/* Onglets */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
           <div className="flex overflow-x-auto whitespace-nowrap gap-2 -mx-4 px-4 md:mx-0 md:px-0">
             <button
               onClick={() => setActiveTab('spectacles')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'spectacles'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
+                activeTab === 'spectacles' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
               Spectacles
@@ -707,9 +715,7 @@ const handleDeleteLieu = async (id: number) => {
             <button
               onClick={() => setActiveTab('artists')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'artists'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
+                activeTab === 'artists' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
               Artistes
@@ -737,9 +743,7 @@ const handleDeleteLieu = async (id: number) => {
             <button
               onClick={() => setActiveTab('settings')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'settings'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
+                activeTab === 'settings' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
               Paramètres
@@ -747,9 +751,7 @@ const handleDeleteLieu = async (id: number) => {
             <button
               onClick={() => setActiveTab('maintenance')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'maintenance'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
+                activeTab === 'maintenance' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
               Maintenance
@@ -757,16 +759,14 @@ const handleDeleteLieu = async (id: number) => {
             <button
               onClick={() => setActiveTab('sponsorise')}
               className={`shrink-0 px-4 py-2 rounded text-sm md:text-base ${
-                activeTab === 'sponsorise'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
+                activeTab === 'sponsorise' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'
               } transition duration-300`}
             >
               Sponsorisé
             </button>
           </div>
         </div>
-        
+
         {/* Boutons d'ajout selon l'onglet actif */}
         <div className="flex justify-end mb-6">
           {activeTab === 'spectacles' && (
@@ -778,42 +778,47 @@ const handleDeleteLieu = async (id: number) => {
               <span>Ajouter un spectacle</span>
             </button>
           )}
-            {activeTab === 'artists' && (
-              <button
-                onClick={handleAddArtistClick}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
-              >
-                <i className="fa-solid fa-plus"></i>
-                <span>Ajouter un artiste</span>
-              </button>
-            )}
+          {activeTab === 'artists' && (
+            <button
+              onClick={handleAddArtistClick}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 flex items-center space-x-2 w-full md:w-auto justify-center"
+            >
+              <i className="fa-solid fa-plus"></i>
+              <span>Ajouter un artiste</span>
+            </button>
+          )}
         </div>
 
         {/* Content */}
         {/* Section L'affiche retirée */}
 
-        {activeTab === 'spectacles' && (
-          spectacles.length === 0 ? (
+        {activeTab === 'spectacles' &&
+          (spectacles.length === 0 ? (
             <p className="text-gray-400 text-center">Aucun spectacle</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {spectacles.map((spectacle) => (
                 <div key={spectacle.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={buildImgSrc('spectacles', (spectacle.img || '').replace(/\.(jpe?g)$/i, '.webp'))} alt={spectacle.title} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
+                  <img
+                    src={buildImgSrc('spectacles', (spectacle.img || '').replace(/\.(jpe?g)$/i, '.webp'))}
+                    alt={spectacle.title}
+                    className="w-full h-48 object-cover"
+                    onError={onImgErrorSwap}
+                  />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{spectacle.title}</h3>
                     <p className="text-gray-400 mb-2">
-                        Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
+                      Date: {new Date(spectacle.date_spectacle).toLocaleDateString('fr-FR')}
                     </p>
                     {/* Prix et jauge de disponibilités supprimés */}
                     <div className="flex flex-col sm:flex-row gap-2">
-                      <button 
+                      <button
                         onClick={() => handleEditSpectacleClick(spectacle)}
                         className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
                         Modifier
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteClick('spectacle', spectacle.id)}
                         className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
@@ -824,27 +829,31 @@ const handleDeleteLieu = async (id: number) => {
                 </div>
               ))}
             </div>
-          )
-        )}
+          ))}
 
-        {activeTab === 'artists' && (
-          artists.length === 0 ? (
+        {activeTab === 'artists' &&
+          (artists.length === 0 ? (
             <p className="text-gray-400 text-center">Aucun artiste</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {artists.map((artist) => (
                 <div key={artist.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                  <img src={buildImgSrc('photo_artiste', (artist.photo || '').replace(/\.(jpe?g)$/i, '.webp'))} alt={artist.name} className="w-full h-48 object-cover" onError={onImgErrorSwap} />
+                  <img
+                    src={buildImgSrc('photo_artiste', (artist.photo || '').replace(/\.(jpe?g)$/i, '.webp'))}
+                    alt={artist.name}
+                    className="w-full h-48 object-cover"
+                    onError={onImgErrorSwap}
+                  />
                   <div className="p-4">
                     <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
                     <div className="flex flex-col sm:flex-row gap-2">
-                      <button 
+                      <button
                         onClick={() => handleEditArtistClick(artist)}
                         className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
                         Modifier
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteClick('artist', artist.id)}
                         className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                       >
@@ -855,8 +864,7 @@ const handleDeleteLieu = async (id: number) => {
                 </div>
               ))}
             </div>
-          )
-        )}
+          ))}
 
         {/* Bloc Réservations supprimé */}
 
@@ -867,19 +875,33 @@ const handleDeleteLieu = async (id: number) => {
               <p className="text-gray-400 text-center">Aucune image</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {lieuImages.map(img => (
+                {lieuImages.map((img) => (
                   <div key={img.id} className="bg-gray-900 rounded-lg overflow-hidden">
-                    <img 
-                      src={buildImgSrc('image_path', img.image_path)} 
-                      alt="lieu" 
-                      className="w-full h-48 object-cover" 
+                    <img
+                      src={buildImgSrc('image_path', img.image_path)}
+                      alt="lieu"
+                      className="w-full h-48 object-cover"
                       onError={onImgErrorSwap}
                     />
                     <div className="p-4">
-                      <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {img.image_path}</p>
-                      <p className="text-gray-400 mb-2"><b>Type:</b> {img.is_main ? <span className="text-green-400 font-bold">Principale</span> : <span className="text-blue-400">Galerie</span>}</p>
+                      <p className="text-gray-400 mb-2 break-all">
+                        <b>Chemin:</b> {img.image_path}
+                      </p>
+                      <p className="text-gray-400 mb-2">
+                        <b>Type:</b>{' '}
+                        {img.is_main ? (
+                          <span className="text-green-400 font-bold">Principale</span>
+                        ) : (
+                          <span className="text-blue-400">Galerie</span>
+                        )}
+                      </p>
                       <div className="flex justify-center mt-2">
-                        <button onClick={() => handleEditLieuClick(img)} className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Modifier</button>
+                        <button
+                          onClick={() => handleEditLieuClick(img)}
+                          className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                        >
+                          Modifier
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -894,78 +916,82 @@ const handleDeleteLieu = async (id: number) => {
             <h2 className="text-2xl font-bold text-white mb-6">Gestion des utilisateurs</h2>
             {users.length === 0 ? (
               <p className="text-gray-400 text-center">Aucun utilisateur</p>
-          ) : (
-            <div className="space-y-4">
+            ) : (
+              <div className="space-y-4">
                 {users.map((user) => (
                   <div key={user.id} className="bg-gray-900 rounded-lg p-6">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-                    <div>
+                      <div>
                         <h3 className="text-xl font-bold text-white mb-2">
                           {user.civility} {user.firstName} {user.lastName}
                         </h3>
                         <p className="text-gray-400 mb-1">Email: {user.email}</p>
-                      <p className="text-gray-400 mb-1">
-                          Rôle: <span className={`font-semibold ${user.role === 'admin' ? 'text-red-500' : 'text-blue-400'}`}>
+                        <p className="text-gray-400 mb-1">
+                          Rôle:{' '}
+                          <span className={`font-semibold ${user.role === 'admin' ? 'text-red-500' : 'text-blue-400'}`}>
                             {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
                           </span>
                         </p>
                         <p className="text-gray-400 mb-1">
-                          Statut: <span className={`font-semibold ${user.isActive !== false ? 'text-green-400' : 'text-red-400'}`}>
+                          Statut:{' '}
+                          <span
+                            className={`font-semibold ${user.isActive !== false ? 'text-green-400' : 'text-red-400'}`}
+                          >
                             {user.isActive !== false ? 'Actif' : 'Suspendu'}
                           </span>
                         </p>
+                      </div>
                     </div>
-                  </div>
-                  
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div className="bg-gray-700 rounded-lg p-3">
+                      <div className="bg-gray-700 rounded-lg p-3">
                         <p className="text-gray-400 text-sm">ID Utilisateur</p>
                         <p className="text-white font-semibold">{user.id}</p>
-                    </div>
-                    <div className="bg-gray-700 rounded-lg p-3">
+                      </div>
+                      <div className="bg-gray-700 rounded-lg p-3">
                         <p className="text-gray-400 text-sm">Civilité</p>
                         <p className="text-white font-semibold">{user.civility}</p>
-                    </div>
-                    <div className="bg-gray-700 rounded-lg p-3">
+                      </div>
+                      <div className="bg-gray-700 rounded-lg p-3">
                         <p className="text-gray-400 text-sm">Date de création</p>
                         <p className="text-white font-semibold">
                           {user.createdAt ? formatDate(user.createdAt) : 'Non disponible'}
-                      </p>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-                    <div className="text-sm text-gray-400">
+
+                    <div className="flex justify-between items-center pt-4 border-t border-gray-700">
+                      <div className="text-sm text-gray-400">
                         <p>Dernière connexion: {user.lastLogin ? formatDate(user.lastLogin) : 'Jamais connecté'}</p>
-                    </div>
+                      </div>
                       {user.role === 'admin' ? (
                         <span className="text-red-500 text-sm font-semibold">
                           ⚠️ Impossible de supprimer un administrateur
                         </span>
                       ) : (
                         <div className="flex flex-col sm:flex-row gap-2">
-                    <button 
+                          <button
                             onClick={() => handleToggleUserStatus(user)}
                             className={`w-full sm:w-auto px-4 py-2 rounded text-sm transition duration-300 ${
-                              user.isActive !== false 
-                                ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                              user.isActive !== false
+                                ? 'bg-orange-500 text-white hover:bg-orange-600'
                                 : 'bg-green-500 text-white hover:bg-green-600'
                             }`}
                           >
                             {user.isActive !== false ? 'Suspendre' : 'Réactiver'}
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteClick('user', user.id)}
                             className="w-full sm:w-auto bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-                    >
-                      Supprimer
-                    </button>
+                          >
+                            Supprimer
+                          </button>
                         </div>
                       )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -977,19 +1003,25 @@ const handleDeleteLieu = async (id: number) => {
               <p className="text-gray-400 text-center">Aucune photo additionnelle.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {additionnalPhotos.map(p => (
+                {additionnalPhotos.map((p) => (
                   <div key={p.id} className="bg-gray-900 rounded-lg overflow-hidden">
-                    <img 
-                      src={buildImgSrc('photo_addictionnel', (p.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))} 
-                      alt="photo" 
-                      className="w-full h-48 object-cover" 
-                      onError={onImgErrorSwap} 
+                    <img
+                      src={buildImgSrc('photo_addictionnel', (p.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
+                      alt="photo"
+                      className="w-full h-48 object-cover"
+                      onError={onImgErrorSwap}
                     />
                     <div className="p-4">
-                      <p className="text-gray-400 mb-2 break-all"><b>Chemin:</b> {p.image_path}</p>
-                      <p className="text-gray-400 mb-2"><b>Ordre:</b> {p.sort_order || <span className="text-gray-500">Non défini</span>}</p>
+                      <p className="text-gray-400 mb-2 break-all">
+                        <b>Chemin:</b> {p.image_path}
+                      </p>
+                      <p className="text-gray-400 mb-2">
+                        <b>Ordre:</b> {p.sort_order || <span className="text-gray-500">Non défini</span>}
+                      </p>
                       <div className="flex justify-center mt-2">
-                        <button className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Modifier</button>
+                        <button className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">
+                          Modifier
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1033,12 +1065,12 @@ const handleDeleteLieu = async (id: number) => {
                           form.append('file', file);
                           const res = await fetch(`${API_URL}/api/admin/upload/spectacle-image`, {
                             method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` },
-                            body: form
+                            headers: { Authorization: `Bearer ${token}` },
+                            body: form,
                           });
                           const data = await res.json();
                           if (!res.ok) throw new Error(data.error || 'Upload échoué');
-                          setSpectacleFormData(prev => ({ ...prev, img: data.path }));
+                          setSpectacleFormData((prev) => ({ ...prev, img: data.path }));
                           toast.success('Image téléversée');
                         } catch (err) {
                           toast.error(err instanceof Error ? err.message : 'Erreur upload');
@@ -1046,15 +1078,15 @@ const handleDeleteLieu = async (id: number) => {
                       }}
                       className="bg-gray-700 text-white rounded px-4 py-2 w-full md:w-auto"
                     />
-                  <input
-                    type="text"
-                    name="img"
-                    value={spectacleFormData.img}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    <input
+                      type="text"
+                      name="img"
+                      value={spectacleFormData.img}
+                      onChange={handleSpectacleInputChange}
+                      className="w-full bg-gray-700 text-white rounded px-4 py-2"
                       placeholder="/assets/img/spectacles/mon_image.webp"
-                    required
-                  />
+                      required
+                    />
                   </div>
                   <p className="text-gray-400 text-xs mt-2">Max 5 Mo, conversion en .webp côté serveur.</p>
                 </div>
@@ -1074,42 +1106,46 @@ const handleDeleteLieu = async (id: number) => {
                     <input
                       type="checkbox"
                       checked={spectacleFormData.recurrence_enabled}
-                      onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_enabled: e.target.checked }))}
+                      onChange={(e) =>
+                        setSpectacleFormData((prev) => ({ ...prev, recurrence_enabled: e.target.checked }))
+                      }
                     />
                     Ajouter en récurrence (hebdomadaire)
                   </label>
                   {!spectacleFormData.recurrence_enabled ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-white mb-2">Date</label>
-                  <input
-                    type="date"
-                    name="date_spectacle"
-                    value={spectacleFormData.date_spectacle}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white mb-2">Heure</label>
-                  <input
-                    type="time"
-                    name="heure_spectacle"
-                    value={spectacleFormData.heure_spectacle}
-                    onChange={handleSpectacleInputChange}
-                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
-                    required
-                  />
-                </div>
+                      <div>
+                        <label className="block text-white mb-2">Date</label>
+                        <input
+                          type="date"
+                          name="date_spectacle"
+                          value={spectacleFormData.date_spectacle}
+                          onChange={handleSpectacleInputChange}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-2">Heure</label>
+                        <input
+                          type="time"
+                          name="heure_spectacle"
+                          value={spectacleFormData.heure_spectacle}
+                          onChange={handleSpectacleInputChange}
+                          className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                          required
+                        />
+                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
+                      <div>
                         <label className="block text-white mb-2">Jour de la semaine</label>
                         <select
                           value={spectacleFormData.recurrence_weekday}
-                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_weekday: Number(e.target.value) }))}
+                          onChange={(e) =>
+                            setSpectacleFormData((prev) => ({ ...prev, recurrence_weekday: Number(e.target.value) }))
+                          }
                           className="w-full bg-gray-700 text-white rounded px-4 py-2"
                         >
                           <option value={1}>Lundi</option>
@@ -1123,10 +1159,12 @@ const handleDeleteLieu = async (id: number) => {
                       </div>
                       <div>
                         <label className="block text-white mb-2">Heure</label>
-                  <input
+                        <input
                           type="time"
                           value={spectacleFormData.recurrence_time}
-                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_time: e.target.value }))}
+                          onChange={(e) =>
+                            setSpectacleFormData((prev) => ({ ...prev, recurrence_time: e.target.value }))
+                          }
                           className="w-full bg-gray-700 text-white rounded px-4 py-2"
                         />
                       </div>
@@ -1135,7 +1173,9 @@ const handleDeleteLieu = async (id: number) => {
                         <input
                           type="date"
                           value={spectacleFormData.recurrence_start}
-                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_start: e.target.value }))}
+                          onChange={(e) =>
+                            setSpectacleFormData((prev) => ({ ...prev, recurrence_start: e.target.value }))
+                          }
                           className="w-full bg-gray-700 text-white rounded px-4 py-2"
                         />
                       </div>
@@ -1144,7 +1184,9 @@ const handleDeleteLieu = async (id: number) => {
                         <input
                           type="date"
                           value={spectacleFormData.recurrence_end}
-                          onChange={(e) => setSpectacleFormData(prev => ({ ...prev, recurrence_end: e.target.value }))}
+                          onChange={(e) =>
+                            setSpectacleFormData((prev) => ({ ...prev, recurrence_end: e.target.value }))
+                          }
                           className="w-full bg-gray-700 text-white rounded px-4 py-2"
                         />
                       </div>
@@ -1220,10 +1262,10 @@ const handleDeleteLieu = async (id: number) => {
                       const res = await fetch(`${API_URL}/api/admin/settings/contact-email`, {
                         method: 'PUT',
                         headers: {
-                          'Authorization': `Bearer ${token}`,
-                          'Content-Type': 'application/json'
+                          Authorization: `Bearer ${token}`,
+                          'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ email: contactEmail })
+                        body: JSON.stringify({ email: contactEmail }),
                       });
                       const data = await res.json();
                       if (!res.ok) throw new Error(data.error || 'Erreur lors de la sauvegarde');
@@ -1246,7 +1288,8 @@ const handleDeleteLieu = async (id: number) => {
           <div className="bg-gray-800 rounded-lg p-6 max-w-xl">
             <h2 className="text-2xl font-bold text-white mb-6">Maintenance</h2>
             <p className="text-gray-300 mb-4">
-              Quand la maintenance est activée, seuls les administrateurs connectés peuvent voir le site. Les utilisateurs voient une page de maintenance.
+              Quand la maintenance est activée, seuls les administrateurs connectés peuvent voir le site. Les
+              utilisateurs voient une page de maintenance.
             </p>
             {maintenanceEnabled && (
               <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4 mb-4">
@@ -1264,22 +1307,27 @@ const handleDeleteLieu = async (id: number) => {
             <div className="flex items-center justify-between bg-gray-900 rounded-lg p-4">
               <span className="text-white font-semibold">Activer la maintenance</span>
               <label className="inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" checked={maintenanceEnabled} onChange={async (e) => {
-                  try {
-                    const token = localStorage.getItem('token');
-                    const res = await fetch(`${API_URL}/api/admin/settings/maintenance`, {
-                      method: 'PUT',
-                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ enabled: e.target.checked })
-                    });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error || 'Erreur lors de la mise à jour');
-                    setMaintenanceEnabled(Boolean(data.maintenance_enabled));
-                    toast.success(`Maintenance ${e.target.checked ? 'activée' : 'désactivée'}`);
-                  } catch (err) {
-                    toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
-                  }
-                }} />
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={maintenanceEnabled}
+                  onChange={async (e) => {
+                    try {
+                      const token = localStorage.getItem('token');
+                      const res = await fetch(`${API_URL}/api/admin/settings/maintenance`, {
+                        method: 'PUT',
+                        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: e.target.checked }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || 'Erreur lors de la mise à jour');
+                      setMaintenanceEnabled(Boolean(data.maintenance_enabled));
+                      toast.success(`Maintenance ${e.target.checked ? 'activée' : 'désactivée'}`);
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : 'Une erreur est survenue');
+                    }
+                  }}
+                />
                 <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute relative after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
               </label>
             </div>
@@ -1290,10 +1338,10 @@ const handleDeleteLieu = async (id: number) => {
           <div className="bg-gray-800 rounded-lg p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Pages Sponsorisées</h2>
             <p className="text-gray-300 mb-6">
-              Ces pages sont accessibles via des liens directs mais ne s'affichent pas sur le site principal. 
-              Copiez les liens pour partager les spectacles récurrents.
+              Ces pages sont accessibles via des liens directs mais ne s'affichent pas sur le site principal. Copiez les
+              liens pour partager les spectacles récurrents.
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Tchatcheur Comedy Club */}
               <div className="bg-gray-900 rounded-lg p-6">
@@ -1302,8 +1350,8 @@ const handleDeleteLieu = async (id: number) => {
                 <div className="bg-gray-800 rounded p-3 mb-4">
                   <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={`${window.location.origin}/sponsorise/tchatcheur-comedy-club`}
                       readOnly
                       className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
@@ -1319,7 +1367,7 @@ const handleDeleteLieu = async (id: number) => {
                     </button>
                   </div>
                 </div>
-                <a 
+                <a
                   href={`${window.location.origin}/sponsorise/tchatcheur-comedy-club`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -1337,15 +1385,17 @@ const handleDeleteLieu = async (id: number) => {
                 <div className="bg-gray-800 rounded p-3 mb-4">
                   <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={`${window.location.origin}/sponsorise/un-ado-peut-en-cacher-un-autre`}
                       readOnly
                       className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
                     />
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/sponsorise/un-ado-peut-en-cacher-un-autre`);
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/sponsorise/un-ado-peut-en-cacher-un-autre`
+                        );
                         toast.success('Lien copié !');
                       }}
                       className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-300"
@@ -1354,7 +1404,7 @@ const handleDeleteLieu = async (id: number) => {
                     </button>
                   </div>
                 </div>
-                <a 
+                <a
                   href={`${window.location.origin}/sponsorise/un-ado-peut-en-cacher-un-autre`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -1372,8 +1422,8 @@ const handleDeleteLieu = async (id: number) => {
                 <div className="bg-gray-800 rounded p-3 mb-4">
                   <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={`${window.location.origin}/sponsorise/cheri-je-tai-trompe`}
                       readOnly
                       className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
@@ -1389,7 +1439,7 @@ const handleDeleteLieu = async (id: number) => {
                     </button>
                   </div>
                 </div>
-                <a 
+                <a
                   href={`${window.location.origin}/sponsorise/cheri-je-tai-trompe`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -1407,15 +1457,17 @@ const handleDeleteLieu = async (id: number) => {
                 <div className="bg-gray-800 rounded p-3 mb-4">
                   <p className="text-gray-400 text-sm mb-2">Lien à copier :</p>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={`${window.location.origin}/sponsorise/kaci-dans-la-connerie-humaine`}
                       readOnly
                       className="flex-1 bg-gray-700 text-white rounded px-3 py-2 text-sm"
                     />
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/sponsorise/kaci-dans-la-connerie-humaine`);
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/sponsorise/kaci-dans-la-connerie-humaine`
+                        );
                         toast.success('Lien copié !');
                       }}
                       className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-300"
@@ -1424,7 +1476,7 @@ const handleDeleteLieu = async (id: number) => {
                     </button>
                   </div>
                 </div>
-                <a 
+                <a
                   href={`${window.location.origin}/sponsorise/kaci-dans-la-connerie-humaine`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -1443,7 +1495,7 @@ const handleDeleteLieu = async (id: number) => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
               <h2 className="text-2xl font-bold text-white mb-4">
-                {isAddingArtist ? 'Ajouter un artiste' : 'Modifier l\'artiste'}
+                {isAddingArtist ? 'Ajouter un artiste' : "Modifier l'artiste"}
               </h2>
               <form onSubmit={handleArtistSubmit} className="space-y-4">
                 <div>
@@ -1472,12 +1524,12 @@ const handleDeleteLieu = async (id: number) => {
                           form.append('file', file);
                           const res = await fetch(`${API_URL}/api/admin/upload/artiste-image`, {
                             method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` },
-                            body: form
+                            headers: { Authorization: `Bearer ${token}` },
+                            body: form,
                           });
                           const data = await res.json();
                           if (!res.ok) throw new Error(data.error || 'Upload échoué');
-                          setArtistFormData(prev => ({ ...prev, photo: data.path }));
+                          setArtistFormData((prev) => ({ ...prev, photo: data.path }));
                           toast.success('Image téléversée');
                         } catch (err) {
                           toast.error(err instanceof Error ? err.message : 'Erreur upload');
@@ -1485,15 +1537,15 @@ const handleDeleteLieu = async (id: number) => {
                       }}
                       className="bg-gray-700 text-white rounded px-4 py-2 w-full md:w-auto"
                     />
-                  <input
-                    type="text"
-                    name="photo"
-                    value={artistFormData.photo}
-                    onChange={handleArtistInputChange}
+                    <input
+                      type="text"
+                      name="photo"
+                      value={artistFormData.photo}
+                      onChange={handleArtistInputChange}
                       className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-red-500"
                       placeholder="/assets/img/photo_artiste/mon_image.webp"
-                  />
-                </div>
+                    />
+                  </div>
                   <p className="text-gray-400 text-xs mt-2">Max 5 Mo, conversion en .webp côté serveur.</p>
                 </div>
                 {/* Champ Biographie retiré */}
@@ -1526,12 +1578,13 @@ const handleDeleteLieu = async (id: number) => {
             <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
               <h3 className="text-xl font-bold mb-4">Confirmation de suppression</h3>
               <p className="text-gray-300 mb-6">
-                Êtes-vous sûr de vouloir supprimer {
-                  itemToDelete?.type === 'spectacle' ? 'ce spectacle' : 
-                  itemToDelete?.type === 'artist' ? 'cet artiste' : 
-                  'cet utilisateur'
-                } ? 
-                Cette action est irréversible.
+                Êtes-vous sûr de vouloir supprimer{' '}
+                {itemToDelete?.type === 'spectacle'
+                  ? 'ce spectacle'
+                  : itemToDelete?.type === 'artist'
+                    ? 'cet artiste'
+                    : 'cet utilisateur'}{' '}
+                ? Cette action est irréversible.
               </p>
               <div className="flex justify-end space-x-4">
                 <button
@@ -1564,15 +1617,43 @@ const handleDeleteLieu = async (id: number) => {
               <form onSubmit={handleLieuSubmit} className="space-y-4">
                 <div>
                   <label className="block text-white mb-2">Chemin image</label>
-                  <input type="text" name="image_path" value={lieuFormData.image_path} onChange={handleLieuInputChange} className="w-full bg-gray-700 text-white rounded px-4 py-2" required />
+                  <input
+                    type="text"
+                    name="image_path"
+                    value={lieuFormData.image_path}
+                    onChange={handleLieuInputChange}
+                    className="w-full bg-gray-700 text-white rounded px-4 py-2"
+                    required
+                  />
                 </div>
                 <div className="flex items-center space-x-3">
-                  <input type="checkbox" id="is_main" name="is_main" checked={!!lieuFormData.is_main} onChange={e => setLieuFormData(prev => ({ ...prev, is_main: e.target.checked }))} />
-                  <label htmlFor="is_main" className="text-white">Image principale (affichée sur l'accueil)</label>
+                  <input
+                    type="checkbox"
+                    id="is_main"
+                    name="is_main"
+                    checked={!!lieuFormData.is_main}
+                    onChange={(e) => setLieuFormData((prev) => ({ ...prev, is_main: e.target.checked }))}
+                  />
+                  <label htmlFor="is_main" className="text-white">
+                    Image principale (affichée sur l'accueil)
+                  </label>
                 </div>
                 <div className="flex justify-end space-x-4 mt-6">
-                  <button type="button" onClick={() => { setIsLieuModalOpen(false); }} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300">Annuler</button>
-                  <button type="submit" className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300">Enregistrer</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLieuModalOpen(false);
+                    }}
+                    className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-300"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                  >
+                    Enregistrer
+                  </button>
                 </div>
               </form>
             </div>
@@ -1585,4 +1666,4 @@ const handleDeleteLieu = async (id: number) => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

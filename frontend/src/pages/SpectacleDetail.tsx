@@ -1,14 +1,13 @@
 import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { Spectacle } from '../services/types';
-import { toast } from "@/components/ui/sonner";
+import { toast } from '@/components/ui/sonner';
 import { trackBookingClick } from '@/utils/googleAds';
-
 
 const SpectacleDetail = () => {
   const { id } = useParams();
@@ -20,16 +19,16 @@ const SpectacleDetail = () => {
   const [extraPhotos, setExtraPhotos] = useState<Array<{ id: number; image_path: string }>>([]);
 
   const formatHeure = (heure: string) => {
-    return heure.split(":").slice(0, 2).join(":");
+    return heure.split(':').slice(0, 2).join(':');
   };
 
   // Préchargement dynamique de l'image principale du spectacle
   useEffect(() => {
     if (!spectacle?.img) return;
 
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
     link.href = buildImgSrc('spectacles', spectacle.img);
     document.head.appendChild(link);
 
@@ -45,7 +44,7 @@ const SpectacleDetail = () => {
         const data = await api.get<Spectacle>(`/api/spectacles/${id}`);
         setSpectacle(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur inconnue");
+        setError(err instanceof Error ? err.message : 'Erreur inconnue');
       } finally {
         setLoading(false);
       }
@@ -60,7 +59,7 @@ const SpectacleDetail = () => {
       try {
         const { api } = await import('@/services/api');
         const photos = await api.get<Array<{ id: number; image_path: string }>>(`/api/photos/spectacle/${id}`);
-        setExtraPhotos((photos || []).slice(0, 3).map(p => ({ id: p.id, image_path: p.image_path })));
+        setExtraPhotos((photos || []).slice(0, 3).map((p) => ({ id: p.id, image_path: p.image_path })));
       } catch {
         setExtraPhotos([]);
       }
@@ -72,24 +71,24 @@ const SpectacleDetail = () => {
 
   const handleReserve = () => {
     if (!spectacle) return;
-    
+
     // Envoyer la conversion Google Ads avant la redirection
     trackBookingClick(spectacle.title);
-    
+
     // Utiliser le lien de billetterie du spectacle s'il existe
     if (spectacle.lien_spectacle) {
       window.location.href = spectacle.lien_spectacle;
       return;
     }
-    
+
     // Fallback vers la variable d'environnement
     const url = import.meta.env.VITE_TICKETING_URL as string | undefined;
     if (url && typeof url === 'string') {
       window.location.href = url;
       return;
     }
-    
-    toast.error("Lien de billetterie indisponible pour ce spectacle.");
+
+    toast.error('Lien de billetterie indisponible pour ce spectacle.');
   };
 
   if (loading) {
@@ -109,7 +108,7 @@ const SpectacleDetail = () => {
       <div className="min-h-screen bg-black">
         <section className="bg-black py-12">
           <div className="container mx-auto px-6 text-center">
-            <p className="text-red-500">{error || "Spectacle non trouvé"}</p>
+            <p className="text-red-500">{error || 'Spectacle non trouvé'}</p>
           </div>
         </section>
       </div>
@@ -125,7 +124,10 @@ const SpectacleDetail = () => {
             {/* Hero Section */}
             <div className="relative h-[700px] rounded-xl overflow-hidden mb-8 shadow-2xl">
               <img
-                src={buildImgSrc('spectacles', (spectacle.img || '').replace(/\.(jpe?g)$/i, '.webp')) || "/assets/placeholder.jpg"}
+                src={
+                  buildImgSrc('spectacles', (spectacle.img || '').replace(/\.(jpe?g)$/i, '.webp')) ||
+                  '/assets/placeholder.jpg'
+                }
                 alt={spectacle.title}
                 className="w-full h-full object-cover object-center"
                 onError={onImgErrorSwap}
@@ -134,7 +136,7 @@ const SpectacleDetail = () => {
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="flex items-center mb-6">
                   <span className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg">
-                    {format(new Date(spectacle.date_spectacle), "d MMM", {
+                    {format(new Date(spectacle.date_spectacle), 'd MMM', {
                       locale: fr,
                     }).toUpperCase()}
                   </span>
@@ -145,7 +147,7 @@ const SpectacleDetail = () => {
                 <div className="flex items-center text-white/90 text-lg">
                   <i className="fa-solid fa-calendar-days mr-3 text-red-400"></i>
                   <span className="font-medium">
-                    {format(new Date(spectacle.date_spectacle), "EEEE d MMMM yyyy", {
+                    {format(new Date(spectacle.date_spectacle), 'EEEE d MMMM yyyy', {
                       locale: fr,
                     })}
                   </span>
@@ -157,8 +159,7 @@ const SpectacleDetail = () => {
 
             {/* Content Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Main Content */
-              }
+              {/* Main Content */}
               <div className="md:col-span-2">
                 {/* Informations pratiques */}
                 <div className="bg-gray-900 rounded-lg p-6 mb-6">
@@ -168,7 +169,7 @@ const SpectacleDetail = () => {
                       <div>
                         <p className="text-gray-400 text-sm">Date</p>
                         <p className="text-white">
-                          {format(new Date(spectacle.date_spectacle), "EEEE d MMMM yyyy", {
+                          {format(new Date(spectacle.date_spectacle), 'EEEE d MMMM yyyy', {
                             locale: fr,
                           })}
                         </p>
@@ -206,7 +207,10 @@ const SpectacleDetail = () => {
                       {extraPhotos.map((p) => (
                         <div key={p.id} className="rounded-lg overflow-hidden bg-black">
                           <img
-                            src={buildImgSrc('photo_addictionnel', (p.image_path || '').replace(/\.(jpe?g)$/i, '.webp'))}
+                            src={buildImgSrc(
+                              'photo_addictionnel',
+                              (p.image_path || '').replace(/\.(jpe?g)$/i, '.webp')
+                            )}
                             alt={`Photo additionnelle ${p.id}`}
                             className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
                             onError={onImgErrorSwap}
@@ -216,30 +220,30 @@ const SpectacleDetail = () => {
                     </div>
                   </div>
                 )}
-  
-              {/* Vidéo (Uniquement pour Tchatcheur Comedy Club) */}
-              {spectacle.title && spectacle.title.toLowerCase().includes('tchatcheur comedy club') && (
-                <div className="bg-gray-900 rounded-lg p-6 mb-6">
-                  <h2 className="text-2xl font-bold text-white mb-4">Vidéo</h2>
-                  <div className="aspect-video w-full rounded overflow-hidden bg-black">
-                    <iframe
-                      src="https://www.youtube.com/embed/bjQdOh830G4"
-                      title="Vidéo YouTube"
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
+
+                {/* Vidéo (Uniquement pour Tchatcheur Comedy Club) */}
+                {spectacle.title && spectacle.title.toLowerCase().includes('tchatcheur comedy club') && (
+                  <div className="bg-gray-900 rounded-lg p-6 mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-4">Vidéo</h2>
+                    <div className="aspect-video w-full rounded overflow-hidden bg-black">
+                      <iframe
+                        src="https://www.youtube.com/embed/bjQdOh830G4"
+                        title="Vidéo YouTube"
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    </div>
+                    <a
+                      href="https://youtu.be/bjQdOh830G4"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center mt-3 text-red-400 hover:text-red-300"
+                    >
+                      Ouvrir sur YouTube
+                    </a>
                   </div>
-                  <a
-                    href="https://youtu.be/bjQdOh830G4"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center mt-3 text-red-400 hover:text-red-300"
-                  >
-                    Ouvrir sur YouTube
-                  </a>
-                </div>
-              )}
+                )}
               </div>
 
               {/* Sidebar */}
@@ -253,9 +257,7 @@ const SpectacleDetail = () => {
                     onClick={handleReserve}
                     disabled={isSoldOut}
                     className={`w-full font-bold py-3 px-6 rounded transition duration-300 flex items-center justify-center ${
-                      isSoldOut
-                        ? 'bg-red-600 text-white cursor-not-allowed'
-                        : 'bg-red-500 text-white hover:bg-red-600'
+                      isSoldOut ? 'bg-red-600 text-white cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'
                     }`}
                   >
                     <i className="fa-solid fa-ticket-alt mr-2"></i>
@@ -264,7 +266,7 @@ const SpectacleDetail = () => {
                   <div className="mt-6">
                     <div className="flex items-center justify-between text-gray-300 mb-2">
                       <span>Date</span>
-                      <span>{format(new Date(spectacle.date_spectacle), "EEEE d MMM yyyy", { locale: fr })}</span>
+                      <span>{format(new Date(spectacle.date_spectacle), 'EEEE d MMM yyyy', { locale: fr })}</span>
                     </div>
                     <div className="flex items-center justify-between text-gray-300">
                       <span>Heure</span>

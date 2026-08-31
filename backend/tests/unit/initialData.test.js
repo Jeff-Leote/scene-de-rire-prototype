@@ -4,7 +4,7 @@
 const mockQuery = jest.fn();
 
 jest.mock('../../src/db', () => ({
-  query: (...args) => mockQuery(...args)
+  query: (...args) => mockQuery(...args),
 }));
 
 const { getInitialDataForHome } = require('../../src/initialData');
@@ -16,18 +16,42 @@ describe('initialData', () => {
       if (typeof sql !== 'string') return Promise.resolve([[]]);
       if (sql.includes('COUNT(*)')) return Promise.resolve([[{ total: 10 }]]);
       if (sql.includes('LIMIT ? OFFSET ?')) {
-        return Promise.resolve([[
-          { id: 1, title: 'Spectacle 1', img: 'img1.jpg', description: '', date_spectacle: '2025-06-01', heure_spectacle: '20:00:00', lieu: 'Lille', lien_spectacle: '' }
-        ]]);
+        return Promise.resolve([
+          [
+            {
+              id: 1,
+              title: 'Spectacle 1',
+              img: 'img1.jpg',
+              description: '',
+              date_spectacle: '2025-06-01',
+              heure_spectacle: '20:00:00',
+              lieu: 'Lille',
+              lien_spectacle: '',
+            },
+          ],
+        ]);
       }
       if (sql.includes('is_main = TRUE')) return Promise.resolve([[{ id: 1, image_path: 'venue.jpg', is_main: true }]]);
-      if (sql.includes('FROM lieu') && !sql.includes('is_main = TRUE')) return Promise.resolve([[{ id: 1, image_path: 'v1.jpg', is_main: false }]]);
+      if (sql.includes('FROM lieu') && !sql.includes('is_main = TRUE'))
+        return Promise.resolve([[{ id: 1, image_path: 'v1.jpg', is_main: false }]]);
       if (sql.includes('FROM spectacle')) {
-        return Promise.resolve([[
-          { id: 1, title: 'S1', img: 'i1.jpg', description: '', date_spectacle: '2025-06-01', heure_spectacle: '20:00:00', lieu: 'Lille', lien_spectacle: '' }
-        ]]);
+        return Promise.resolve([
+          [
+            {
+              id: 1,
+              title: 'S1',
+              img: 'i1.jpg',
+              description: '',
+              date_spectacle: '2025-06-01',
+              heure_spectacle: '20:00:00',
+              lieu: 'Lille',
+              lien_spectacle: '',
+            },
+          ],
+        ]);
       }
-      if (sql.includes('FROM artiste')) return Promise.resolve([[{ id: 1, name: 'Artiste', photo: 'p.jpg', upcoming_shows: 0 }]]);
+      if (sql.includes('FROM artiste'))
+        return Promise.resolve([[{ id: 1, name: 'Artiste', photo: 'p.jpg', upcoming_shows: 0 }]]);
       return Promise.resolve([[]]);
     });
   });

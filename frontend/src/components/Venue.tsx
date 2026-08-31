@@ -1,20 +1,24 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { LieuImage } from "../services/lieu";
-import { buildImgSrc, onImgErrorSwap } from "@/utils/image";
-import OptimizedImage from "./OptimizedImage";
+import { LieuImage } from '../services/lieu';
+import { buildImgSrc, onImgErrorSwap } from '@/utils/image';
+import OptimizedImage from './OptimizedImage';
 import { api } from '@/services/api';
 
 const Venue = () => {
   const navigate = useNavigate();
-  const { data: mainImage = null, isLoading: loading, error: queryError } = useQuery({
+  const {
+    data: mainImage = null,
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
     queryKey: ['venue', 'main'],
     queryFn: () => api.get<LieuImage | null>('/api/lieu/images/main'),
     staleTime: 60 * 60 * 1000,
-    gcTime: 4 * 60 * 60 * 1000
+    gcTime: 4 * 60 * 60 * 1000,
   });
-  const error = queryError ? (queryError instanceof Error ? queryError.message : "Erreur inconnue") : null;
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Erreur inconnue') : null;
 
   return (
     <section id="venue" className="bg-gray-950 py-16">
@@ -23,7 +27,9 @@ const Venue = () => {
           <div className="md:w-1/2">
             <h2 className="text-3xl font-bold text-white mb-6">Notre salle</h2>
             <p className="text-gray-300 mb-6">
-              En plein cœur de Lille, notre salle propose une ambiance conviviale et chaleureuse pour profiter des meilleurs humoristes dans d’excellentes conditions. Grâce à une acoustique soignée et une visibilité optimale depuis chaque place, chaque spectacle devient un moment unique.
+              En plein cœur de Lille, notre salle propose une ambiance conviviale et chaleureuse pour profiter des
+              meilleurs humoristes dans d’excellentes conditions. Grâce à une acoustique soignée et une visibilité
+              optimale depuis chaque place, chaque spectacle devient un moment unique.
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -43,7 +49,7 @@ const Venue = () => {
 
             <span
               className="inline-block bg-red-500 text-white px-6 py-3 rounded hover:bg-red-600 transition duration-300 mt-4 cursor-pointer"
-              onClick={() => navigate("/le-lieu")}
+              onClick={() => navigate('/le-lieu')}
             >
               Comment s'y rendre
             </span>
@@ -52,13 +58,9 @@ const Venue = () => {
           <div className="md:w-1/2">
             <div className="relative h-[400px] rounded-lg overflow-hidden">
               {loading ? (
-                <div className="w-full h-full flex items-center justify-center text-red-500">
-                  Chargement...
-                </div>
+                <div className="w-full h-full flex items-center justify-center text-red-500">Chargement...</div>
               ) : error ? (
-                <div className="w-full h-full flex items-center justify-center text-red-400">
-                  {error}
-                </div>
+                <div className="w-full h-full flex items-center justify-center text-red-400">{error}</div>
               ) : mainImage ? (
                 <img
                   className="w-full h-full object-cover"

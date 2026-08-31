@@ -10,7 +10,8 @@ const Maintenance = () => {
           <div className="text-5xl mb-6">🚧</div>
           <h1 className="text-3xl font-bold mb-3">Site en maintenance</h1>
           <p className="text-gray-400 mb-6 max-w-xl">
-            Nous effectuons actuellement une maintenance. Le site sera de retour très bientôt. Merci de votre compréhension.
+            Nous effectuons actuellement une maintenance. Le site sera de retour très bientôt. Merci de votre
+            compréhension.
           </p>
         </div>
       </main>
@@ -19,7 +20,3 @@ const Maintenance = () => {
 };
 
 export default Maintenance;
-
-
-
-

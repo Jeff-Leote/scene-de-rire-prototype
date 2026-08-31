@@ -1,15 +1,16 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const pool = require("../db");
+const pool = require('../db');
 
 // Route pour la liste paginée (6 par page)
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 6;
     const offset = (page - 1) * limit;
 
-    const [spectacles] = await pool.query(`
+    const [spectacles] = await pool.query(
+      `
       SELECT 
         spectacle.id,
         spectacle.title,
@@ -23,7 +24,9 @@ router.get("/", async (req, res) => {
       WHERE spectacle.date_spectacle >= CURDATE()
       ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ? OFFSET ?
-    `, [limit, offset]);
+    `,
+      [limit, offset]
+    );
 
     const [[{ total }]] = await pool.query(`
       SELECT COUNT(*) as total 
@@ -41,18 +44,18 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Erreur lors de la récupération des spectacles :", err);
-    res.status(500).json({ error: "Erreur serveur lors de la récupération des spectacles" });
+    console.error('Erreur lors de la récupération des spectacles :', err);
+    res.status(500).json({ error: 'Erreur serveur lors de la récupération des spectacles' });
   }
 });
 
 // Route pour les 3 prochains spectacles (sans pagination)
-router.get("/upcoming", async (req, res) => {
+router.get('/upcoming', async (req, res) => {
   try {
     const limit = 4;
 
-
-    const [rows] = await pool.query(`
+    const [rows] = await pool.query(
+      `
       SELECT
         spectacle.id,
         spectacle.title,
@@ -66,18 +69,18 @@ router.get("/upcoming", async (req, res) => {
       WHERE spectacle.date_spectacle >= CURDATE()
       ORDER BY spectacle.date_spectacle ASC, spectacle.heure_spectacle ASC
       LIMIT ?
-    `, [limit]);
+    `,
+      [limit]
+    );
 
-
-
-    res.json(rows);  // direct tableau, pour UpcomingShows.tsx
+    res.json(rows); // direct tableau, pour UpcomingShows.tsx
   } catch (err) {
-    console.error("Erreur lors de la récupération des spectacles à venir :", err);
-    res.status(500).json({ error: "Erreur serveur lors de la récupération des spectacles à venir" });
+    console.error('Erreur lors de la récupération des spectacles à venir :', err);
+    res.status(500).json({ error: 'Erreur serveur lors de la récupération des spectacles à venir' });
   }
 });
 
-router.get("/all", async (req, res) => {
+router.get('/all', async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT
@@ -95,15 +98,16 @@ router.get("/all", async (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error("Erreur lors de la récupération de tous les spectacles :", err);
-    res.status(500).json({ error: "Erreur serveur lors de la récupération de tous les spectacles" });
+    console.error('Erreur lors de la récupération de tous les spectacles :', err);
+    res.status(500).json({ error: 'Erreur serveur lors de la récupération de tous les spectacles' });
   }
 });
 
 // Route pour récupérer un spectacle spécifique
-router.get("/:id", async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const [spectacles] = await pool.query(`
+    const [spectacles] = await pool.query(
+      `
       SELECT 
         spectacle.id,
         spectacle.title,
@@ -115,16 +119,18 @@ router.get("/:id", async (req, res) => {
         spectacle.lien_spectacle
       FROM spectacle
       WHERE spectacle.id = ?
-    `, [req.params.id]);
+    `,
+      [req.params.id]
+    );
 
     if (spectacles.length === 0) {
-      return res.status(404).json({ error: "Spectacle non trouvé" });
+      return res.status(404).json({ error: 'Spectacle non trouvé' });
     }
 
     res.json(spectacles[0]);
   } catch (err) {
-    console.error("Erreur lors de la récupération du spectacle :", err);
-    res.status(500).json({ error: "Erreur serveur lors de la récupération du spectacle" });
+    console.error('Erreur lors de la récupération du spectacle :', err);
+    res.status(500).json({ error: 'Erreur serveur lors de la récupération du spectacle' });
   }
 });
 

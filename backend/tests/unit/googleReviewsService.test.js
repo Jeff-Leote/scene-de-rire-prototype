@@ -6,12 +6,12 @@ describe('Google Reviews Utilities', () => {
     it('should generate correct Google Maps URL', () => {
       const placeId = 'ChIJF94WEwDVwkcRpB4gPela0dE';
       const expectedUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
-      
+
       // Simulation de la fonction getGoogleMapsUrl
       const getGoogleMapsUrl = (placeId) => {
         return `https://www.google.com/maps/place/?q=place_id:${placeId}`;
       };
-      
+
       const result = getGoogleMapsUrl(placeId);
       expect(result).toBe(expectedUrl);
     });
@@ -23,7 +23,7 @@ describe('Google Reviews Utilities', () => {
       const formatRating = (rating) => {
         return '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
       };
-      
+
       expect(formatRating(5)).toBe('★★★★★');
       expect(formatRating(3)).toBe('★★★☆☆');
       expect(formatRating(0)).toBe('☆☆☆☆☆');
@@ -36,13 +36,13 @@ describe('Google Reviews Utilities', () => {
         authorAttribution: {
           displayName: 'John Doe',
           uri: 'https://google.com/user/123',
-          photoUri: 'https://example.com/photo.jpg'
+          photoUri: 'https://example.com/photo.jpg',
         },
         rating: 5,
         publishTime: '2024-01-15T10:00:00Z',
         text: {
-          text: 'Excellent service!'
-        }
+          text: 'Excellent service!',
+        },
       };
 
       // Simulation de l'adaptation des données
@@ -51,20 +51,21 @@ describe('Google Reviews Utilities', () => {
         author_url: review.authorAttribution?.uri || '',
         profile_photo_url: review.authorAttribution?.photoUri || '',
         rating: review.rating || 0,
-        relative_time_description: review.publishTime ? 
-          new Date(review.publishTime).toLocaleDateString('fr-FR') : 'Récemment',
-        text: review.text?.text || review.text || ''
+        relative_time_description: review.publishTime
+          ? new Date(review.publishTime).toLocaleDateString('fr-FR')
+          : 'Récemment',
+        text: review.text?.text || review.text || '',
       });
 
       const result = adaptReview(mockGoogleReview);
-      
+
       expect(result).toEqual({
         author_name: 'John Doe',
         author_url: 'https://google.com/user/123',
         profile_photo_url: 'https://example.com/photo.jpg',
         rating: 5,
         relative_time_description: '15/01/2024',
-        text: 'Excellent service!'
+        text: 'Excellent service!',
       });
     });
 
@@ -73,8 +74,8 @@ describe('Google Reviews Utilities', () => {
         rating: 4,
         publishTime: '2024-01-15T10:00:00Z',
         text: {
-          text: 'Good service'
-        }
+          text: 'Good service',
+        },
       };
 
       const adaptReview = (review) => ({
@@ -82,13 +83,14 @@ describe('Google Reviews Utilities', () => {
         author_url: review.authorAttribution?.uri || '',
         profile_photo_url: review.authorAttribution?.photoUri || '',
         rating: review.rating || 0,
-        relative_time_description: review.publishTime ? 
-          new Date(review.publishTime).toLocaleDateString('fr-FR') : 'Récemment',
-        text: review.text?.text || review.text || ''
+        relative_time_description: review.publishTime
+          ? new Date(review.publishTime).toLocaleDateString('fr-FR')
+          : 'Récemment',
+        text: review.text?.text || review.text || '',
       });
 
       const result = adaptReview(mockGoogleReview);
-      
+
       expect(result.author_name).toBe('Anonyme');
       expect(result.author_url).toBe('');
       expect(result.profile_photo_url).toBe('');
@@ -100,8 +102,8 @@ describe('Google Reviews Utilities', () => {
       const mockErrorResponse = {
         error: {
           code: 'INVALID_REQUEST',
-          message: 'Invalid place ID'
-        }
+          message: 'Invalid place ID',
+        },
       };
 
       // Simulation de la gestion d'erreur

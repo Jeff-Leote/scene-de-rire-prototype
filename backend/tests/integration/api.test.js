@@ -14,8 +14,7 @@ describe('API Integration Tests', () => {
 
   describe('Public Routes', () => {
     it('should return health check status', async () => {
-      const response = await request(app)
-        .get('/api/health');
+      const response = await request(app).get('/api/health');
 
       // En environnement de test, la DB peut ne pas être disponible
       expect([200, 500]).toContain(response.status);
@@ -25,16 +24,14 @@ describe('API Integration Tests', () => {
     });
 
     it('should return 200 for spectacles list', async () => {
-      const response = await request(app)
-        .get('/api/spectacles');
+      const response = await request(app).get('/api/spectacles');
 
       // En environnement de test, la DB peut ne pas être disponible
       expect([200, 500]).toContain(response.status);
     });
 
     it('should return 200 for artistes list', async () => {
-      const response = await request(app)
-        .get('/api/artistes');
+      const response = await request(app).get('/api/artistes');
 
       // En environnement de test, la DB peut ne pas être disponible
       expect([200, 500]).toContain(response.status);
@@ -43,8 +40,7 @@ describe('API Integration Tests', () => {
 
   describe('Protected Routes', () => {
     it('should return 401 for protected route without token', async () => {
-      const response = await request(app)
-        .get('/api/admin/spectacles');
+      const response = await request(app).get('/api/admin/spectacles');
 
       expect(response.status).toBe(401);
     });
@@ -55,9 +51,7 @@ describe('API Integration Tests', () => {
         return;
       }
 
-      const response = await request(app)
-        .get('/api/admin/spectacles')
-        .set('Authorization', `Bearer ${authToken}`);
+      const response = await request(app).get('/api/admin/spectacles').set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
     });
@@ -70,13 +64,13 @@ describe('API Integration Tests', () => {
         promises.push(
           request(app)
             .get('/api/spectacles')
-            .then(response => response.status)
+            .then((response) => response.status)
         );
       }
 
       const results = await Promise.all(promises);
-      const successCount = results.filter(status => status === 200).length;
-      
+      const successCount = results.filter((status) => status === 200).length;
+
       // En environnement de test, on vérifie juste que l'app répond
       expect(results.length).toBeGreaterThan(0);
     });
@@ -84,27 +78,23 @@ describe('API Integration Tests', () => {
 
   describe('Input Validation', () => {
     it('should validate email format', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'invalid-email',
-          password: 'password123'
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'invalid-email',
+        password: 'password123',
+      });
 
       // En environnement de test, on vérifie juste que l'app répond
       expect([400, 500]).toContain(response.status);
     });
 
     it('should validate required fields', async () => {
-      const response = await request(app)
-        .post('/api/contact')
-        .send({
-          firstName: 'John',
-          // lastName manquant
-          email: 'test@example.com',
-          subject: 'Test',
-          message: 'Hello'
-        });
+      const response = await request(app).post('/api/contact').send({
+        firstName: 'John',
+        // lastName manquant
+        email: 'test@example.com',
+        subject: 'Test',
+        message: 'Hello',
+      });
 
       expect(response.status).toBe(400);
     });
@@ -112,8 +102,7 @@ describe('API Integration Tests', () => {
 
   describe('Error Handling', () => {
     it('should return 404 for non-existent routes', async () => {
-      const response = await request(app)
-        .get('/api/non-existent-route');
+      const response = await request(app).get('/api/non-existent-route');
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('API route not found');
@@ -132,18 +121,14 @@ describe('API Integration Tests', () => {
 
   describe('CORS', () => {
     it('should allow requests from authorized origins', async () => {
-      const response = await request(app)
-        .get('/api/spectacles')
-        .set('Origin', 'http://localhost:5173');
+      const response = await request(app).get('/api/spectacles').set('Origin', 'http://localhost:5173');
 
       // En environnement de test, on vérifie juste que l'app répond
       expect([200, 500]).toContain(response.status);
     });
 
     it('should block requests from unauthorized origins', async () => {
-      const response = await request(app)
-        .get('/api/spectacles')
-        .set('Origin', 'https://malicious-site.com');
+      const response = await request(app).get('/api/spectacles').set('Origin', 'https://malicious-site.com');
 
       expect(response.status).toBe(500); // CORS error
     });
@@ -151,8 +136,7 @@ describe('API Integration Tests', () => {
 
   describe('Security Headers', () => {
     it('should include security headers', async () => {
-      const response = await request(app)
-        .get('/api/spectacles');
+      const response = await request(app).get('/api/spectacles');
 
       // En environnement de test, on vérifie juste que l'app répond
       expect([200, 500]).toContain(response.status);

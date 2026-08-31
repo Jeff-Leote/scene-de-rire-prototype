@@ -1,0 +1,54 @@
+version: 2
+updates:
+  # Dépendances racine (concurrently, scripts globaux)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-et-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # Backend (Express, MySQL, etc.)
+  - package-ecosystem: 'npm'
+    directory: '/backend'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-et-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # Frontend (React, Vite, etc.)
+  - package-ecosystem: 'npm'
+    directory: '/frontend'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-et-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # Images de base Docker (backend et frontend)
+  - package-ecosystem: 'docker'
+    directory: '/backend'
+    schedule:
+      interval: 'weekly'
+
+  - package-ecosystem: 'docker'
+    directory: '/frontend'
+    schedule:
+      interval: 'weekly'
+
+  # Actions GitHub (si un workflow CI est ajouté plus tard)
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'

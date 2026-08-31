@@ -10,10 +10,7 @@ const https = require('https');
 const http = require('http');
 
 // Configuration
-const SITES = [
-  'https://scene-de-rire-prototype.onrender.com',
-  'https://espacecomedie.fr'
-];
+const SITES = ['https://scene-de-rire-prototype.onrender.com', 'https://espacecomedie.fr'];
 
 const PING_INTERVAL = 2 * 60 * 1000; // 2 minutes (plus agressif que Railway)
 
@@ -23,15 +20,17 @@ console.log(`🌐 Sites à pinger: ${SITES.join(', ')}`);
 
 const pingSite = (url) => {
   const startTime = Date.now();
-  
+
   const protocol = url.startsWith('https') ? https : http;
-  
-  protocol.get(url, (res) => {
-    const duration = Date.now() - startTime;
-    console.log(`✅ ${url} - ${res.statusCode} - ${duration}ms - ${new Date().toISOString()}`);
-  }).on('error', (err) => {
-    console.error(`❌ ${url} - Erreur: ${err.message} - ${new Date().toISOString()}`);
-  });
+
+  protocol
+    .get(url, (res) => {
+      const duration = Date.now() - startTime;
+      console.log(`✅ ${url} - ${res.statusCode} - ${duration}ms - ${new Date().toISOString()}`);
+    })
+    .on('error', (err) => {
+      console.error(`❌ ${url} - Erreur: ${err.message} - ${new Date().toISOString()}`);
+    });
 };
 
 // Ping initial

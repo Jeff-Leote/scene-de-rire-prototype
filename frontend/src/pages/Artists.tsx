@@ -78,9 +78,9 @@ const Artists = () => {
               {artists.map((artist) => (
                 <div key={artist.id} className="group relative">
                   <div className="relative overflow-hidden rounded-lg aspect-[3/4]">
-                    <img 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                      src={buildImgSrc('photo_artiste', (artist.photo || '').replace(/\.(jpe?g)$/i, '.webp'))} 
+                    <img
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      src={buildImgSrc('photo_artiste', (artist.photo || '').replace(/\.(jpe?g)$/i, '.webp'))}
                       alt={`Portrait de ${artist.name}`}
                       onError={onImgErrorSwap}
                     />
@@ -101,4 +101,4 @@ const Artists = () => {
   );
 };
 
-export default Artists; 
+export default Artists;

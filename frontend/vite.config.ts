@@ -1,6 +1,6 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -8,19 +8,17 @@ export default defineConfig(({ mode }) => ({
     port: 5173,
     strictPort: true,
     proxy: {
-      "/api": {
-        target: "http://backend:5000",
+      '/api': {
+        target: 'http://backend:5000',
         changeOrigin: true,
         secure: false,
       },
     },
   },
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   // 🚀 OPTIMISATIONS POUR LA PRODUCTION
@@ -31,8 +29,8 @@ export default defineConfig(({ mode }) => ({
       compress: {
         drop_console: mode === 'production', // Supprimer console.log en production
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug']
-      }
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+      },
     },
     rollupOptions: {
       output: {
@@ -41,7 +39,7 @@ export default defineConfig(({ mode }) => ({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
           utils: ['date-fns', 'zod', 'react-hook-form'],
-          charts: ['recharts']
+          charts: ['recharts'],
         },
         // 📦 Optimisation des chunks avec compression
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -50,7 +48,7 @@ export default defineConfig(({ mode }) => ({
           if (!assetInfo.name) return `assets/[name]-[hash].[ext]`;
           const extType = assetInfo.name.split('.').at(1);
           if (!extType) return `assets/[name]-[hash].[ext]`;
-          
+
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
             return `assets/img/[name]-[hash].[ext]`;
           }
@@ -58,8 +56,8 @@ export default defineConfig(({ mode }) => ({
             return `assets/css/[name]-[hash].[ext]`;
           }
           return `assets/[name]-[hash].[ext]`;
-        }
-      }
+        },
+      },
     },
     // ⚡ Optimisations de build
     chunkSizeWarningLimit: 1000,
@@ -69,13 +67,10 @@ export default defineConfig(({ mode }) => ({
   },
   // 🔧 Optimisations de développement
   optimizeDeps: {
-    include: [
-      'react', 'react-dom', 'react-router-dom',
-      '@tanstack/react-query', 'date-fns', 'zod'
-    ],
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'date-fns', 'zod'],
   },
   // 🚀 OPTIMISATIONS CSS
   css: {
-    devSourcemap: mode === 'development'
-  }
+    devSourcemap: mode === 'development',
+  },
 }));

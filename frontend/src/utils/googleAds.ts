@@ -31,11 +31,7 @@ declare global {
  * @param currency - Devise (par défaut: EUR)
  * @param transactionId - ID de transaction unique (optionnel)
  */
-export const trackGoogleAdsConversion = (
-  value?: number,
-  currency: string = 'EUR',
-  transactionId?: string
-): void => {
+export const trackGoogleAdsConversion = (value?: number, currency: string = 'EUR', transactionId?: string): void => {
   try {
     // Vérifier que gtag est disponible
     if (typeof window !== 'undefined' && window.gtag) {
@@ -71,7 +67,7 @@ export const trackGoogleAdsConversion = (
       console.warn('⚠️ gtag non disponible - conversion non envoyée');
     }
   } catch (error) {
-    console.error('❌ Erreur lors de l\'envoi de la conversion Google Ads:', error);
+    console.error("❌ Erreur lors de l'envoi de la conversion Google Ads:", error);
   }
 };
 
@@ -82,13 +78,12 @@ export const trackGoogleAdsConversion = (
 export const trackBookingClick = (spectacleTitle?: string): void => {
   // Créer un ID de transaction unique basé sur le timestamp
   const transactionId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
+
   // Envoyer la conversion
   trackGoogleAdsConversion(1.0, 'EUR', transactionId);
-  
+
   // Optionnel: logger pour le debug
   if (spectacleTitle) {
     console.log(`📊 Conversion trackée pour: ${spectacleTitle}`);
   }
 };
-

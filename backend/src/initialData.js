@@ -6,23 +6,16 @@ const db = require('./db');
 
 async function getInitialDataForHome() {
   try {
-    const [
-      spectaclesUpcoming,
-      artistFeatured,
-      venueImages,
-      venueMain,
-      spectaclesList,
-      artistes,
-      spectaclesAll
-    ] = await Promise.all([
-      getSpectaclesUpcoming(),
-      getArtistFeatured(),
-      getVenueImages(),
-      getVenueMain(),
-      getSpectaclesList(1, 9),
-      getArtistes(),
-      getSpectaclesAll()
-    ]);
+    const [spectaclesUpcoming, artistFeatured, venueImages, venueMain, spectaclesList, artistes, spectaclesAll] =
+      await Promise.all([
+        getSpectaclesUpcoming(),
+        getArtistFeatured(),
+        getVenueImages(),
+        getVenueMain(),
+        getSpectaclesList(1, 9),
+        getArtistes(),
+        getSpectaclesAll(),
+      ]);
 
     return {
       spectaclesUpcoming,
@@ -31,7 +24,7 @@ async function getInitialDataForHome() {
       venueMain,
       spectaclesList,
       artistes,
-      spectaclesAll
+      spectaclesAll,
     };
   } catch (err) {
     console.warn('⚠️ Initial data (home):', err.message);
@@ -60,20 +53,20 @@ async function getArtistFeatured() {
     LIMIT 1
   `);
   if (rows.length === 0) {
-    return { id: 1, name: "Artiste à l'affiche", photo: "default-artist.jpg", next_show: null };
+    return { id: 1, name: "Artiste à l'affiche", photo: 'default-artist.jpg', next_show: null };
   }
   const s = rows[0];
   return {
     id: 1,
     name: "Artiste à l'affiche",
-    photo: "default-artist.jpg",
+    photo: 'default-artist.jpg',
     next_show: {
       id: s.next_show_id,
       title: s.next_show_title,
       date: s.next_show_date,
       time: s.next_show_time,
-      image: s.next_show_image
-    }
+      image: s.next_show_image,
+    },
   };
 }
 
@@ -83,21 +76,22 @@ async function getVenueImages() {
 }
 
 async function getVenueMain() {
-  const [rows] = await db.query(
-    'SELECT id, image_path, is_main FROM lieu WHERE is_main = TRUE LIMIT 1'
-  );
+  const [rows] = await db.query('SELECT id, image_path, is_main FROM lieu WHERE is_main = TRUE LIMIT 1');
   return rows[0] || null;
 }
 
 async function getSpectaclesList(page, limit) {
   const offset = (page - 1) * limit;
-  const [spectacles] = await db.query(`
+  const [spectacles] = await db.query(
+    `
     SELECT id, title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle
     FROM spectacle
     WHERE date_spectacle >= CURDATE()
     ORDER BY date_spectacle ASC, heure_spectacle ASC
     LIMIT ? OFFSET ?
-  `, [limit, offset]);
+  `,
+    [limit, offset]
+  );
   const [[{ total }]] = await db.query(`
     SELECT COUNT(*) as total FROM spectacle WHERE date_spectacle >= CURDATE()
   `);
@@ -107,8 +101,8 @@ async function getSpectaclesList(page, limit) {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
-    }
+      totalPages: Math.ceil(total / limit),
+    },
   };
 }
 

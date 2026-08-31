@@ -7,6 +7,7 @@ Application frontend React pour l'Espace Comédie, une salle de spectacle spéci
 ## 🛡️ Sécurité
 
 L'application intègre un **système de sécurité complet** protégeant contre :
+
 - ✅ **XSS** (Cross-Site Scripting) - Sanitisation automatique
 - ✅ **CSRF** (Cross-Site Request Forgery) - Tokens de validation
 - ✅ **Attaques par Force Brute** - Rate limiting intelligent
@@ -14,6 +15,7 @@ L'application intègre un **système de sécurité complet** protégeant contre 
 - ✅ **Clickjacking** - Headers de sécurité
 
 ### Documentation de Sécurité
+
 - 📖 [Guide de Sécurité](SECURITY.md) - Détails des protections
 - 📖 [Implémentation Sécurité](SECURITY_IMPLEMENTATION.md) - Guide technique
 
@@ -54,10 +56,12 @@ frontend/
 ## 🛠️ Installation et Développement
 
 ### Prérequis
+
 - Node.js 18+ et npm
 - Docker et Docker Compose (pour l'environnement complet)
 
 ### Installation Locale
+
 ```bash
 # Cloner le projet
 git clone <repository-url>
@@ -71,6 +75,7 @@ npm run dev
 ```
 
 ### Environnement Docker (Recommandé)
+
 ```bash
 # Depuis la racine du projet
 docker-compose up frontend
@@ -81,6 +86,7 @@ L'application sera disponible sur `http://localhost:5173`
 ## 🧪 Tests
 
 ### Tests Unitaires
+
 ```bash
 # Lancer tous les tests
 npm test
@@ -96,6 +102,7 @@ npm run test:watch
 ```
 
 ### Tests de Sécurité
+
 ```bash
 # Audit de sécurité
 npm run security:audit
@@ -109,25 +116,27 @@ node src/test-simple.js
 
 ## 📦 Scripts Disponibles
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Démarre le serveur de développement |
-| `npm run build` | Build de production |
-| `npm run preview` | Prévisualise le build de production |
-| `npm test` | Lance les tests unitaires |
-| `npm run test:ui` | Interface de test interactive |
-| `npm run test:coverage` | Tests avec rapport de couverture |
-| `npm run lint` | Vérification du code |
-| `npm run security:audit` | Audit de sécurité des dépendances |
+| Script                   | Description                         |
+| ------------------------ | ----------------------------------- |
+| `npm run dev`            | Démarre le serveur de développement |
+| `npm run build`          | Build de production                 |
+| `npm run preview`        | Prévisualise le build de production |
+| `npm test`               | Lance les tests unitaires           |
+| `npm run test:ui`        | Interface de test interactive       |
+| `npm run test:coverage`  | Tests avec rapport de couverture    |
+| `npm run lint`           | Vérification du code                |
+| `npm run security:audit` | Audit de sécurité des dépendances   |
 
 ## 🔧 Configuration
 
 ### Variables d'Environnement
+
 ```env
 VITE_API_URL=http://localhost:5000  # URL de l'API backend
 ```
 
 ### Configuration TypeScript
+
 - `tsconfig.json` - Configuration TypeScript principale
 - `tsconfig.node.json` - Configuration pour Node.js
 - `src/types/test.d.ts` - Types pour les tests
@@ -135,18 +144,21 @@ VITE_API_URL=http://localhost:5000  # URL de l'API backend
 ## 🎯 Fonctionnalités Principales
 
 ### 🎭 Gestion des Spectacles
+
 - Affichage des spectacles à venir
 - Détails des spectacles
 - Calendrier des événements
 - Recherche et filtrage
 
 ### 👥 Gestion des Utilisateurs
+
 - Inscription/Connexion sécurisée
 - Profil utilisateur
 - Historique des réservations
 - Gestion des préférences
 
 ### 🏢 Administration
+
 - Dashboard administrateur
 - Gestion des spectacles
 - Statistiques de vente
@@ -155,26 +167,29 @@ VITE_API_URL=http://localhost:5000  # URL de l'API backend
 ## 🛡️ Système de Sécurité
 
 ### Protection XSS
-```typescript
-import { sanitizeString } from '@/utils/security'
 
-const userInput = '<script>alert("xss")</script>Hello'
-const sanitized = sanitizeString(userInput) // "Hello"
+```typescript
+import { sanitizeString } from '@/utils/security';
+
+const userInput = '<script>alert("xss")</script>Hello';
+const sanitized = sanitizeString(userInput); // "Hello"
 ```
 
 ### Rate Limiting
-```typescript
-import { useSecurity } from '@/hooks/useSecurity'
 
-const { checkRateLimitForAction } = useSecurity()
-const isAllowed = checkRateLimitForAction('login', 5, 15 * 60 * 1000)
+```typescript
+import { useSecurity } from '@/hooks/useSecurity';
+
+const { checkRateLimitForAction } = useSecurity();
+const isAllowed = checkRateLimitForAction('login', 5, 15 * 60 * 1000);
 ```
 
 ### Validation Stricte
-```typescript
-import { contactFormSchema } from '@/utils/security'
 
-const validatedData = contactFormSchema.parse(formData)
+```typescript
+import { contactFormSchema } from '@/utils/security';
+
+const validatedData = contactFormSchema.parse(formData);
 ```
 
 ## 📚 Documentation
@@ -199,6 +214,7 @@ Ce projet est propriétaire de l'Espace Comédie.
 ## 🆘 Support
 
 Pour toute question ou problème :
+
 - 📧 Email : contact@espacecomedie.fr
 - 🐛 Issues : GitHub Issues
 - 📖 Documentation : Voir les fichiers de documentation

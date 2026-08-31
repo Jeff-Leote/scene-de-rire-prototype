@@ -40,5 +40,3 @@ export function onImgErrorSwap(e: React.SyntheticEvent<HTMLImageElement, Event>)
     el.src = '/assets/placeholder.jpg';
   }
 }
-
-

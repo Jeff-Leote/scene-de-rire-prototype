@@ -1,73 +1,73 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { ArrowLeft, Mic, Lightbulb, Mail, Eye, EyeOff } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { ArrowLeft, Mic, Lightbulb, Mail, Eye, EyeOff } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import Header from "@/components/Header";
-import PasswordStrength from "@/components/PasswordStrength";
-import PasswordHelper from "@/components/PasswordHelper";
-import { usePasswordValidation } from "@/hooks/usePasswordValidation";
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import Header from '@/components/Header';
+import PasswordStrength from '@/components/PasswordStrength';
+import PasswordHelper from '@/components/PasswordHelper';
+import { usePasswordValidation } from '@/hooks/usePasswordValidation';
 
-const formSchema = z.object({
-  civility: z.enum(["M.", "Mme.","Non-renseigné"], {
-    required_error: "Veuillez sélectionner une civilité",
-  }),
-  firstName: z.string().min(2, {
-    message: "Le prénom doit contenir au moins 2 caractères",
-  }),
-  lastName: z.string().min(2, {
-    message: "Le nom doit contenir au moins 2 caractères",
-  }),
-  birthYear: z.string({
-    required_error: "Veuillez sélectionner une année",
-  }),
-  birthMonth: z.string({
-    required_error: "Veuillez sélectionner un mois",
-  }),
-  birthDay: z.string({
-    required_error: "Veuillez sélectionner un jour",
-  }),
-  email: z.string().email({
-    message: "Veuillez entrer une adresse email valide",
-  }),
-  password: z.string()
-    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
-    .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
-    .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
-    .regex(/\d/, "Le mot de passe doit contenir au moins un chiffre")
-    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/, "Le mot de passe doit contenir au moins un caractère spécial"),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Les mots de passe ne correspondent pas",
-  path: ["confirmPassword"],
-}).refine((data) => {
-  const today = new Date();
-  const birthDate = new Date(parseInt(data.birthYear), parseInt(data.birthMonth) - 1, parseInt(data.birthDay));
-  const age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    return age - 1 >= 15;
-  }
-  return age >= 15;
-}, {
-  message: "Vous devez avoir au moins 15 ans pour vous inscrire",
-  path: ["birthYear"],
-});
+const formSchema = z
+  .object({
+    civility: z.enum(['M.', 'Mme.', 'Non-renseigné'], {
+      required_error: 'Veuillez sélectionner une civilité',
+    }),
+    firstName: z.string().min(2, {
+      message: 'Le prénom doit contenir au moins 2 caractères',
+    }),
+    lastName: z.string().min(2, {
+      message: 'Le nom doit contenir au moins 2 caractères',
+    }),
+    birthYear: z.string({
+      required_error: 'Veuillez sélectionner une année',
+    }),
+    birthMonth: z.string({
+      required_error: 'Veuillez sélectionner un mois',
+    }),
+    birthDay: z.string({
+      required_error: 'Veuillez sélectionner un jour',
+    }),
+    email: z.string().email({
+      message: 'Veuillez entrer une adresse email valide',
+    }),
+    password: z
+      .string()
+      .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
+      .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
+      .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
+      .regex(/\d/, 'Le mot de passe doit contenir au moins un chiffre')
+      .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/, 'Le mot de passe doit contenir au moins un caractère spécial'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['confirmPassword'],
+  })
+  .refine(
+    (data) => {
+      const today = new Date();
+      const birthDate = new Date(parseInt(data.birthYear), parseInt(data.birthMonth) - 1, parseInt(data.birthDay));
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        return age - 1 >= 15;
+      }
+      return age >= 15;
+    },
+    {
+      message: 'Vous devez avoir au moins 15 ans pour vous inscrire',
+      path: ['birthYear'],
+    }
+  );
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -79,59 +79,61 @@ const Register = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       civility: undefined,
-      firstName: "",
-      lastName: "",
-      birthYear: "",
-      birthMonth: "",
-      birthDay: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+      firstName: '',
+      lastName: '',
+      birthYear: '',
+      birthMonth: '',
+      birthDay: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
-const onSubmit = async (values: z.infer<typeof formSchema>) => {
-  setIsLoading(true);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
 
-  try {
-    const API_URL = import.meta.env.VITE_API_URL;
-    const response = await fetch(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        civility: values.civility,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        birthDate: new Date(parseInt(values.birthYear), parseInt(values.birthMonth) - 1, parseInt(values.birthDay)),
-        email: values.email,
-        password: values.password,
-      }),
-    });
+    try {
+      const API_URL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          civility: values.civility,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          birthDate: new Date(parseInt(values.birthYear), parseInt(values.birthMonth) - 1, parseInt(values.birthDay)),
+          email: values.email,
+          password: values.password,
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message || "Erreur lors de l'inscription");
+      if (!response.ok) {
+        throw new Error(data.message || "Erreur lors de l'inscription");
+      }
+
+      toast.success('Inscription réussie ! Vous allez recevoir un email de confirmation.');
+      form.reset();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-
-    toast.success("Inscription réussie ! Vous allez recevoir un email de confirmation.");
-    form.reset();
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
-    toast.error(errorMessage);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
 
   return (
     <>
       <Header activeItem="Connexion" />
-      
-      <section id="register-page" className="min-h-[100vh] bg-black flex flex-col items-center justify-center py-8 px-4 relative overflow-hidden">
+
+      <section
+        id="register-page"
+        className="min-h-[100vh] bg-black flex flex-col items-center justify-center py-8 px-4 relative overflow-hidden"
+      >
         {/* Background effect elements */}
         <div className="absolute bottom-0 left-0 w-full h-[300px] opacity-10 pointer-events-none">
           <div className="absolute bottom-10 left-10 transform rotate-12">
@@ -141,11 +143,14 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
             <Lightbulb className="w-[100px] h-[100px] text-red-500" />
           </div>
         </div>
-        
+
         {/* Minimal header */}
         <div id="minimal-header" className="w-full max-w-md mb-8">
           <div className="flex items-center justify-between">
-            <Link to="/connexion" className="text-red-500 hover:text-red-400 transition flex items-center cursor-pointer">
+            <Link
+              to="/connexion"
+              className="text-red-500 hover:text-red-400 transition flex items-center cursor-pointer"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               <span>Retour à la connexion</span>
             </Link>
@@ -154,9 +159,12 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
         </div>
 
         {/* Registration form card */}
-        <div id="register-card" className="w-full max-w-md bg-gray-900 rounded-lg shadow-2xl p-8 border border-gray-800">
+        <div
+          id="register-card"
+          className="w-full max-w-md bg-gray-900 rounded-lg shadow-2xl p-8 border border-gray-800"
+        >
           <h1 className="text-2xl font-bold text-white mb-6 text-center">Créez votre compte</h1>
-          
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Civility field */}
@@ -167,22 +175,28 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                   <FormItem className="space-y-3">
                     <FormLabel className="text-gray-300">Civilité</FormLabel>
                     <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex gap-6"
-                      >
+                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-6">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="M." id="monsieur" className="border-gray-700 text-red-500" />
-                          <label htmlFor="monsieur" className="text-white cursor-pointer">M.</label>
+                          <label htmlFor="monsieur" className="text-white cursor-pointer">
+                            M.
+                          </label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="Mme." id="madame" className="border-gray-700 text-red-500" />
-                          <label htmlFor="madame" className="text-white cursor-pointer">Mme.</label>
+                          <label htmlFor="madame" className="text-white cursor-pointer">
+                            Mme.
+                          </label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="Non-renseigné" id="non-renseigné" className="border-gray-700 text-red-500" />
-                          <label htmlFor="non-renseigné" className="text-white cursor-pointer">Non-renseigné</label>
+                          <RadioGroupItem
+                            value="Non-renseigné"
+                            id="non-renseigné"
+                            className="border-gray-700 text-red-500"
+                          />
+                          <label htmlFor="non-renseigné" className="text-white cursor-pointer">
+                            Non-renseigné
+                          </label>
                         </div>
                       </RadioGroup>
                     </FormControl>
@@ -190,7 +204,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                   </FormItem>
                 )}
               />
-              
+
               {/* First name & Last name fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -200,17 +214,17 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                     <FormItem>
                       <FormLabel className="text-gray-300">Prénom</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Votre prénom" 
+                        <Input
+                          placeholder="Votre prénom"
                           className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage className="text-red-400" />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="lastName"
@@ -218,10 +232,10 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                     <FormItem>
                       <FormLabel className="text-gray-300">Nom</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Votre nom" 
+                        <Input
+                          placeholder="Votre nom"
                           className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage className="text-red-400" />
@@ -229,7 +243,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                   )}
                 />
               </div>
-              
+
               {/* Birth date fields */}
               <div className="space-y-2">
                 <FormLabel className="text-gray-300">Date de naissance</FormLabel>
@@ -257,7 +271,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                       </FormItem>
                     )}
                   />
-                  
+
                   {/* Month */}
                   <FormField
                     control={form.control}
@@ -271,18 +285,18 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                           >
                             <option value="">Mois</option>
                             {[
-                              { value: "01", label: "Janvier" },
-                              { value: "02", label: "Février" },
-                              { value: "03", label: "Mars" },
-                              { value: "04", label: "Avril" },
-                              { value: "05", label: "Mai" },
-                              { value: "06", label: "Juin" },
-                              { value: "07", label: "Juillet" },
-                              { value: "08", label: "Août" },
-                              { value: "09", label: "Septembre" },
-                              { value: "10", label: "Octobre" },
-                              { value: "11", label: "Novembre" },
-                              { value: "12", label: "Décembre" }
+                              { value: '01', label: 'Janvier' },
+                              { value: '02', label: 'Février' },
+                              { value: '03', label: 'Mars' },
+                              { value: '04', label: 'Avril' },
+                              { value: '05', label: 'Mai' },
+                              { value: '06', label: 'Juin' },
+                              { value: '07', label: 'Juillet' },
+                              { value: '08', label: 'Août' },
+                              { value: '09', label: 'Septembre' },
+                              { value: '10', label: 'Octobre' },
+                              { value: '11', label: 'Novembre' },
+                              { value: '12', label: 'Décembre' },
                             ].map((month) => (
                               <option key={month.value} value={month.value}>
                                 {month.label}
@@ -294,7 +308,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                       </FormItem>
                     )}
                   />
-                  
+
                   {/* Year */}
                   <FormField
                     control={form.control}
@@ -328,11 +342,9 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                     )}
                   />
                 </div>
-                <p className="text-sm text-gray-400">
-                  Vous devez avoir au moins 15 ans pour vous inscrire
-                </p>
+                <p className="text-sm text-gray-400">Vous devez avoir au moins 15 ans pour vous inscrire</p>
               </div>
-              
+
               {/* Email field */}
               <FormField
                 control={form.control}
@@ -341,18 +353,18 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                   <FormItem>
                     <FormLabel className="text-gray-300">Email</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="votre@email.com" 
+                      <Input
+                        placeholder="votre@email.com"
                         type="email"
                         className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
-              
+
               {/* Password field */}
               <FormField
                 control={form.control}
@@ -362,9 +374,9 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                     <FormLabel className="text-gray-300">Mot de passe</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input 
-                          placeholder="••••••••" 
-                          type={showPassword ? "text" : "password"}
+                        <Input
+                          placeholder="••••••••"
+                          type={showPassword ? 'text' : 'password'}
                           autoComplete="new-password"
                           className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500 pr-10"
                           {...field}
@@ -377,39 +389,30 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                         <button
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => setShowPassword(v => !v)}
-                          aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                          onClick={() => setShowPassword((v) => !v)}
+                          aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                           aria-pressed={showPassword}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                         >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400" />
-                    
+
                     {/* Password strength indicator */}
                     {showPasswordStrength && field.value && (
                       <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
-                        <PasswordStrength 
-                          password={field.value} 
-                          confirmPassword={form.watch("confirmPassword")}
-                        />
+                        <PasswordStrength password={field.value} confirmPassword={form.watch('confirmPassword')} />
                       </div>
                     )}
-                    
+
                     {/* Password helper */}
-                    {showPasswordStrength && (
-                      <PasswordHelper />
-                    )}
+                    {showPasswordStrength && <PasswordHelper />}
                   </FormItem>
                 )}
               />
-              
+
               {/* Confirm Password field */}
               <FormField
                 control={form.control}
@@ -419,26 +422,26 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                     <FormLabel className="text-gray-300">Confirmer le mot de passe</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input 
-                          placeholder="••••••••" 
-                          type={showConfirmPassword ? "text" : "password"}
+                        <Input
+                          placeholder="••••••••"
+                          type={showConfirmPassword ? 'text' : 'password'}
                           autoComplete="new-password"
                           className="bg-gray-800 border border-gray-700 text-white focus:ring-red-500 pr-10"
-                          {...field} 
+                          {...field}
                         />
                         <button
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => setShowConfirmPassword(v => !v)}
-                          aria-label={showConfirmPassword ? "Masquer la confirmation du mot de passe" : "Afficher la confirmation du mot de passe"}
+                          onClick={() => setShowConfirmPassword((v) => !v)}
+                          aria-label={
+                            showConfirmPassword
+                              ? 'Masquer la confirmation du mot de passe'
+                              : 'Afficher la confirmation du mot de passe'
+                          }
                           aria-pressed={showConfirmPassword}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                         >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
                     </FormControl>
@@ -446,33 +449,51 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
                   </FormItem>
                 )}
               />
-              
+
               {/* Submit button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isLoading}
                 className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Inscription...
                   </span>
-                ) : 'Créer mon compte'}
+                ) : (
+                  'Créer mon compte'
+                )}
               </Button>
             </form>
           </Form>
-          
+
           {/* Divider */}
           <div className="flex items-center my-6">
             <div className="flex-grow h-px bg-gray-700"></div>
             <span className="px-3 text-sm text-gray-500">ou</span>
             <div className="flex-grow h-px bg-gray-700"></div>
           </div>
-          
+
           {/* Social signup options */}
           <div id="social-login" className="space-y-3">
             <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium transition-colors duration-200 flex items-center justify-center">
@@ -484,7 +505,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
               S'inscrire avec Facebook
             </Button>
           </div>
-          
+
           {/* Already have account */}
           <div className="mt-6 text-center text-gray-400">
             Vous avez déjà un compte ?{' '}
@@ -493,7 +514,7 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
             </Link>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div id="footer" className="mt-8 text-center text-sm text-gray-500">
           <div className="flex justify-center space-x-4 mb-2">

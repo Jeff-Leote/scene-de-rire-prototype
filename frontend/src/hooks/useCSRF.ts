@@ -20,12 +20,12 @@ export const useCSRF = () => {
   // Récupérer le token CSRF actuel
   const getToken = useCallback(() => {
     let token = getCSRFToken();
-    
+
     // Si pas de token ou token expiré, en générer un nouveau
     if (!token || !validateCSRFToken(token)) {
       token = generateToken();
     }
-    
+
     setCsrfToken(token);
     return token;
   }, [generateToken]);
@@ -52,9 +52,12 @@ export const useCSRF = () => {
   // Rafraîchir le token toutes les heures pour la sécurité
   useEffect(() => {
     if (isInitialized) {
-      const interval = setInterval(() => {
-        refreshToken();
-      }, 60 * 60 * 1000); // 1 heure
+      const interval = setInterval(
+        () => {
+          refreshToken();
+        },
+        60 * 60 * 1000
+      ); // 1 heure
 
       return () => clearInterval(interval);
     }
@@ -65,6 +68,6 @@ export const useCSRF = () => {
     getToken,
     validateToken,
     refreshToken,
-    isInitialized
+    isInitialized,
   };
 };

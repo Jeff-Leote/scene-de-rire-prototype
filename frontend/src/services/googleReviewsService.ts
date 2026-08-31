@@ -60,24 +60,26 @@ export class GoogleReviewsService {
       const reviewsData = data.reviews || [];
       console.log('Avis trouvés:', reviewsData.length);
       console.log('Format des avis:', reviewsData);
-      
+
       // Adapter le format des avis pour notre composant
       const adaptedReviews = reviewsData.map((review: any) => ({
         author_name: review.authorAttribution?.displayName || 'Anonyme',
         author_url: review.authorAttribution?.uri || '',
         profile_photo_url: review.authorAttribution?.photoUri || '',
         rating: review.rating || 0,
-        relative_time_description: review.publishTime ? 
-          new Date(review.publishTime).toLocaleDateString('fr-FR') : 'Récemment',
-        text: review.text?.text || review.text || ''
+        relative_time_description: review.publishTime
+          ? new Date(review.publishTime).toLocaleDateString('fr-FR')
+          : 'Récemment',
+        text: review.text?.text || review.text || '',
       }));
-      
+
       console.log('Avis adaptés:', adaptedReviews);
       return adaptedReviews.slice(0, maxReviews);
-
     } catch (error) {
       console.error('Erreur lors du chargement des avis:', error);
-      throw new Error(`Impossible de charger les avis Google: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      throw new Error(
+        `Impossible de charger les avis Google: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
+      );
     }
   }
 

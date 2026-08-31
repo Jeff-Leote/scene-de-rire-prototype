@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -9,49 +8,108 @@ const Footer = () => {
           <div>
             <div className="flex items-center mb-4">
               <Link to="/" className="flex items-center">
-                <img 
-                  src="/assets/img/logo-espace-comedie-lille.webp" 
-                  alt="L'Espace Comédie Lille" 
+                <img
+                  src="/assets/img/logo-espace-comedie-lille.webp"
+                  alt="L'Espace Comédie Lille"
                   className="h-12 w-auto max-w-none mr-4"
                 />
               </Link>
             </div>
-            <p className="text-gray-400 mb-4">La référence pour découvrir et réserver les meilleurs spectacles d'humour.</p>
+            <p className="text-gray-400 mb-4">
+              La référence pour découvrir et réserver les meilleurs spectacles d'humour.
+            </p>
             <div className="flex space-x-4">
-              <a href="https://share.google/wyNIUTlnM8Zr7oszq" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+              <a
+                href="https://share.google/wyNIUTlnM8Zr7oszq"
+                target="_blank"
+                rel="noreferrer"
+                className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer"
+              >
                 <i className="fa-brands fa-google text-xl"></i>
               </a>
-              <a href="https://www.facebook.com/share/1FYTKaxZrB/?mibextid=wwXIfr" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+              <a
+                href="https://www.facebook.com/share/1FYTKaxZrB/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noreferrer"
+                className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer"
+              >
                 <i className="fa-brands fa-facebook-f text-xl"></i>
               </a>
-              <a href="https://www.instagram.com/lespacecomedie?igsh=MTBrNXcydjZmYzhhaA==" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+              <a
+                href="https://www.instagram.com/lespacecomedie?igsh=MTBrNXcydjZmYzhhaA=="
+                target="_blank"
+                rel="noreferrer"
+                className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer"
+              >
                 <i className="fa-brands fa-instagram text-xl"></i>
               </a>
             </div>
           </div>
-          
+
           <div>
             <h3 className="text-lg font-bold mb-4 text-white">Navigation</h3>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Accueil</Link></li>
-              <li><Link to="/spectacles" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Spectacles</Link></li>
-              <li><Link to="/le-lieu" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Le lieu</Link></li>
-              <li><Link to="/cours" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Cours</Link></li>
-              <li><Link to="/contact" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Contact</Link></li>
-              <li><Link to="/connexion" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Connexion</Link></li>
+              <li>
+                <Link to="/" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+                  Accueil
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/spectacles"
+                  className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer"
+                >
+                  Spectacles
+                </Link>
+              </li>
+              <li>
+                <Link to="/le-lieu" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+                  Le lieu
+                </Link>
+              </li>
+              <li>
+                <Link to="/cours" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+                  Cours
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/connexion"
+                  className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer"
+                >
+                  Connexion
+                </Link>
+              </li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="text-lg font-bold mb-4 text:white">Informations</h3>
             <ul className="space-y-2">
-              <li><span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">FAQ</span></li>
-              <li><span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Mentions légales</span></li>
-              <li><span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">CGV</span></li>
-              <li><span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">Politique de confidentialité</span></li>
+              <li>
+                <span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">FAQ</span>
+              </li>
+              <li>
+                <span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+                  Mentions légales
+                </span>
+              </li>
+              <li>
+                <span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">CGV</span>
+              </li>
+              <li>
+                <span className="text-gray-400 hover:text-red-500 transition duration-300 cursor-pointer">
+                  Politique de confidentialité
+                </span>
+              </li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="text-lg font-bold mb-4 text-white">Contact</h3>
             <ul className="space-y-2">
@@ -74,16 +132,16 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm mb-4 md:mb-0">© 2025 L'Espace Comédie Lille. Tous droits réservés.</p>
             <div className="flex items-center space-x-6">
-                <img 
-                  src="/assets/img/logo-espace-comedie-lille.webp" 
-                  alt="L'Espace Comédie Lille" 
-                  className="h-4 w-auto max-w-none"
-                />
+              <img
+                src="/assets/img/logo-espace-comedie-lille.webp"
+                alt="L'Espace Comédie Lille"
+                className="h-4 w-auto max-w-none"
+              />
             </div>
           </div>
         </div>

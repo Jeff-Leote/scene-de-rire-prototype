@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   format,
@@ -14,8 +14,8 @@ import {
   isBefore,
   isSameMonth,
   parseISO,
-} from "date-fns";
-import { fr } from "date-fns/locale/fr";
+} from 'date-fns';
+import { fr } from 'date-fns/locale/fr';
 import { api } from '@/services/api';
 
 type Spectacle = {
@@ -33,10 +33,14 @@ const ShowsCalendar = () => {
     queryKey: ['spectacles', 'all'],
     queryFn: () => api.get<Spectacle[]>('/api/spectacles/all'),
     staleTime: 5 * 60 * 1000,
-    gcTime: 15 * 60 * 1000
+    gcTime: 15 * 60 * 1000,
   });
   const spectacles = Array.isArray(raw) ? raw : [];
-  const error = queryError ? (queryError instanceof Error ? queryError.message : "Erreur lors du chargement des spectacles") : null;
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'Erreur lors du chargement des spectacles'
+    : null;
 
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -69,8 +73,8 @@ const ShowsCalendar = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
 
-    const daysInMonth = Number(format(monthEnd, "d"));
-    const firstWeekday = ((Number(format(monthStart, "i")) + 6) % 7); // 0=Lun … 6=Dim (aligné sur notre header)
+    const daysInMonth = Number(format(monthEnd, 'd'));
+    const firstWeekday = (Number(format(monthStart, 'i')) + 6) % 7; // 0=Lun … 6=Dim (aligné sur notre header)
 
     const cells: JSX.Element[] = [];
 
@@ -89,49 +93,51 @@ const ShowsCalendar = () => {
       dateObj.setDate(d);
 
       const now = new Date();
-      const isPast = isBefore(dateObj, new Date(format(now, "yyyy-MM-dd")));
+      const isPast = isBefore(dateObj, new Date(format(now, 'yyyy-MM-dd')));
 
-      const spectaclesForDay = spectacles.filter((s) =>
-        isSameDay(parseISO(s.date_spectacle), dateObj)
-      );
-      const allExpired = spectaclesForDay.length > 0 && spectaclesForDay.every(s => isSpectacleExpired(s.date_spectacle, s.heure_spectacle));
+      const spectaclesForDay = spectacles.filter((s) => isSameDay(parseISO(s.date_spectacle), dateObj));
+      const allExpired =
+        spectaclesForDay.length > 0 &&
+        spectaclesForDay.every((s) => isSpectacleExpired(s.date_spectacle, s.heure_spectacle));
 
-      let classes = "text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded ";
-      if (isPast) classes += "text-gray-500 "; else classes += "text-white ";
+      let classes = 'text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded ';
+      if (isPast) classes += 'text-gray-500 ';
+      else classes += 'text-white ';
 
-      const content = (
+      const content =
         spectaclesForDay.length > 0 ? (
           <div className={`relative ${allExpired ? '' : 'group'}`}>
-            <div 
-              className={`${allExpired ? 'bg-gray-600' : 'bg-red-500'} text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 flex items-center justify-center mx-auto ${(!allExpired && spectaclesForDay.length === 1) ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform duration-200 text-[10px] sm:text-xs md:text-sm`}
-              onClick={() => { if (!allExpired) handleDateClick(spectaclesForDay); }}
+            <div
+              className={`${allExpired ? 'bg-gray-600' : 'bg-red-500'} text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 flex items-center justify-center mx-auto ${!allExpired && spectaclesForDay.length === 1 ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform duration-200 text-[10px] sm:text-xs md:text-sm`}
+              onClick={() => {
+                if (!allExpired) handleDateClick(spectaclesForDay);
+              }}
             >
               {d}
             </div>
             {!allExpired && (
-            <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] sm:text-xs p-2 sm:p-3 rounded whitespace-nowrap leading-5 sm:leading-6 min-w-max">
-              <div className="space-y-1 sm:space-y-2">
-                {spectaclesForDay.map((s, index) => (
-                  <div 
-                    key={index} 
-                    className="text-center cursor-pointer hover:bg-gray-700 p-1.5 sm:p-2 rounded transition-colors duration-200"
-                    onClick={(e) => handleSpectacleClick(s.id, e)}
-                  >
-                    <div className="font-semibold text-red-400 hover:text-red-300">{s.title}</div>
-                    <div className="text-gray-300">{formatHeure(s.heure_spectacle)}</div>
-                  </div>
-                ))}
+              <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] sm:text-xs p-2 sm:p-3 rounded whitespace-nowrap leading-5 sm:leading-6 min-w-max">
+                <div className="space-y-1 sm:space-y-2">
+                  {spectaclesForDay.map((s, index) => (
+                    <div
+                      key={index}
+                      className="text-center cursor-pointer hover:bg-gray-700 p-1.5 sm:p-2 rounded transition-colors duration-200"
+                      onClick={(e) => handleSpectacleClick(s.id, e)}
+                    >
+                      <div className="font-semibold text-red-400 hover:text-red-300">{s.title}</div>
+                      <div className="text-gray-300">{formatHeure(s.heure_spectacle)}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-center mt-1 sm:mt-2 text-gray-400 text-[10px] sm:text-xs">
+                  {spectaclesForDay.length > 1 ? 'Choisissez un spectacle ci-dessus' : 'Cliquez pour voir les détails'}
+                </div>
               </div>
-              <div className="text-center mt-1 sm:mt-2 text-gray-400 text-[10px] sm:text-xs">
-                {spectaclesForDay.length > 1 ? "Choisissez un spectacle ci-dessus" : "Cliquez pour voir les détails"}
-              </div>
-            </div>
             )}
           </div>
         ) : (
           <div className="text-[10px] sm:text-xs md:text-sm">{d}</div>
-        )
-      );
+        );
 
       cells.push(
         <div key={`day-${d}`} className={classes}>
@@ -143,7 +149,7 @@ const ShowsCalendar = () => {
     // Padding de fin pour compléter la dernière semaine
     const remainder = cells.length % 7;
     if (remainder !== 0) {
-      for (let i = 0; i < (7 - remainder); i += 1) {
+      for (let i = 0; i < 7 - remainder; i += 1) {
         cells.push(
           <div key={`pad-end-${i}`} className="text-center py-1 sm:py-2 md:py-3 px-1 sm:px-2 rounded text-gray-600">
             <div className="h-5 sm:h-6 md:h-8" />
@@ -167,9 +173,7 @@ const ShowsCalendar = () => {
 
   const renderHeader = () => (
     <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg md:text-xl text-white font-bold">
-        {format(currentDate, "LLLL yyyy", { locale: fr })}
-      </h3>
+      <h3 className="text-lg md:text-xl text-white font-bold">{format(currentDate, 'LLLL yyyy', { locale: fr })}</h3>
       <div className="flex space-x-2">
         <button
           onClick={prevMonth}
@@ -191,9 +195,7 @@ const ShowsCalendar = () => {
     return (
       <section id="calendrier-spectacles" className="py-16">
         <div className="container mx-auto px-6">
-          <div className="bg-red-500 text-white p-4 rounded-lg">
-            {error}
-          </div>
+          <div className="bg-red-500 text-white p-4 rounded-lg">{error}</div>
         </div>
       </section>
     );
@@ -202,16 +204,14 @@ const ShowsCalendar = () => {
   return (
     <section id="calendrier-spectacles" className="py-12 md:py-16 text-[11px] sm:text-[13px] md:text-base">
       <div className="container mx-auto px-4 md:px-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8">
-          Calendrier des spectacles
-        </h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8">Calendrier des spectacles</h2>
         <div className="bg-gray-900 rounded-xl p-3 sm:p-4 md:p-6 border border-gray-800 shadow-2xl">
           {renderHeader()}
 
           <div>
             <div>
               <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-3 mb-2 md:mb-3">
-                {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
+                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
                   <div
                     key={day}
                     className="text-center text-gray-500 text-[10px] sm:text-xs md:text-base font-semibold"

@@ -48,8 +48,8 @@ const queryClient = new QueryClient({
         },
         onError: (error, query) => {
           console.error(`❌ Query échouée: ${query.queryKey.join(' -> ')}`, error);
-        }
-      })
+        },
+      }),
     },
     mutations: {
       retry: 3,
@@ -58,9 +58,9 @@ const queryClient = new QueryClient({
         if (process.env.NODE_ENV === 'development') {
           console.log(`✅ Mutation réussie`);
         }
-      }
-    }
-  }
+      },
+    },
+  },
 });
 
 // Option B : hydratation synchrone du cache avec les données injectées côté serveur (avant premier rendu)
@@ -69,7 +69,7 @@ if (typeof window !== 'undefined' && window.__INITIAL_DATA__) {
   delete window.__INITIAL_DATA__;
 }
 
-class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }>{
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
@@ -88,8 +88,12 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
         <div className="min-h-screen bg-black text-white flex items-center justify-center p-8 text-center">
           <div>
             <div className="text-2xl font-bold mb-2">Une erreur est survenue</div>
-            <div className="text-gray-400 mb-6">Veuillez actualiser la page. Si le problème persiste, réessayez plus tard.</div>
-            <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => window.location.reload()}>Actualiser</button>
+            <div className="text-gray-400 mb-6">
+              Veuillez actualiser la page. Si le problème persiste, réessayez plus tard.
+            </div>
+            <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={() => window.location.reload()}>
+              Actualiser
+            </button>
           </div>
         </div>
       );
@@ -110,7 +114,9 @@ const AppContent = () => {
         const res = await fetch(`${API_URL}/api/settings/maintenance`, { credentials: 'include' });
         const data = await res.json();
         setMaintenance(Boolean(data?.maintenance_enabled));
-      } catch { /* empty */ }
+      } catch {
+        /* empty */
+      }
     };
     check();
   }, []);
@@ -132,8 +138,8 @@ const AppContent = () => {
             <Route path="/artistes" element={<Artists />} />
             <Route path="/connexion" element={<Login />} />
             <Route path="/inscription" element={<Register />} />
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute requireAuth requireAdmin>
                   <Dashboard />
@@ -151,22 +157,22 @@ const AppContent = () => {
 };
 
 const App = () => (
-    <AppErrorBoundary>
-      <AuthProvider>
-        <CSRFProvider>
-          <MaintenanceProvider>
-            <AutoLogout/>
-            <QueryClientProvider client={queryClient}>
-              <InitialDataHydrator />
-              <TooltipProvider>
-                <Sonner />
-                <AppContent />
-              </TooltipProvider>
-            </QueryClientProvider>
-          </MaintenanceProvider>
-        </CSRFProvider>
-      </AuthProvider>
-    </AppErrorBoundary>
+  <AppErrorBoundary>
+    <AuthProvider>
+      <CSRFProvider>
+        <MaintenanceProvider>
+          <AutoLogout />
+          <QueryClientProvider client={queryClient}>
+            <InitialDataHydrator />
+            <TooltipProvider>
+              <Sonner />
+              <AppContent />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </MaintenanceProvider>
+      </CSRFProvider>
+    </AuthProvider>
+  </AppErrorBoundary>
 );
 
 export default App;

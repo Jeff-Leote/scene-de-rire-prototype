@@ -10,17 +10,17 @@ describe('Email Service', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockSendMail = jest.fn();
     mockTransporter = {
       sendMail: mockSendMail,
-      verify: jest.fn().mockResolvedValue(true)
+      verify: jest.fn().mockResolvedValue(true),
     };
-    
+
     nodemailer.createTransport.mockReturnValue(mockTransporter);
     nodemailer.createTestAccount.mockResolvedValue({
       user: 'test@ethereal.email',
-      pass: 'testpass'
+      pass: 'testpass',
     });
   });
 
@@ -29,17 +29,13 @@ describe('Email Service', () => {
       process.env.SMTP_HOST = 'smtp.gmail.com';
       process.env.SMTP_USER = 'test@gmail.com';
       process.env.SMTP_PASS = 'testpass';
-      
+
       mockSendMail.mockResolvedValue({
         messageId: 'test-message-id',
-        response: 'OK'
+        response: 'OK',
       });
 
-      const result = await sendEmail(
-        'recipient@example.com',
-        'Test Subject',
-        'Test message'
-      );
+      const result = await sendEmail('recipient@example.com', 'Test Subject', 'Test message');
 
       expect(result.success).toBe(true);
       expect(result.messageId).toBe('test-message-id');
@@ -47,7 +43,7 @@ describe('Email Service', () => {
         expect.objectContaining({
           to: 'recipient@example.com',
           subject: 'Test Subject',
-          html: expect.stringContaining('Test message')
+          html: expect.stringContaining('Test message'),
         })
       );
     });
@@ -56,16 +52,12 @@ describe('Email Service', () => {
       delete process.env.SMTP_HOST;
       delete process.env.SMTP_USER;
       delete process.env.SMTP_PASS;
-      
+
       mockSendMail.mockResolvedValue({
-        messageId: 'test-message-id'
+        messageId: 'test-message-id',
       });
 
-      const result = await sendEmail(
-        'recipient@example.com',
-        'Test Subject',
-        'Test message'
-      );
+      const result = await sendEmail('recipient@example.com', 'Test Subject', 'Test message');
 
       expect(result.success).toBe(true);
       expect(nodemailer.createTestAccount).toHaveBeenCalled();
@@ -75,30 +67,24 @@ describe('Email Service', () => {
       process.env.SMTP_HOST = 'smtp.gmail.com';
       process.env.SMTP_USER = 'test@gmail.com';
       process.env.SMTP_PASS = 'testpass';
-      
+
       mockSendMail.mockRejectedValue(new Error('SMTP Error'));
 
-      await expect(sendEmail(
-        'recipient@example.com',
-        'Test Subject',
-        'Test message'
-      )).rejects.toThrow('SMTP Error');
+      await expect(sendEmail('recipient@example.com', 'Test Subject', 'Test message')).rejects.toThrow('SMTP Error');
     });
 
     it('should handle authentication errors specifically', async () => {
       process.env.SMTP_HOST = 'smtp.gmail.com';
       process.env.SMTP_USER = 'test@gmail.com';
       process.env.SMTP_PASS = 'testpass';
-      
+
       const authError = new Error('Authentication failed');
       authError.code = 'EAUTH';
       mockSendMail.mockRejectedValue(authError);
 
-      await expect(sendEmail(
-        'recipient@example.com',
-        'Test Subject',
-        'Test message'
-      )).rejects.toThrow('Erreur d\'authentification SMTP');
+      await expect(sendEmail('recipient@example.com', 'Test Subject', 'Test message')).rejects.toThrow(
+        "Erreur d'authentification SMTP"
+      );
     });
   });
 });

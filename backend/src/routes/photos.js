@@ -6,9 +6,7 @@ const { auth, isAdmin, router: _authRouter } = require('./auth');
 // Public: get all additional photos (up to 3)
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await db.query(
-      'SELECT id, image_path FROM photo_addictionnel ORDER BY id LIMIT 3'
-    );
+    const [rows] = await db.query('SELECT id, image_path FROM photo_addictionnel ORDER BY id LIMIT 3');
     res.json(rows);
   } catch (err) {
     console.error('Erreur récupération toutes photos additionnels:', err);
@@ -66,10 +64,10 @@ router.post('/admin', auth, isAdmin, async (req, res) => {
     if (!image_path) {
       return res.status(400).json({ error: 'image_path requis' });
     }
-    const [result] = await db.query(
-      'INSERT INTO photo_addictionnel (image_path, category_id) VALUES (?, ?)',
-      [image_path, category_id ?? null]
-    );
+    const [result] = await db.query('INSERT INTO photo_addictionnel (image_path, category_id) VALUES (?, ?)', [
+      image_path,
+      category_id ?? null,
+    ]);
     return res.json({ id: result.insertId, image_path, category_id: category_id ?? null });
   } catch (err) {
     console.error('Erreur admin création photo:', err);
@@ -84,7 +82,11 @@ router.put('/admin/:id', auth, isAdmin, async (req, res) => {
     const { image_path, category_id } = req.body || {};
     const [exists] = await db.query('SELECT id FROM photo_addictionnel WHERE id = ?', [id]);
     if (exists.length === 0) return res.status(404).json({ error: 'Photo non trouvée' });
-    await db.query('UPDATE photo_addictionnel SET image_path = ?, category_id = ? WHERE id = ?', [image_path, category_id ?? null, id]);
+    await db.query('UPDATE photo_addictionnel SET image_path = ?, category_id = ? WHERE id = ?', [
+      image_path,
+      category_id ?? null,
+      id,
+    ]);
     return res.json({ id: Number(id), image_path, category_id: category_id ?? null });
   } catch (err) {
     console.error('Erreur admin maj photo:', err);
@@ -107,5 +109,3 @@ router.delete('/admin/:id', auth, isAdmin, async (req, res) => {
 });
 
 module.exports = router;
-
-

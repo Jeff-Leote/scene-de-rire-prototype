@@ -10,8 +10,8 @@ const Cours = () => {
           <div className="container mx-auto px-6">
             <h1 className="text-3xl md:text-4xl font-bold mb-6">Cours</h1>
             <p className="text-gray-300 max-w-3xl">
-              Découvrez prochainement nos cours, ateliers et formations dédiés à l'humour et à la scène.
-              Cette page présentera les contenus, horaires et modalités d'inscription.
+              Découvrez prochainement nos cours, ateliers et formations dédiés à l'humour et à la scène. Cette page
+              présentera les contenus, horaires et modalités d'inscription.
             </p>
           </div>
         </section>
@@ -22,8 +22,3 @@ const Cours = () => {
 };
 
 export default Cours;
-
-
-
-
-

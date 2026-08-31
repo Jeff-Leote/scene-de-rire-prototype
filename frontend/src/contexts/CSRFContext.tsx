@@ -13,23 +13,19 @@ export const CSRFProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { csrfToken, isInitialized, refreshToken } = useCSRF();
 
   // Initialiser le token CSRF au démarrage de l'application
-                // useEffect(() => {
-              //   if (isInitialized && csrfToken) {
-              //     console.log('🔒 Token CSRF initialisé:', csrfToken.substring(0, 10) + '...');
-              //   }
-              // }, [isInitialized, csrfToken]);
+  // useEffect(() => {
+  //   if (isInitialized && csrfToken) {
+  //     console.log('🔒 Token CSRF initialisé:', csrfToken.substring(0, 10) + '...');
+  //   }
+  // }, [isInitialized, csrfToken]);
 
   const value: CSRFContextType = {
     csrfToken,
     isInitialized,
-    refreshToken
+    refreshToken,
   };
 
-  return (
-    <CSRFContext.Provider value={value}>
-      {children}
-    </CSRFContext.Provider>
-  );
+  return <CSRFContext.Provider value={value}>{children}</CSRFContext.Provider>;
 };
 
 export const useCSRFContext = (): CSRFContextType => {

@@ -4,7 +4,9 @@ const db = require('../db');
 const { auth, isAdmin } = require('./auth');
 const path = require('path');
 const fs = require('fs');
-let multer, sharp, { createClient } = require('@supabase/supabase-js'); // lazy require to avoid crash if not installed in some envs
+let multer,
+  sharp,
+  { createClient } = require('@supabase/supabase-js'); // lazy require to avoid crash if not installed in some envs
 
 // Middleware pour protéger toutes les routes admin
 router.use(auth, isAdmin);
@@ -26,75 +28,68 @@ if (multer && sharp) {
       const ok = /^image\/(png|jpeg|jpg|webp)$/i.test(file.mimetype);
       if (!ok) return cb(new Error('Type de fichier non autorisé'));
       cb(null, true);
-    }
+    },
   });
 
   router.post('/upload/spectacle-image', upload.single('file'), async (req, res) => {
     try {
       if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
-      
+
       console.log('📁 Upload spectacle → mimetype =', req.file.mimetype, '| size =', req.file.size);
-      
+
       // Configuration Supabase si en production
       const isProduction = process.env.NODE_ENV === 'production';
-      
+
       if (isProduction && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
         // === PRODUCTION: Upload vers Supabase Storage ===
         console.log('☁️ Upload vers Supabase Storage en production');
         console.log('🔧 SUPABASE_URL:', process.env.SUPABASE_URL);
         console.log('🔧 SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
-        
+
         // Initialiser le client Supabase
-        const supabase = createClient(
-          process.env.SUPABASE_URL,
-          process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
         // Construire un nom basé sur le nom original, sécurisé
         const original = (req.file.originalname || 'image').toString();
         const parsed = path.parse(original);
         const baseRaw = (parsed.name || 'image').toLowerCase();
-        const baseSanitized = baseRaw
-          .normalize('NFKD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9\s._-]/g, '')
-          .replace(/[\s]+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
+        const baseSanitized =
+          baseRaw
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s._-]/g, '')
+            .replace(/[\s]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
 
         // Convertir en WEBP avec Sharp
         const webpBuffer = await sharp(req.file.buffer).webp({ quality: 85 }).toBuffer();
-        
+
         // Nom du fichier simple (Supabase gère les collisions automatiquement)
         const fileName = `${baseSanitized}.webp`;
-        
+
         // Upload vers Supabase Storage
         console.log('📤 Upload vers Supabase - fileName:', fileName, '| buffer size:', webpBuffer.length);
-        const { data, error } = await supabase.storage
-          .from('spectacle')
-          .upload(fileName, webpBuffer, {
-            contentType: 'image/webp',
-            upsert: false
-          });
+        const { data, error } = await supabase.storage.from('spectacle').upload(fileName, webpBuffer, {
+          contentType: 'image/webp',
+          upsert: false,
+        });
 
         if (error) {
           console.error('❌ Erreur Supabase Storage:', error);
           console.error('❌ Détails erreur:', JSON.stringify(error, null, 2));
-          return res.status(500).json({ error: 'Erreur Supabase lors de l\'upload: ' + error.message });
+          return res.status(500).json({ error: "Erreur Supabase lors de l'upload: " + error.message });
         }
 
         // Récupérer l'URL publique
-        const { data: urlData } = supabase.storage
-          .from('spectacle')
-          .getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from('spectacle').getPublicUrl(fileName);
 
         console.log('✅ Upload Supabase réussi:', urlData.publicUrl);
         return res.json({ path: urlData.publicUrl });
-
       } else {
         // === DÉVELOPPEMENT: Upload local ===
         console.log('💻 Upload local en développement');
-        
+
         // Dossier monté par Docker: ./frontend/public/assets/img/spectacles -> /app/frontend_public_assets/spectacles
         const mountBase = process.env.FRONTEND_PUBLIC_MOUNT_DIR || '/app/frontend_public_assets';
         const frontendDir = path.join(mountBase, 'spectacles');
@@ -105,13 +100,14 @@ if (multer && sharp) {
         const original = (req.file.originalname || 'image').toString();
         const parsed = path.parse(original);
         const baseRaw = (parsed.name || 'image').toLowerCase();
-        const baseSanitized = baseRaw
-          .normalize('NFKD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9\s._-]/g, '')
-          .replace(/[\s]+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
+        const baseSanitized =
+          baseRaw
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s._-]/g, '')
+            .replace(/[\s]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
 
         let targetName = `${baseSanitized}.webp`;
         let targetAbs = path.join(frontendDir, targetName);
@@ -131,7 +127,7 @@ if (multer && sharp) {
       }
     } catch (error) {
       console.error('Erreur upload image:', error);
-      return res.status(500).json({ error: 'Erreur serveur lors de l\'upload' });
+      return res.status(500).json({ error: "Erreur serveur lors de l'upload" });
     }
   });
 }
@@ -146,75 +142,68 @@ if (multer && sharp) {
       const ok = /^image\/(png|jpeg|jpg|webp)$/i.test(file.mimetype);
       if (!ok) return cb(new Error('Type de fichier non autorisé'));
       cb(null, true);
-    }
+    },
   });
 
   router.post('/upload/artiste-image', uploadArtiste.single('file'), async (req, res) => {
     try {
       if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
-      
+
       console.log('📁 Upload artiste → mimetype =', req.file.mimetype, '| size =', req.file.size);
-      
+
       // Configuration Supabase si en production
       const isProduction = process.env.NODE_ENV === 'production';
-      
+
       if (isProduction && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
         // === PRODUCTION: Upload vers Supabase Storage ===
         console.log('☁️ Upload artiste vers Supabase Storage en production');
         console.log('🔧 SUPABASE_URL:', process.env.SUPABASE_URL);
         console.log('🔧 SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
-        
+
         // Initialiser le client Supabase
-        const supabase = createClient(
-          process.env.SUPABASE_URL,
-          process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
+        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
         // Construire un nom basé sur le nom original, sécurisé
         const original = (req.file.originalname || 'image').toString();
         const parsed = path.parse(original);
         const baseRaw = (parsed.name || 'image').toLowerCase();
-        const baseSanitized = baseRaw
-          .normalize('NFKD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9\s._-]/g, '')
-          .replace(/[\s]+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
+        const baseSanitized =
+          baseRaw
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s._-]/g, '')
+            .replace(/[\s]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
 
         // Convertir en WEBP avec Sharp
         const webpBuffer = await sharp(req.file.buffer).webp({ quality: 85 }).toBuffer();
-        
+
         // Nom du fichier simple (Supabase gère les collisions automatiquement)
         const fileName = `${baseSanitized}.webp`;
-        
+
         // Upload vers Supabase Storage
         console.log('📤 Upload artiste vers Supabase - fileName:', fileName, '| buffer size:', webpBuffer.length);
-        const { data, error } = await supabase.storage
-          .from('artiste')
-          .upload(fileName, webpBuffer, {
-            contentType: 'image/webp',
-            upsert: false
-          });
+        const { data, error } = await supabase.storage.from('artiste').upload(fileName, webpBuffer, {
+          contentType: 'image/webp',
+          upsert: false,
+        });
 
         if (error) {
           console.error('❌ Erreur Supabase Storage artiste:', error);
           console.error('❌ Détails erreur:', JSON.stringify(error, null, 2));
-          return res.status(500).json({ error: 'Erreur Supabase lors de l\'upload: ' + error.message });
+          return res.status(500).json({ error: "Erreur Supabase lors de l'upload: " + error.message });
         }
 
         // Récupérer l'URL publique
-        const { data: urlData } = supabase.storage
-          .from('artiste')
-          .getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from('artiste').getPublicUrl(fileName);
 
         console.log('✅ Upload artiste Supabase réussi:', urlData.publicUrl);
         return res.json({ path: urlData.publicUrl });
-
       } else {
         // === DÉVELOPPEMENT: Upload local ===
         console.log('💻 Upload artiste local en développement');
-        
+
         // Dossier monté par Docker: ./frontend/public/assets/img/photo_artiste -> /app/frontend_public_assets/photo_artiste
         const mountBase = process.env.FRONTEND_PUBLIC_MOUNT_DIR || '/app/frontend_public_assets';
         const frontendDir = path.join(mountBase, 'photo_artiste');
@@ -225,13 +214,14 @@ if (multer && sharp) {
         const original = (req.file.originalname || 'image').toString();
         const parsed = path.parse(original);
         const baseRaw = (parsed.name || 'image').toLowerCase();
-        const baseSanitized = baseRaw
-          .normalize('NFKD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9\s._-]/g, '')
-          .replace(/[\s]+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
+        const baseSanitized =
+          baseRaw
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s._-]/g, '')
+            .replace(/[\s]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^[-_.]+|[-_.]+$/g, '') || 'image';
 
         let targetName = `${baseSanitized}.webp`;
         let targetAbs = path.join(frontendDir, targetName);
@@ -251,20 +241,21 @@ if (multer && sharp) {
       }
     } catch (error) {
       console.error('Erreur upload image artiste:', error);
-      return res.status(500).json({ error: 'Erreur serveur lors de l\'upload' });
+      return res.status(500).json({ error: "Erreur serveur lors de l'upload" });
     }
   });
 }
-
 
 // ====== Paramètres (settings) ======
 // Récupérer l'email destinataire des messages contact
 router.get('/settings/contact-email', async (req, res) => {
   try {
-    await db.query("CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )");
+    await db.query(
+      'CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )'
+    );
     const [rows] = await db.query('SELECT `value` FROM settings WHERE `key` = ? LIMIT 1', ['contact_recipient_email']);
     const envFallback = process.env.CONTACT_RECIPIENT_EMAIL || process.env.FROM_EMAIL || process.env.SMTP_USER || '';
-    res.json({ email: (rows[0]?.value) || envFallback });
+    res.json({ email: rows[0]?.value || envFallback });
   } catch (error) {
     console.error('Erreur lecture contact-email:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -278,8 +269,13 @@ router.put('/settings/contact-email', async (req, res) => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Email invalide' });
     }
-    await db.query("CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )");
-    await db.query('INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)', ['contact_recipient_email', email]);
+    await db.query(
+      'CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )'
+    );
+    await db.query(
+      'INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+      ['contact_recipient_email', email]
+    );
     res.json({ email });
   } catch (error) {
     console.error('Erreur maj contact-email:', error);
@@ -292,8 +288,13 @@ router.put('/settings/maintenance', async (req, res) => {
   try {
     const { enabled } = req.body || {};
     const value = enabled ? '1' : '0';
-    await db.query("CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )");
-    await db.query('INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)', ['maintenance_enabled', value]);
+    await db.query(
+      'CREATE TABLE IF NOT EXISTS settings (\n      `key` VARCHAR(100) PRIMARY KEY,\n      `value` TEXT,\n      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n    )'
+    );
+    await db.query(
+      'INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+      ['maintenance_enabled', value]
+    );
     res.json({ maintenance_enabled: value === '1' });
   } catch (error) {
     console.error('Erreur maj maintenance:', error);
@@ -310,18 +311,19 @@ router.get('/spectacles', async (req, res) => {
     const offset = (page - 1) * limit;
 
     // Récupérer le total pour la pagination
-    const [countResult] = await db.query(
-      'SELECT COUNT(*) as total FROM spectacle'
-    );
+    const [countResult] = await db.query('SELECT COUNT(*) as total FROM spectacle');
     const total = countResult[0].total;
     const totalPages = Math.ceil(total / limit);
 
     // Requête avec pagination et limite de sécurité
-    const [spectacles] = await db.query(`
+    const [spectacles] = await db.query(
+      `
       SELECT * FROM spectacle 
       ORDER BY date_spectacle DESC, heure_spectacle DESC
       LIMIT ? OFFSET ?
-    `, [limit, offset]);
+    `,
+      [limit, offset]
+    );
 
     // Retourner les données avec pagination
     const result = {
@@ -332,8 +334,8 @@ router.get('/spectacles', async (req, res) => {
         total,
         totalPages,
         hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
+        hasPrevPage: page > 1,
+      },
     };
 
     res.json(result);
@@ -346,8 +348,6 @@ router.get('/spectacles', async (req, res) => {
 // Ajouter un nouveau spectacle
 router.post('/spectacles', async (req, res) => {
   try {
-
-    
     if (!req.body) {
       console.error('Admin - Corps de la requête manquant');
       return res.status(400).json({ error: 'Corps de la requête manquant' });
@@ -366,17 +366,13 @@ router.post('/spectacles', async (req, res) => {
           return res.status(400).json({ error: 'date_spectacle et heure_spectacle requis pour un ajout simple' });
         }
         const [result] = await db.query(
-            'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle || null]
+          'INSERT INTO spectacle (title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle || null]
         );
-      
-      const [newSpectacle] = await db.query(
-        'SELECT * FROM spectacle WHERE id = ?',
-        [result.insertId]
-      );
 
+        const [newSpectacle] = await db.query('SELECT * FROM spectacle WHERE id = ?', [result.insertId]);
 
-      return res.status(201).json(newSpectacle[0]);
+        return res.status(201).json(newSpectacle[0]);
       }
 
       // Récurrence hebdomadaire
@@ -398,13 +394,13 @@ router.post('/spectacles', async (req, res) => {
         d.setDate(d.getDate() + 7);
       }
       if (dates.length === 0) {
-        return res.status(400).json({ error: 'Aucune occurrence dans l\'intervalle' });
+        return res.status(400).json({ error: "Aucune occurrence dans l'intervalle" });
       }
-      const values = dates.map(dt => [
+      const values = dates.map((dt) => [
         title,
         img,
         description,
-        dt.toISOString().slice(0,10),
+        dt.toISOString().slice(0, 10),
         time.length === 'HH:mm'.length ? time + ':00' : time,
         lieu,
         lien_spectacle || null,
@@ -415,19 +411,19 @@ router.post('/spectacles', async (req, res) => {
       );
       return res.status(201).json({ success: true, inserted: values.length });
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du spectacle:', error);
-        res.status(500).json({ 
-          message: 'Erreur serveur',
-          details: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
-      }
+      console.error("Erreur lors de l'ajout du spectacle:", error);
+      res.status(500).json({
+        message: 'Erreur serveur',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      });
+    }
   } catch (error) {
     console.error('Erreur générale:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Erreur serveur',
       details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 });
@@ -448,16 +444,11 @@ router.put('/spectacles/:id', async (req, res) => {
       [title, img, description, date_spectacle, heure_spectacle, lieu, lien_spectacle || null, id]
     );
 
-    const [updatedSpectacle] = await db.query(
-      'SELECT * FROM spectacle WHERE id = ?',
-      [id]
-    );
+    const [updatedSpectacle] = await db.query('SELECT * FROM spectacle WHERE id = ?', [id]);
 
     if (updatedSpectacle.length === 0) {
-
       return res.status(404).json({ error: 'Spectacle non trouvé' });
     }
-
 
     res.json(updatedSpectacle[0]);
   } catch (error) {
@@ -472,11 +463,14 @@ router.delete('/spectacles/:id', async (req, res) => {
 
   try {
     // 1. Récupérer les informations du spectacle avant suppression
-    const [spectacleInfo] = await db.query(`
+    const [spectacleInfo] = await db.query(
+      `
       SELECT s.*
       FROM spectacle s 
       WHERE s.id = ?
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (spectacleInfo.length === 0) {
       return res.status(404).json({ error: 'Spectacle non trouvé' });
@@ -487,9 +481,9 @@ router.delete('/spectacles/:id', async (req, res) => {
     // 2. Supprimer uniquement le spectacle (pas d'appels à reservation/paiement)
     await db.query('DELETE FROM spectacle WHERE id = ?', [id]);
 
-    res.json({ 
+    res.json({
       message: 'Spectacle supprimé avec succès',
-      spectacleSupprime: spectacle.title
+      spectacleSupprime: spectacle.title,
     });
   } catch (error) {
     console.error('Erreur lors de la suppression du spectacle:', error);
@@ -522,10 +516,7 @@ router.put('/artistes/:id', async (req, res) => {
   }
 
   try {
-    await db.query(
-      'UPDATE artiste SET name = ?, photo = ? WHERE id = ?',
-      [name, photo, id]
-    );
+    await db.query('UPDATE artiste SET name = ?, photo = ? WHERE id = ?', [name, photo, id]);
 
     const [updatedArtist] = await db.query(
       `SELECT a.*, 0 as upcoming_shows
@@ -539,7 +530,7 @@ router.put('/artistes/:id', async (req, res) => {
     }
     res.json(updatedArtist[0]);
   } catch (error) {
-    console.error('Erreur lors de la modification de l\'artiste:', error);
+    console.error("Erreur lors de la modification de l'artiste:", error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
@@ -548,24 +539,23 @@ router.put('/artistes/:id', async (req, res) => {
 router.delete('/artistes/:id', async (req, res) => {
   const { id } = req.params;
 
-
   try {
     // Vérifier si l'artiste existe
     const [artiste] = await db.query('SELECT id FROM artiste WHERE id = ?', [id]);
     if (artiste.length === 0) {
-      return res.status(404).json({ 
-        error: 'Artiste non trouvé' 
+      return res.status(404).json({
+        error: 'Artiste non trouvé',
       });
     }
 
     const [result] = await db.query('DELETE FROM artiste WHERE id = ?', [id]);
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Artiste non trouvé' });
     }
     res.json({ message: 'Artiste supprimé avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'artiste:', error);
+    console.error("Erreur lors de la suppression de l'artiste:", error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
@@ -585,12 +575,9 @@ router.post('/artiste', async (req, res) => {
     console.log('🔍 Vérification structure table artiste...');
     const [tableInfo] = await db.query('DESCRIBE artiste');
     console.log('📋 Structure table artiste:', tableInfo);
-    
+
     console.log('📝 Insertion artiste en base...');
-    const [result] = await db.query(
-      'INSERT INTO artiste (name, photo) VALUES (?, ?)',
-      [name, photo]
-    );
+    const [result] = await db.query('INSERT INTO artiste (name, photo) VALUES (?, ?)', [name, photo]);
 
     console.log('✅ Insertion réussie - ID:', result.insertId);
 
@@ -604,7 +591,7 @@ router.post('/artiste', async (req, res) => {
     console.log('📋 Artiste récupéré:', newArtist[0]);
     res.status(201).json(newArtist[0]);
   } catch (error) {
-    console.error('❌ Erreur détaillée lors de l\'ajout de l\'artiste:', error);
+    console.error("❌ Erreur détaillée lors de l'ajout de l'artiste:", error);
     console.error('❌ Code erreur:', error.code);
     console.error('❌ Message erreur:', error.message);
     console.error('❌ SQL State:', error.sqlState);
@@ -624,25 +611,25 @@ router.get('/featured', async (req, res) => {
       LIMIT 1
     `);
     if (rows.length === 0) {
-      return res.status(404).json({ error: "Aucun spectacle à venir" });
+      return res.status(404).json({ error: 'Aucun spectacle à venir' });
     }
     const spectacle = rows[0];
     const response = {
       id: 1,
       name: "Artiste à l'affiche",
-      photo: "default-artist.jpg",
-      biographie: "Artiste en vedette pour ce spectacle",
+      photo: 'default-artist.jpg',
+      biographie: 'Artiste en vedette pour ce spectacle',
       next_show: {
         id: spectacle.next_show_id,
         title: spectacle.next_show_title,
         date: spectacle.next_show_date,
-        time: spectacle.next_show_time
-      }
+        time: spectacle.next_show_time,
+      },
     };
     res.json(response);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'artiste à l'affiche:", error);
-    res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 
@@ -688,19 +675,19 @@ router.delete('/users/:id', async (req, res) => {
     // Vérifier que l'utilisateur n'a pas de réservations
     const [reservations] = await db.query('SELECT id FROM reservation WHERE user_id = ?', [id]);
     if (reservations.length > 0) {
-      return res.status(400).json({ 
-        error: 'Impossible de supprimer cet utilisateur car il a des réservations associées' 
+      return res.status(400).json({
+        error: 'Impossible de supprimer cet utilisateur car il a des réservations associées',
       });
     }
 
     const [result] = await db.query('DELETE FROM user WHERE id = ?', [id]);
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
     res.json({ message: 'Utilisateur supprimé avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    console.error("Erreur lors de la suppression de l'utilisateur:", error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
@@ -724,9 +711,9 @@ router.put('/users/:id/status', async (req, res) => {
     await db.query('UPDATE user SET isActive = ? WHERE id = ?', [isActive, id]);
     res.json({ message: `Utilisateur ${isActive ? 'activé' : 'suspendu'} avec succès` });
   } catch (error) {
-    console.error('Erreur lors du changement de statut de l\'utilisateur:', error);
+    console.error("Erreur lors du changement de statut de l'utilisateur:", error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 
-module.exports = router; 
+module.exports = router;

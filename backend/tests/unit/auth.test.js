@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 // Mock de la base de données
 const mockDb = {
-  query: jest.fn()
+  query: jest.fn(),
 };
 
 // Mock des modules
@@ -22,9 +22,7 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/login', () => {
     it('should return 400 if email or password is missing', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({});
+      const response = await request(app).post('/api/auth/login').send({});
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Email et mot de passe requis.');
@@ -33,12 +31,10 @@ describe('Auth Routes', () => {
     it('should return 401 if user not found', async () => {
       mockDb.query.mockResolvedValueOnce([[]]);
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'password123'
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'password123',
+      });
 
       expect(response.status).toBe(401);
       expect(response.body.error).toBe('Email ou mot de passe incorrect.');
@@ -46,22 +42,22 @@ describe('Auth Routes', () => {
 
     it('should return 401 if password is incorrect', async () => {
       const hashedPassword = await bcrypt.hash('correctpassword', 10);
-      mockDb.query.mockResolvedValueOnce([[
-        {
-          id: 1,
-          email: 'test@example.com',
-          password: hashedPassword,
-          role: 'utilisateur'
-        }
-      ]]);
+      mockDb.query.mockResolvedValueOnce([
+        [
+          {
+            id: 1,
+            email: 'test@example.com',
+            password: hashedPassword,
+            role: 'utilisateur',
+          },
+        ],
+      ]);
       bcrypt.compare.mockResolvedValueOnce(false);
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'wrongpassword'
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'wrongpassword',
+      });
 
       expect(response.status).toBe(401);
       expect(response.body.error).toBe('Email ou mot de passe incorrect.');
@@ -76,19 +72,17 @@ describe('Auth Routes', () => {
         civility: 'M',
         prenom: 'John',
         nom: 'Doe',
-        role: 'utilisateur'
+        role: 'utilisateur',
       };
 
       mockDb.query.mockResolvedValueOnce([[mockUser]]);
       bcrypt.compare.mockResolvedValueOnce(true);
       jwt.sign.mockReturnValueOnce('mock.jwt.token');
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'correctpassword'
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'correctpassword',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.token).toBe('mock.jwt.token');
@@ -99,12 +93,10 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/register', () => {
     it('should return 400 if required fields are missing', async () => {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          email: 'test@example.com',
-          password: 'password123'
-        });
+      const response = await request(app).post('/api/auth/register').send({
+        email: 'test@example.com',
+        password: 'password123',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Tous les champs sont requis.');
@@ -113,16 +105,14 @@ describe('Auth Routes', () => {
     it('should return 400 if email already exists', async () => {
       mockDb.query.mockResolvedValueOnce([[{ id: 1 }]]);
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          civility: 'M',
-          firstName: 'John',
-          lastName: 'Doe',
-          birthDate: '1990-01-01',
-          email: 'existing@example.com',
-          password: 'password123'
-        });
+      const response = await request(app).post('/api/auth/register').send({
+        civility: 'M',
+        firstName: 'John',
+        lastName: 'Doe',
+        birthDate: '1990-01-01',
+        email: 'existing@example.com',
+        password: 'password123',
+      });
 
       expect(response.status).toBe(409);
       expect(response.body.error).toBe('Email déjà utilisé.');
@@ -136,16 +126,14 @@ describe('Auth Routes', () => {
 
       bcrypt.hash.mockResolvedValueOnce('hashedpassword');
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          civility: 'M',
-          firstName: 'John',
-          lastName: 'Doe',
-          birthDate: '1990-01-01',
-          email: 'test@example.com',
-          password: 'password123'
-        });
+      const response = await request(app).post('/api/auth/register').send({
+        civility: 'M',
+        firstName: 'John',
+        lastName: 'Doe',
+        birthDate: '1990-01-01',
+        email: 'test@example.com',
+        password: 'password123',
+      });
 
       expect(response.status).toBe(201);
       expect(response.body.message).toBe('Utilisateur créé avec succès 🎉');

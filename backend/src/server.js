@@ -1,29 +1,29 @@
 //server.js
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const hpp = require("hpp");
-const xss = require("xss-clean");
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const hpp = require('hpp');
+const xss = require('xss-clean');
 
 // Import conditionnel des routes (seulement si DB disponible)
 let routes;
 try {
-  routes = require("./routes");
+  routes = require('./routes');
 } catch (error) {
-  console.log("⚠️ Routes non chargées - Base de données non disponible");
+  console.log('⚠️ Routes non chargées - Base de données non disponible');
   routes = null;
 }
 
 // Import des middlewares de sécurité optimisés
-const { 
-  createRateLimiters, 
-  sanitizeInput, 
-  helmetConfig, 
-  csrfProtection, 
-  securityLogger 
-} = require("./middleware/security");
+const {
+  createRateLimiters,
+  sanitizeInput,
+  helmetConfig,
+  csrfProtection,
+  securityLogger,
+} = require('./middleware/security');
 
-const { validateSqlQuery } = require("./utils/sqlProtection");
+const { validateSqlQuery } = require('./utils/sqlProtection');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,14 +32,14 @@ const PORT = process.env.PORT || 5000;
 const rateLimiters = createRateLimiters();
 
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://scene-de-rire-prototype.onrender.com",
-  "https://scene-de-rire-prototype-1.onrender.com",
-  "https://espacecomedie.fr",
-  "https://www.espacecomedie.fr",
+  'http://localhost:5173',
+  'https://scene-de-rire-prototype.onrender.com',
+  'https://scene-de-rire-prototype-1.onrender.com',
+  'https://espacecomedie.fr',
+  'https://www.espacecomedie.fr',
   // 🔧 DOMAINES ADDITIONNELS POUR LA PRODUCTION
-  "https://espacecomedie.com",
-  "https://www.espacecomedie.com"
+  'https://espacecomedie.com',
+  'https://www.espacecomedie.com',
 ];
 
 // ====== MIDDLEWARES DE SÉCURITÉ OPTIMISÉS ======
@@ -49,73 +49,71 @@ app.use(helmetConfig);
 
 // 2. CORS - Contrôle d'accès cross-origin (PRODUCTION)
 const isProd = process.env.NODE_ENV === 'production';
-app.use(cors({
-  origin: function(origin, callback){
-    if (!isProd) {
-      console.log(`🌍 CORS - Origine demandée: ${origin}`);
-    }
-    if (!origin) {
-      if (!isProd) console.log('✅ CORS - Pas d\'origine (requête locale)');
-      return callback(null, true);
-    }
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      if (!isProd) console.log(`✅ CORS - Origine autorisée: ${origin}`);
-      return callback(null, true);
-    }
-    const isSubdomain = allowedOrigins.some(allowed => {
-      if (allowed.includes('espacecomedie')) {
-        return origin.includes('espacecomedie');
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!isProd) {
+        console.log(`🌍 CORS - Origine demandée: ${origin}`);
       }
-      return false;
-    });
-    if (isSubdomain) {
-      if (!isProd) console.log(`✅ CORS - Sous-domaine autorisé: ${origin}`);
-      return callback(null, true);
-    }
-    if (!isProd) {
-      console.warn(`❌ CORS - Origine non autorisée: ${origin}`);
-      console.log(`📋 Origines autorisées:`, allowedOrigins);
-    }
-    const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
-    return callback(new Error(msg), false);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With', 
-    'X-CSRF-Token',
-    'Origin',
-    'Accept'
-  ],
-  // 🔧 OPTIONS POUR LA PRODUCTION
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-}));
+      if (!origin) {
+        if (!isProd) console.log("✅ CORS - Pas d'origine (requête locale)");
+        return callback(null, true);
+      }
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        if (!isProd) console.log(`✅ CORS - Origine autorisée: ${origin}`);
+        return callback(null, true);
+      }
+      const isSubdomain = allowedOrigins.some((allowed) => {
+        if (allowed.includes('espacecomedie')) {
+          return origin.includes('espacecomedie');
+        }
+        return false;
+      });
+      if (isSubdomain) {
+        if (!isProd) console.log(`✅ CORS - Sous-domaine autorisé: ${origin}`);
+        return callback(null, true);
+      }
+      if (!isProd) {
+        console.warn(`❌ CORS - Origine non autorisée: ${origin}`);
+        console.log(`📋 Origines autorisées:`, allowedOrigins);
+      }
+      const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS.`;
+      return callback(new Error(msg), false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'Origin', 'Accept'],
+    // 🔧 OPTIONS POUR LA PRODUCTION
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
 
 // 3. Rate limiters optimisés pour la production
 app.use(rateLimiters.publicRoutes); // ULTRA-PERMISSIF pour les routes publiques
-app.use(rateLimiters.general);      // Général pour les autres routes
+app.use(rateLimiters.general); // Général pour les autres routes
 
 // 🔧 MIDDLEWARE CORS DE FALLBACK POUR LA PRODUCTION
 app.use((req, res, next) => {
   // Ajouter les headers CORS manquants si nécessaire
   const origin = req.headers.origin;
-  
+
   if (origin && (origin.includes('espacecomedie') || origin.includes('localhost'))) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token, Origin, Accept');
+    res.header(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Requested-With, X-CSRF-Token, Origin, Accept'
+    );
   }
-  
+
   // Gérer les requêtes OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return;
   }
-  
+
   next();
 });
 
@@ -141,20 +139,21 @@ app.use(securityLogger);
 // 🔧 MIDDLEWARE DE PERFORMANCE ET MONITORING
 app.use((req, res, next) => {
   const start = Date.now();
-  
+
   // Log minimal en production pour éviter le spam
   if (process.env.NODE_ENV !== 'production') {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   }
-  
+
   // Monitoring des temps de réponse
   res.on('finish', () => {
     const duration = Date.now() - start;
-    if (duration > 1000) { // Log seulement les requêtes lentes (>1s)
+    if (duration > 1000) {
+      // Log seulement les requêtes lentes (>1s)
       console.warn(`⚠️ Requête lente: ${req.method} ${req.url} - ${duration}ms`);
     }
   });
-  
+
   next();
 });
 
@@ -169,8 +168,8 @@ if (process.env.NODE_ENV !== 'production') {
       rateLimitInfo: {
         remaining: req.headers['x-ratelimit-remaining'],
         reset: req.headers['x-ratelimit-reset'],
-        limit: req.headers['x-ratelimit-limit']
-      }
+        limit: req.headers['x-ratelimit-limit'],
+      },
     });
   });
 }
@@ -178,14 +177,14 @@ if (process.env.NODE_ENV !== 'production') {
 // 🔧 Endpoint de santé pour vérifier la DB et les performances
 app.get('/api/health', async (req, res) => {
   const startTime = Date.now();
-  
+
   try {
     // Test de la base de données
     const db = require('./db');
     await db.query('SELECT 1 as health_check');
-    
+
     const duration = Date.now() - startTime;
-    
+
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -195,19 +194,18 @@ app.get('/api/health', async (req, res) => {
       uptime: process.uptime(),
       memory: {
         used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
-      }
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      },
     });
-    
   } catch (error) {
     const duration = Date.now() - startTime;
-    
+
     res.status(500).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
       database: 'disconnected',
       error: error.message,
-      responseTime: `${duration}ms`
+      responseTime: `${duration}ms`,
     });
   }
 });
@@ -216,66 +214,64 @@ app.get('/api/health', async (req, res) => {
 // Utilisation conditionnelle des routes
 if (routes) {
   // Protection CSRF pour les routes API seulement
-  app.use("/api", csrfProtection);
-  app.use("/api", routes);
-  
+  app.use('/api', csrfProtection);
+  app.use('/api', routes);
+
   // Route d'optimisation d'images
   try {
-    const imageOptimizationRoutes = require("./routes/imageOptimization");
-    app.use("/api/images", imageOptimizationRoutes);
+    const imageOptimizationRoutes = require('./routes/imageOptimization');
+    app.use('/api/images', imageOptimizationRoutes);
     console.log("✅ Routes d'optimisation d'images chargées");
   } catch (error) {
     console.log("⚠️ Routes d'optimisation d'images non disponibles:", error.message);
   }
-  
-  
 } else {
   // Routes de fallback sans base de données
-  app.get("/api/health", (req, res) => {
+  app.get('/api/health', (req, res) => {
     res.json({
-      status: "healthy",
+      status: 'healthy',
       timestamp: new Date().toISOString(),
-      database: "not_connected",
-      message: "Serveur fonctionnel sans base de données"
+      database: 'not_connected',
+      message: 'Serveur fonctionnel sans base de données',
     });
   });
-  
-  app.get("/api/spectacles", (req, res) => {
+
+  app.get('/api/spectacles', (req, res) => {
     res.json({
       spectacles: [],
-      pagination: { total: 0 }
+      pagination: { total: 0 },
     });
   });
-  
-  app.get("/api/artistes", (req, res) => {
+
+  app.get('/api/artistes', (req, res) => {
     res.json([]);
   });
-  
-  app.get("/api/artistes/featured", (req, res) => {
+
+  app.get('/api/artistes/featured', (req, res) => {
     res.json({
       id: 1,
-      name: "Aucun artiste",
-      photo: ""
+      name: 'Aucun artiste',
+      photo: '',
     });
   });
-  
-  app.get("/api/lieu/images", (req, res) => {
+
+  app.get('/api/lieu/images', (req, res) => {
     res.json([]);
   });
-  
-  app.get("/api/lieu/images/main", (req, res) => {
+
+  app.get('/api/lieu/images/main', (req, res) => {
     res.json({
       id: 1,
-      image_path: "",
-      description: "Aucune image configurée"
+      image_path: '',
+      description: 'Aucune image configurée',
     });
   });
-  
-  app.get("/api/spectacles/upcoming", (req, res) => {
+
+  app.get('/api/spectacles/upcoming', (req, res) => {
     res.json([]);
   });
-  
-  app.get("/api/spectacles/all", (req, res) => {
+
+  app.get('/api/spectacles/all', (req, res) => {
     res.json([]);
   });
 }
@@ -306,7 +302,7 @@ app.get('/robots.txt', async (req, res) => {
       'Disallow: /dashboard',
       'Disallow: /connexion?redirect=*',
       '',
-      `Sitemap: ${baseUrl}/sitemap.xml`
+      `Sitemap: ${baseUrl}/sitemap.xml`,
     ];
 
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -324,15 +320,7 @@ app.get('/sitemap.xml', async (req, res) => {
     const baseUrl = `${protocol}://${host}`;
 
     // Routes statiques publiques
-    const staticRoutes = [
-      '/',
-      '/spectacles',
-      '/le-lieu',
-      '/artistes',
-      '/contact',
-      '/connexion',
-      '/inscription'
-    ];
+    const staticRoutes = ['/', '/spectacles', '/le-lieu', '/artistes', '/contact', '/connexion', '/inscription'];
 
     // Récupération des spectacles pour générer les URLs dynamiques /spectacles/:id
     let dynamicRoutes = [];
@@ -344,9 +332,9 @@ app.get('/sitemap.xml', async (req, res) => {
         ORDER BY date_spectacle DESC
         LIMIT 500
       `);
-      dynamicRoutes = rows.map(r => ({
+      dynamicRoutes = rows.map((r) => ({
         loc: `/spectacles/${r.id}`,
-        lastmod: r.date_spectacle ? new Date(r.date_spectacle).toISOString().split('T')[0] : undefined
+        lastmod: r.date_spectacle ? new Date(r.date_spectacle).toISOString().split('T')[0] : undefined,
       }));
     } catch (err) {
       console.warn('⚠️ Sitemap: impossible de charger les spectacles depuis la DB:', err.message);
@@ -354,21 +342,24 @@ app.get('/sitemap.xml', async (req, res) => {
 
     const urls = [
       // Statiques
-      ...staticRoutes.map(path => ({ loc: path })),
+      ...staticRoutes.map((path) => ({ loc: path })),
       // Dynamiques
-      ...dynamicRoutes
+      ...dynamicRoutes,
     ];
 
-    const urlset = urls.map(u => {
-      const loc = `${baseUrl}${u.loc}`;
-      const lastmodTag = u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : '';
-      // Priorités simples: page d'accueil > sections > détails
-      const priority = u.loc === '/' ? '1.0' : (u.loc.startsWith('/spectacles/') ? '0.6' : '0.8');
-      const changefreq = u.loc === '/' ? 'daily' : (u.loc.startsWith('/spectacles/') ? 'weekly' : 'weekly');
-      return `<url><loc>${loc}</loc>${lastmodTag}<changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
-    }).join('');
+    const urlset = urls
+      .map((u) => {
+        const loc = `${baseUrl}${u.loc}`;
+        const lastmodTag = u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : '';
+        // Priorités simples: page d'accueil > sections > détails
+        const priority = u.loc === '/' ? '1.0' : u.loc.startsWith('/spectacles/') ? '0.6' : '0.8';
+        const changefreq = u.loc === '/' ? 'daily' : u.loc.startsWith('/spectacles/') ? 'weekly' : 'weekly';
+        return `<url><loc>${loc}</loc>${lastmodTag}<changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+      })
+      .join('');
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    const xml =
+      `<?xml version="1.0" encoding="UTF-8"?>\n` +
       `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urlset}</urlset>`;
 
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
@@ -432,63 +423,65 @@ app.get('*', (req, res) => {
 // Gestion des erreurs optimisée
 app.use((err, req, res, next) => {
   console.error('❌ Erreur serveur:', err);
-  
+
   // En production, ne pas exposer les détails d'erreur
-  const errorMessage = process.env.NODE_ENV === 'production' 
-    ? 'Erreur interne du serveur' 
-    : err.message;
-  
-  res.status(err.status || 500).json({ 
+  const errorMessage = process.env.NODE_ENV === 'production' ? 'Erreur interne du serveur' : err.message;
+
+  res.status(err.status || 500).json({
     error: errorMessage,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
   });
 });
 
 // 🚀 OPTIMISATIONS POUR RAILWAY - PERFORMANCE MAXIMALE
 if (process.env.NODE_ENV === 'production') {
   console.log('🚀 MODE PRODUCTION DÉTECTÉ - Keep-alive activé');
-  
+
   // Keep-alive ULTRA-AGRESSIF pour éviter la mise en veille Railway
   setInterval(() => {
     const timestamp = new Date().toISOString();
     console.log('🔄 RAILWAY KEEP-ALIVE PING -', timestamp);
     console.log('📊 Mémoire utilisée:', Math.round(process.memoryUsage().heapUsed / 1024 / 1024), 'MB');
-    
+
     // Vérification de la base de données
     const db = require('./db');
     db.query('SELECT 1 as health_check')
       .then(() => {
         console.log('✅ RAILWAY DB PING RÉUSSI -', timestamp);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('❌ RAILWAY DB PING ÉCHOUÉ -', err.message, '-', timestamp);
       });
-      
   }, 30 * 1000); // Toutes les 30 secondes (ULTRA-AGRESSIF pour Railway)
-  
+
   // Ping externe pour maintenir l'instance active
   setInterval(() => {
     const https = require('https');
     const url = process.env.RAILWAY_PUBLIC_DOMAIN || 'https://scene-de-rire-prototype.onrender.com';
     const timestamp = new Date().toISOString();
-    
+
     console.log('🌐 RAILWAY PING EXTERNE DÉMARRÉ -', timestamp);
-    
-    https.get(`${url}/api/health`, (res) => {
-      console.log('✅ RAILWAY PING EXTERNE RÉUSSI -', res.statusCode, '-', timestamp);
-    }).on('error', (err) => {
-      console.error('❌ RAILWAY PING EXTERNE ÉCHOUÉ -', err.message, '-', timestamp);
-    });
+
+    https
+      .get(`${url}/api/health`, (res) => {
+        console.log('✅ RAILWAY PING EXTERNE RÉUSSI -', res.statusCode, '-', timestamp);
+      })
+      .on('error', (err) => {
+        console.error('❌ RAILWAY PING EXTERNE ÉCHOUÉ -', err.message, '-', timestamp);
+      });
   }, 45 * 1000); // Toutes les 45 secondes
-  
+
   // Optimisation de la mémoire
-  setInterval(() => {
-    if (global.gc) {
-      global.gc();
-      console.log('🧹 RAILWAY GARBAGE COLLECTION -', new Date().toISOString());
-    }
-  }, 60 * 60 * 1000); // Toutes les 60 minutes
-  
+  setInterval(
+    () => {
+      if (global.gc) {
+        global.gc();
+        console.log('🧹 RAILWAY GARBAGE COLLECTION -', new Date().toISOString());
+      }
+    },
+    60 * 60 * 1000
+  ); // Toutes les 60 minutes
+
   console.log('✅ RAILWAY KEEP-ALIVE SYSTÈME ACTIVÉ - Ping toutes les 30s');
 } else {
   console.log('🔧 MODE DÉVELOPPEMENT - Keep-alive désactivé');
@@ -501,7 +494,7 @@ if (require.main === module) {
     console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
     console.log(`⏰ Heure de démarrage: ${new Date().toISOString()}`);
     if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-      console.warn('⚠️ Production: JWT_SECRET n\'est pas défini — l\'authentification admin renverra 503.');
+      console.warn("⚠️ Production: JWT_SECRET n'est pas défini — l'authentification admin renverra 503.");
     }
   });
 }
