@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  civility      String
+  nom           String
+  prenom        String
+  email         String    @unique
+  password      String
+  dateNaissance DateTime  @map("date_naissance") @db.Date
+  role          String    @default("utilisateur") // admin | utilisateur
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastLogin     DateTime? @map("last_login")
+  avis          Avis[]
+
+  @@map("user")
+}
+
+model Artiste {
+  id        Int      @id @default(autoincrement())
+  name      String
+  photo     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("artiste")
+}
+
+model CategorieSpectacle {
+  id                   Int                  @id @default(autoincrement())
+  code                 String               @unique
+  label                String
+  spectacles           Spectacle[]
+  photosAdditionnelles PhotoAdditionnelle[]
+
+  @@map("category_spectacle")
+}
+
+model Spectacle {
+  id             Int                 @id @default(autoincrement())
+  title          String
+  img            String
+  description    String
+  dateSpectacle  DateTime            @map("date_spectacle") @db.Date
+  heureSpectacle DateTime            @map("heure_spectacle") @db.Time
+  lieu           String
+  lienSpectacle  String?             @map("lien_spectacle")
+  categoryId     Int?                @map("category_id")
+  category       CategorieSpectacle? @relation(fields: [categoryId], references: [id])
+  avis           Avis[]
+
+  @@index([categoryId])
+  @@map("spectacle")
+}
+
+model Avis {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  spectacleId Int       @map("spectacle_id")
+  message     String
+  date        DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  spectacle   Spectacle @relation(fields: [spectacleId], references: [id])
+
+  @@map("avis")
+}
+
+model Lieu {
+  id        Int     @id @default(autoincrement())
+  imagePath String  @map("image_path")
+  isMain    Boolean @default(false) @map("is_main")
+
+  @@map("lieu")
+}
+
+model PhotoAdditionnelle {
+  id         Int                 @id @default(autoincrement())
+  imagePath  String              @map("image_path")
+  categoryId Int?                @map("category_id")
+  createdAt  DateTime            @default(now()) @map("created_at")
+  category   CategorieSpectacle? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("photo_addictionnel")
+}
+
+model Settings {
+  key       String   @id
+  value     String?
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
