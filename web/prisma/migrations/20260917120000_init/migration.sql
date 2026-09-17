@@ -111,14 +111,4 @@ ALTER TABLE "avis" ADD CONSTRAINT "avis_spectacle_id_fkey" FOREIGN KEY ("spectac
 
 -- AddForeignKey
 ALTER TABLE "photo_addictionnel" ADD CONSTRAINT "photo_addictionnel_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "category_spectacle"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-┌─────────────────────────────────────────────────────────┐
-│  Update available 6.19.3 -> 8.0.0-rc.15                 │
-│                                                         │
-│  This is a major update - please follow the guide at    │
-│  https://pris.ly/d/major-version-upgrade                │
-│                                                         │
-│  Run the following to update                            │
-│    npm i --save-dev prisma@latest                       │
-│    npm i @prisma/client@latest                          │
-└─────────────────────────────────────────────────────────┘
 

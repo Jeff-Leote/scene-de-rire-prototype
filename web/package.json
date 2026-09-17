@@ -36,6 +36,7 @@
     "@eslint/eslintrc": "^3.2.0",
     "prettier": "^3.4.0",
     "vitest": "^2.1.8",
+    "@vitest/coverage-v8": "^2.1.8",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^25.0.1",
     "@testing-library/react": "^16.1.0"
