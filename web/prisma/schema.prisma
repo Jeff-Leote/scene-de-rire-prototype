@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooler (pgbouncer) — utilisé par l'appli en runtime
+  directUrl = env("DIRECT_URL") // connexion directe — nécessaire pour les migrations (pgbouncer ne les supporte pas)
 }
 
 model User {
