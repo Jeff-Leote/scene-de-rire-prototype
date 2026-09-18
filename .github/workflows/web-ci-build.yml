@@ -39,6 +39,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://espacecomedie:espacecomedie@localhost:5432/espacecomedie?schema=public
+      DIRECT_URL: postgresql://espacecomedie:espacecomedie@localhost:5432/espacecomedie?schema=public
 
     steps:
       - name: Checkout
