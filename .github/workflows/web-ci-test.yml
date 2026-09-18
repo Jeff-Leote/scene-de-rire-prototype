@@ -1,0 +1,52 @@
+name: Web CI — Tests (Unit & Coverage)
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**']
+  pull_request:
+    paths: ['web/**']
+  workflow_dispatch:
+
+concurrency:
+  group: web-ci-test-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: web
+
+jobs:
+  test:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Unit tests with coverage
+        run: npm run test:cov
+
+      - name: Upload coverage report
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-coverage-report
+          path: web/coverage
