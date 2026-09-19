@@ -19,8 +19,7 @@
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "ping:railway": "node railway-ping.js",
-    "ping:render": "node render-ping.js"
+    "ping:railway": "node railway-ping.js"
   },
   "keywords": [
     "comedy",
