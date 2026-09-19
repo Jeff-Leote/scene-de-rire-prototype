@@ -5,8 +5,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        accent: '#FF6B00',
-        'accent-hover': '#E05A00',
+        accent: '#EF4444',
+        'accent-hover': '#DC2626',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'sans-serif'],
