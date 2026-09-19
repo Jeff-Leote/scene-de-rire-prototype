@@ -36,6 +36,7 @@ export default function VenueTeaser({ mainImage }: { mainImage: Lieu | null }) {
                   src={`/assets/img/image_path/${mainImage.imagePath}`}
                   alt="Intérieur du comedy club"
                   fill
+                  sizes="(max-width: 768px) 100vw, 640px"
                   className="object-cover"
                 />
               ) : (

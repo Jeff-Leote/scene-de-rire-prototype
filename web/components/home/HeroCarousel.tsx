@@ -34,7 +34,7 @@ export default function HeroCarousel({ slides }: { slides: Spectacle[] }) {
 
   return (
     <div className="relative mb-12 h-[500px] overflow-hidden rounded-lg md:h-[700px]">
-      <Image src={slide.img} alt={slide.title} fill priority className="object-cover" />
+      <Image src={slide.img} alt={slide.title} fill priority sizes="100vw" className="object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
 
       {slides.length > 1 && (

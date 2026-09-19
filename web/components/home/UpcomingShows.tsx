@@ -41,7 +41,13 @@ export default function UpcomingShows({ shows }: { shows: Spectacle[] }) {
                 className="flex w-full flex-col overflow-hidden rounded-lg bg-gray-900 shadow-lg transition duration-300 hover:scale-[1.02] hover:shadow-xl"
               >
                 <div className="relative min-h-[36rem] w-full flex-1">
-                  <Image src={show.img} alt={show.title} fill className="object-cover" />
+                  <Image
+                    src={show.img}
+                    alt={show.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
                   <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1 text-xl font-bold text-white">
                     {format(show.dateSpectacle, 'd MMM', { locale: fr }).toUpperCase()}
                   </div>

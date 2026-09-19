@@ -16,6 +16,7 @@ export default function FeaturedArtists({ artistes }: { artistes: Artiste[] }) {
                   src={`/assets/img/photo_artiste/${artiste.photo}`}
                   alt={`Portrait de ${artiste.name}`}
                   fill
+                  sizes="(max-width: 768px) 50vw, 320px"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-accent opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
