@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports -- script Node CommonJS autonome, exécuté hors du bundle Next.js */
 /**
  * Importe les données exportées de MySQL (Railway) vers PostgreSQL (Supabase) via Prisma.
  * Source : web/prisma/migration-data/mysql_export.sql (export phpMyAdmin des tables
