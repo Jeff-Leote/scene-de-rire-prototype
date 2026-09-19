@@ -29,19 +29,17 @@ async function startSupabasePing() {
  * le keep-alive de l'ancien backend Express (backend/src/server.js).
  */
 function startRenderPing() {
-  const https = require('https') as typeof import('https');
   const url = process.env.RENDER_EXTERNAL_URL || 'https://espace-comedie.onrender.com';
   const EIGHT_MINUTES_MS = 8 * 60 * 1000;
 
-  const ping = () => {
+  const ping = async () => {
     const timestamp = new Date().toISOString();
-    https
-      .get(url, (res) => {
-        console.log(`[keep-alive] Ping Render réussi - ${res.statusCode} - ${timestamp}`);
-      })
-      .on('error', (error) => {
-        console.error('[keep-alive] Ping Render échoué:', error.message, '-', timestamp);
-      });
+    try {
+      const res = await fetch(url);
+      console.log(`[keep-alive] Ping Render réussi - ${res.status} - ${timestamp}`);
+    } catch (error) {
+      console.error('[keep-alive] Ping Render échoué:', error, '-', timestamp);
+    }
   };
 
   setInterval(ping, EIGHT_MINUTES_MS);
