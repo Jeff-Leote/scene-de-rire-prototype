@@ -37,7 +37,7 @@
     "npm": ">=8.0.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "concurrently": "^10.0.5",
     "prettier": "^3.9.6"
   }
 }
