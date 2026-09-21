@@ -59,6 +59,26 @@ export async function getUpcomingSpectaclesPage(page: number, limit: number) {
 }
 
 /**
+ * Une occurrence précise, pour la page détail /programmation/[id].
+ */
+export async function getSpectacleById(id: number): Promise<Spectacle | null> {
+  return prisma.spectacle.findUnique({ where: { id } });
+}
+
+/**
+ * Jusqu'à `limit` photos additionnelles liées à la catégorie du spectacle (pas au
+ * spectacle lui-même — le rattachement se fait par catégorie, comme sur le site actuel).
+ */
+export async function getPhotosForCategory(categoryId: number | null, limit: number) {
+  if (!categoryId) return [];
+  return prisma.photoAdditionnelle.findMany({
+    where: { categoryId },
+    orderBy: { id: 'asc' },
+    take: limit,
+  });
+}
+
+/**
  * Toutes les occurrences, pour alimenter le calendrier mensuel (navigation côté client
  * sans requête supplémentaire par mois).
  */
