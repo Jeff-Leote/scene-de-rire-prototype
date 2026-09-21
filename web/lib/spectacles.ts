@@ -41,6 +41,24 @@ export async function getNextUpcomingOccurrences(limit: number): Promise<Spectac
 }
 
 /**
+ * Page de spectacles à venir (chronologique, sans dédoublonnage par titre), pour la
+ * grille paginée de /programmation.
+ */
+export async function getUpcomingSpectaclesPage(page: number, limit: number) {
+  const where = { dateSpectacle: { gte: startOfTodayUTC() } };
+  const [items, total] = await Promise.all([
+    prisma.spectacle.findMany({
+      where,
+      orderBy: [{ dateSpectacle: 'asc' }, { heureSpectacle: 'asc' }],
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.spectacle.count({ where }),
+  ]);
+  return { items, total, totalPages: Math.max(1, Math.ceil(total / limit)) };
+}
+
+/**
  * Toutes les occurrences, pour alimenter le calendrier mensuel (navigation côté client
  * sans requête supplémentaire par mois).
  */
