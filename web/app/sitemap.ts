@@ -1,0 +1,25 @@
+import type { MetadataRoute } from 'next';
+import { getUpcomingSpectacleIdsForSitemap } from '@/lib/spectacles';
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.espacecomedie.fr';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const upcomingSpectacles = await getUpcomingSpectacleIdsForSitemap();
+
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: BASE_URL, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${BASE_URL}/programmation`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${BASE_URL}/le-lieu`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/artistes`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/contact`, changeFrequency: 'monthly', priority: 0.6 },
+  ];
+
+  const spectacleRoutes: MetadataRoute.Sitemap = upcomingSpectacles.map((spectacle) => ({
+    url: `${BASE_URL}/programmation/${spectacle.id}`,
+    lastModified: spectacle.dateSpectacle,
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...spectacleRoutes];
+}

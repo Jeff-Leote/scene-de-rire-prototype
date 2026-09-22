@@ -79,6 +79,18 @@ export async function getPhotosForCategory(categoryId: number | null, limit: num
 }
 
 /**
+ * Id + date de chaque occurrence à venir, pour générer le sitemap (une URL par page
+ * détail réellement utile — inutile d'indexer des séances déjà passées).
+ */
+export async function getUpcomingSpectacleIdsForSitemap() {
+  return prisma.spectacle.findMany({
+    where: { dateSpectacle: { gte: startOfTodayUTC() } },
+    select: { id: true, dateSpectacle: true },
+    orderBy: { dateSpectacle: 'asc' },
+  });
+}
+
+/**
  * Toutes les occurrences, pour alimenter le calendrier mensuel (navigation côté client
  * sans requête supplémentaire par mois).
  */
