@@ -53,7 +53,7 @@ export default function ContactForm() {
             id="firstName"
             name="firstName"
             required
-            className="w-full rounded-md border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
@@ -65,7 +65,7 @@ export default function ContactForm() {
             id="lastName"
             name="lastName"
             required
-            className="w-full rounded-md border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function ContactForm() {
           name="email"
           type="email"
           required
-          className="w-full rounded-md border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent"
+          className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
 
@@ -91,7 +91,7 @@ export default function ContactForm() {
           id="subject"
           name="subject"
           required
-          className="w-full rounded-md border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent"
+          className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
         >
           <option value="spectacle">Spectacle</option>
           <option value="partenariat">Partenariat</option>
@@ -108,7 +108,7 @@ export default function ContactForm() {
           name="message"
           required
           rows={5}
-          className="w-full rounded-md border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent"
+          className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
 

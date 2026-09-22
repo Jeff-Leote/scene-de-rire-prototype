@@ -36,7 +36,7 @@ export default function ContactFaq() {
         return (
           <div key={faq.question} className={index < FAQS.length - 1 ? 'border-b border-gray-200 pb-4' : ''}>
             <button
-              className="flex w-full items-center justify-between text-left text-lg font-medium"
+              className="flex w-full items-center justify-between text-left text-lg font-medium text-gray-900"
               onClick={() => setOpenIndex(isOpen ? null : index)}
             >
               {faq.question}
