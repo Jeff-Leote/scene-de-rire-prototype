@@ -3,6 +3,8 @@ import { getUpcomingSpectacleIdsForSitemap } from '@/lib/spectacles';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.espacecomedie.fr';
 
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const upcomingSpectacles = await getUpcomingSpectacleIdsForSitemap();
 
