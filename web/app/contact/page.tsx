@@ -29,7 +29,7 @@ const SOCIAL_LINKS = [
 
 export default function ContactPage() {
   return (
-    <div className="bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
         <section className="mx-auto mb-16 max-w-3xl text-center">
           <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">Contactez-nous</h1>
