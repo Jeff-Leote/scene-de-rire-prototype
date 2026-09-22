@@ -9,7 +9,6 @@ const NAV_LINKS = [
   { href: '/', label: 'Accueil' },
   { href: '/programmation', label: 'Programmation' },
   { href: '/le-lieu', label: 'Le lieu' },
-  { href: '/artistes', label: 'Artistes' },
   { href: '/contact', label: 'Contact' },
 ];
 
