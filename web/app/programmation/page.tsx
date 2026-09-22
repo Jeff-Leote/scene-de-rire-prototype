@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getUpcomingSpectaclesPage } from '@/lib/spectacles';
 import SpectacleCard from '@/components/SpectacleCard';
@@ -25,6 +26,10 @@ export default async function ProgrammationPage({
 }) {
   const page = parsePage((await searchParams).page);
   const { items, totalPages } = await getUpcomingSpectaclesPage(page, PAGE_SIZE);
+
+  if (page > totalPages) {
+    redirect(`/programmation?page=${totalPages}`);
+  }
 
   return (
     <section className="bg-black py-16">
