@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import ConditionalFooter from '@/components/ConditionalFooter';
 import { BASE_URL } from '@/lib/config';
 import './globals.css';
 
@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.variable} font-sans`}>
         <Header />
         <main className="pt-20 md:pt-24">{children}</main>
-        <Footer />
+        <ConditionalFooter />
       </body>
     </html>
   );
