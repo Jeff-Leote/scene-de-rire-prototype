@@ -121,6 +121,11 @@ export default async function LeLieuPage() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="animate-pulse rounded-full bg-accent px-4 py-2 font-bold text-white opacity-90">
+                  L&apos;Espace Comédie
+                </div>
+              </div>
             </div>
             <div className="flex justify-center">
               <a

@@ -10,6 +10,7 @@ import UpcomingShows from '@/components/home/UpcomingShows';
 import FeaturedArtists from '@/components/home/FeaturedArtists';
 import ShowsCalendar from '@/components/home/ShowsCalendar';
 import VenueTeaser from '@/components/home/VenueTeaser';
+import CTA from '@/components/CTA';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ export default async function HomePage() {
       <FeaturedArtists artistes={artistes} />
       <ShowsCalendar spectacles={allSpectacles} />
       <VenueTeaser mainImage={mainLieuImage} />
+      <CTA />
     </>
   );
 }
