@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Le lieu - L'Espace Comédie Lille",
   description:
     "Découvrez L'Espace Comédie Lille : photos de la salle, infos pratiques, accès et FAQ pour votre soirée d'humour à Lille.",
+  alternates: { canonical: '/le-lieu' },
 };
 
 export const dynamic = 'force-dynamic';

@@ -14,6 +14,7 @@ import ContactFaq from '@/components/contact/ContactFaq';
 export const metadata: Metadata = {
   title: "Contact - L'Espace Comédie Lille",
   description: "Contactez L'Espace Comédie Lille : téléphone, email, adresse et formulaire de contact.",
+  alternates: { canonical: '/contact' },
 };
 
 const SOCIAL_LINKS = [

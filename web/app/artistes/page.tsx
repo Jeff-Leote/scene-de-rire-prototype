@@ -5,6 +5,7 @@ import { getAllArtistes } from '@/lib/artistes';
 export const metadata: Metadata = {
   title: "Nos artistes - L'Espace Comédie Lille",
   description: "Découvrez les humoristes déjà venus se produire à L'Espace Comédie Lille.",
+  alternates: { canonical: '/artistes' },
 };
 
 export const dynamic = 'force-dynamic';

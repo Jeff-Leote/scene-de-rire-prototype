@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${spectacle.title} - L'Espace Comédie Lille`,
     description: `${spectacle.title} le ${dateLabel} à ${formatTime(spectacle.heureSpectacle)} — ${spectacle.description.slice(0, 140)}`,
+    alternates: { canonical: `/programmation/${spectacle.id}` },
   };
 }
 

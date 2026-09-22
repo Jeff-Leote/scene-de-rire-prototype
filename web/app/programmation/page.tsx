@@ -4,12 +4,6 @@ import type { Metadata } from 'next';
 import { getUpcomingSpectaclesPage } from '@/lib/spectacles';
 import SpectacleCard from '@/components/SpectacleCard';
 
-export const metadata: Metadata = {
-  title: "Programmation - L'Espace Comédie Lille",
-  description:
-    "Toute la programmation à venir de L'Espace Comédie Lille : stand-up, comédies et soirées d'humour à Lille.",
-};
-
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 9;
@@ -19,11 +13,19 @@ function parsePage(value: string | string[] | undefined) {
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
-export default async function ProgrammationPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string | string[] }>;
-}) {
+type Props = { searchParams: Promise<{ page?: string | string[] }> };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const page = parsePage((await searchParams).page);
+  return {
+    title: "Programmation - L'Espace Comédie Lille",
+    description:
+      "Toute la programmation à venir de L'Espace Comédie Lille : stand-up, comédies et soirées d'humour à Lille.",
+    alternates: { canonical: page > 1 ? `/programmation?page=${page}` : '/programmation' },
+  };
+}
+
+export default async function ProgrammationPage({ searchParams }: Props) {
   const page = parsePage((await searchParams).page);
   const { items, totalPages } = await getUpcomingSpectaclesPage(page, PAGE_SIZE);
 

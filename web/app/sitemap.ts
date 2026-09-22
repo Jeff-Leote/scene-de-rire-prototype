@@ -1,7 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getUpcomingSpectacleIdsForSitemap } from '@/lib/spectacles';
-
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.espacecomedie.fr';
+import { BASE_URL } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
 
