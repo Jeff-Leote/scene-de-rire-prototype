@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   description:
     "L'Espace Comédie Lille : la référence pour découvrir et réserver les meilleurs spectacles d'humour à Lille.",
   alternates: { canonical: '/' },
+  icons: {
+    icon: '/assets/img/logo-espace-comedie-lille.webp',
+    shortcut: '/assets/img/logo-espace-comedie-lille.webp',
+    apple: '/assets/img/logo-espace-comedie-lille.webp',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
