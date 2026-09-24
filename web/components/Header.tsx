@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { trackBookingClick } from '@/lib/analytics';
 
 const NAV_LINKS = [
   { href: '/', label: 'Accueil' },
@@ -70,6 +71,7 @@ export default function Header() {
               href={BOOKING_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={trackBookingClick}
               className="hidden rounded bg-accent px-4 py-2 text-white transition duration-300 hover:bg-accent-hover md:inline-block"
             >
               Réserver
@@ -108,7 +110,10 @@ export default function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 rounded bg-accent px-6 py-3 text-xl text-white transition duration-300 hover:bg-accent-hover"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => {
+                trackBookingClick();
+                setIsMobileMenuOpen(false);
+              }}
             >
               Réserver
             </a>

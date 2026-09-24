@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getSpectacleById, getPhotosForCategory } from '@/lib/spectacles';
+import BookingLink from '@/components/BookingLink';
 
 function formatTime(date: Date) {
   return date.toISOString().slice(11, 16);
@@ -137,14 +138,12 @@ export default async function SpectacleDetailPage({ params }: Props) {
                 Ne manquez pas ce spectacle exceptionnel ! Réservez vos places dès maintenant.
               </p>
               {spectacle.lienSpectacle ? (
-                <a
+                <BookingLink
                   href={spectacle.lienSpectacle}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="block w-full rounded bg-accent py-3 text-center font-bold text-white transition duration-300 hover:bg-accent-hover"
                 >
                   Réserver maintenant
-                </a>
+                </BookingLink>
               ) : (
                 <span className="block w-full cursor-not-allowed rounded bg-gray-700 py-3 text-center font-bold text-gray-400">
                   Lien de billetterie indisponible
