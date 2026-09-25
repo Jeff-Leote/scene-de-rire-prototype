@@ -19,7 +19,8 @@
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "ping:railway": "node railway-ping.js"
+    "ping:railway": "node railway-ping.js",
+    "prepare": "husky"
   },
   "keywords": [
     "comedy",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
     "prettier": "^3.9.6"
   }
 }

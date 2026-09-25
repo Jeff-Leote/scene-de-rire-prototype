@@ -1,0 +1,5 @@
+staged_web_files=$(git diff --cached --name-only --diff-filter=ACM | grep '^web/' || true)
+
+if [ -n "$staged_web_files" ]; then
+  cd web && npm run lint && npm run format:check
+fi
