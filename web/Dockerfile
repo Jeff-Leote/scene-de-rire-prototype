@@ -1,5 +1,5 @@
 # --- Stage builder : installe tout (dev inclus), génère Prisma, build Next.js ---
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
@@ -10,7 +10,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # --- Stage runner : uniquement les dépendances de production ---
-FROM node:22-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
