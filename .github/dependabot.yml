@@ -36,7 +36,19 @@ updates:
           - 'minor'
           - 'patch'
 
-  # Images de base Docker (backend et frontend)
+  # Web (Next.js, Prisma, etc.)
+  - package-ecosystem: 'npm'
+    directory: '/web'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-et-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # Images de base Docker (backend, frontend et web)
   - package-ecosystem: 'docker'
     directory: '/backend'
     schedule:
@@ -44,6 +56,11 @@ updates:
 
   - package-ecosystem: 'docker'
     directory: '/frontend'
+    schedule:
+      interval: 'weekly'
+
+  - package-ecosystem: 'docker'
+    directory: '/web'
     schedule:
       interval: 'weekly'
 
