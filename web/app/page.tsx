@@ -6,6 +6,7 @@ import {
 import { getMainLieuImage } from '@/lib/lieu';
 import { getFeaturedArtistes } from '@/lib/artistes';
 import Hero from '@/components/home/Hero';
+import GoogleReviews from '@/components/home/GoogleReviews';
 import UpcomingShows from '@/components/home/UpcomingShows';
 import FeaturedArtists from '@/components/home/FeaturedArtists';
 import ShowsCalendar from '@/components/home/ShowsCalendar';
@@ -26,6 +27,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero slides={heroSlides} />
+      <GoogleReviews />
       <UpcomingShows shows={upcomingShows} />
       <FeaturedArtists artistes={artistes} />
       <ShowsCalendar spectacles={allSpectacles} />
