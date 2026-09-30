@@ -1,9 +1,20 @@
+import { unstable_cache } from 'next/cache';
 import { prisma } from './prisma';
 
-export async function getMainLieuImage() {
-  return prisma.lieu.findFirst({ where: { isMain: true } });
-}
+const REVALIDATE_SECONDS = 7200; // 2h — réduit les requêtes Postgres répétées (egress Supabase)
 
-export async function getGalleryLieuImages() {
-  return prisma.lieu.findMany({ where: { isMain: false }, orderBy: { id: 'asc' } });
-}
+export const getMainLieuImage = unstable_cache(
+  async () => {
+    return prisma.lieu.findFirst({ where: { isMain: true } });
+  },
+  ['lieu-main-image'],
+  { revalidate: REVALIDATE_SECONDS }
+);
+
+export const getGalleryLieuImages = unstable_cache(
+  async () => {
+    return prisma.lieu.findMany({ where: { isMain: false }, orderBy: { id: 'asc' } });
+  },
+  ['lieu-gallery-images'],
+  { revalidate: REVALIDATE_SECONDS }
+);
