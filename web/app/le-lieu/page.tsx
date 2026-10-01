@@ -44,7 +44,7 @@ export default async function LeLieuPage() {
               Situé en plein cœur de la ville, L&apos;Espace Comédie vous accueille pour des soirées de rire et de
               découvertes humoristiques dans une ambiance conviviale et intimiste.
             </p>
-            <p className="text-lg text-accent md:text-xl">136 rue Solférino, 59800 Lille</p>
+            <p className="text-lg text-accent md:text-xl">136 rue Solférino, 59000 Lille</p>
           </div>
         </div>
       </section>
@@ -113,7 +113,7 @@ export default async function LeLieuPage() {
             <div className="relative mb-6 h-[400px] overflow-hidden rounded-lg">
               <iframe
                 title="Google Map - L'Espace Comédie"
-                src="https://www.google.com/maps?q=136+rue+Solférino,+59800+Lille&output=embed"
+                src="https://www.google.com/maps?q=136+rue+Solférino,+59000+Lille&output=embed"
                 width="100%"
                 height="400"
                 style={{ border: 0 }}
@@ -129,7 +129,7 @@ export default async function LeLieuPage() {
             </div>
             <div className="flex justify-center">
               <a
-                href="https://www.google.com/maps/dir/?api=1&destination=136+rue+Solférino,+59800+Lille"
+                href="https://www.google.com/maps/dir/?api=1&destination=136+rue+Solférino,+59000+Lille"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center rounded-full bg-accent px-6 py-3 font-bold text-white transition duration-300 hover:bg-accent-hover"
