@@ -111,6 +111,26 @@ export async function getSpectacleById(id: number): Promise<Spectacle | null> {
 }
 
 /**
+ * Prochaine occurrence d'un titre précis, pour la page /sponsorise/[slug]
+ * (landing page publicitaire adressée par titre plutôt que par id).
+ */
+const getNextOccurrenceByTitleCached = unstable_cache(
+  async (title: string): Promise<Spectacle | null> => {
+    return prisma.spectacle.findFirst({
+      where: { title, dateSpectacle: { gte: startOfTodayUTC() } },
+      orderBy: [{ dateSpectacle: 'asc' }, { heureSpectacle: 'asc' }],
+    });
+  },
+  ['spectacle-next-by-title'],
+  { revalidate: REVALIDATE_SECONDS }
+);
+
+export async function getNextOccurrenceByTitle(title: string): Promise<Spectacle | null> {
+  const result = await getNextOccurrenceByTitleCached(title);
+  return result ? reviveSpectacleDates(result) : null;
+}
+
+/**
  * Jusqu'à `limit` photos additionnelles liées à la catégorie du spectacle (pas au
  * spectacle lui-même — le rattachement se fait par catégorie, comme sur le site actuel).
  */
