@@ -48,6 +48,7 @@ model Spectacle {
   id             Int                 @id @default(autoincrement())
   title          String
   img            String
+  heroImg        String?             @map("hero_img")
   description    String
   dateSpectacle  DateTime            @map("date_spectacle") @db.Date
   heureSpectacle DateTime            @map("heure_spectacle") @db.Time
