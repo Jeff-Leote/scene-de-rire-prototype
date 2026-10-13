@@ -24,13 +24,16 @@ async function startSupabasePing() {
 }
 
 /**
- * Ping externe toutes les 8 minutes vers l'URL publique du service, pour éviter la mise
- * en veille du plan gratuit Render (seuil de 15 minutes d'inactivité). Même logique que
- * le keep-alive de l'ancien backend Express (backend/src/server.js).
+ * Ping externe toutes les 10 minutes vers la route de santé du service (quelques octets,
+ * via l'URL publique), pour éviter la mise en veille de Render (seuil de 15 minutes
+ * d'inactivité). Il ne vise pas la page d'accueil, qui pèse 230 Ko non compressés : ce
+ * ping consommait de la bande passante pour rien. Même logique que le keep-alive de
+ * l'ancien backend Express (backend/src/server.js).
  */
 function startRenderPing() {
-  const url = process.env.RENDER_EXTERNAL_URL || 'https://espace-comedie.onrender.com';
-  const EIGHT_MINUTES_MS = 8 * 60 * 1000;
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || 'https://espace-comedie.onrender.com';
+  const url = `${baseUrl.replace(/\/$/, '')}/api/health`;
+  const TEN_MINUTES_MS = 10 * 60 * 1000;
 
   const ping = async () => {
     const timestamp = new Date().toISOString();
@@ -42,7 +45,7 @@ function startRenderPing() {
     }
   };
 
-  setInterval(ping, EIGHT_MINUTES_MS);
+  setInterval(ping, TEN_MINUTES_MS);
 }
 
 export async function register() {
