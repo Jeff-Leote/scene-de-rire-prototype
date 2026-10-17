@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { escapeHtml } from '@/lib/html';
 
 function createTransport() {
   return nodemailer.createTransport({
@@ -28,6 +29,13 @@ export async function sendContactEmail({
   message: string;
 }) {
   const transporter = createTransport();
+  const safe = {
+    firstName: escapeHtml(firstName),
+    lastName: escapeHtml(lastName),
+    email: escapeHtml(email),
+    subject: escapeHtml(subject),
+    message: escapeHtml(message).replace(/\n/g, '<br>'),
+  };
 
   await transporter.sendMail({
     from: process.env.FROM_EMAIL || process.env.SMTP_USER,
@@ -40,12 +48,12 @@ export async function sendContactEmail({
           <h1 style="color: #333; margin: 0;">Nouveau message de contact</h1>
         </div>
         <div style="padding: 20px; background-color: white;">
-          <h2 style="color: #333;">Message de ${firstName} ${lastName}</h2>
+          <h2 style="color: #333;">Message de ${safe.firstName} ${safe.lastName}</h2>
           <div style="line-height: 1.6; color: #555;">
-            <p><strong>De :</strong> ${firstName} ${lastName} &lt;${email}&gt;</p>
-            <p><strong>Sujet :</strong> ${subject}</p>
+            <p><strong>De :</strong> ${safe.firstName} ${safe.lastName} &lt;${safe.email}&gt;</p>
+            <p><strong>Sujet :</strong> ${safe.subject}</p>
             <p><strong>Message :</strong></p>
-            <p>${message.replace(/\n/g, '<br>')}</p>
+            <p>${safe.message}</p>
           </div>
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
           <p style="color: #888; font-size: 12px;">

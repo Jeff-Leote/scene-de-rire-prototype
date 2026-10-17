@@ -9,7 +9,7 @@ export default function ContactForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!privacyAccepted) return;
 
@@ -20,6 +20,7 @@ export default function ContactForm() {
       email: (form.elements.namedItem('email') as HTMLInputElement).value,
       subject: (form.elements.namedItem('subject') as HTMLSelectElement).value,
       message: (form.elements.namedItem('message') as HTMLTextAreaElement).value,
+      site_check: (form.elements.namedItem('site_check') as HTMLInputElement).value,
     };
 
     setStatus('sending');
@@ -44,6 +45,15 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Champ piège : invisible pour les visiteurs, rempli par les robots. */}
+      <div
+        aria-hidden="true"
+        style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}
+      >
+        <label htmlFor="site_check">Ne pas remplir ce champ</label>
+        <input id="site_check" name="site_check" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
           <label htmlFor="firstName" className="mb-1 block text-sm font-medium text-gray-700">
@@ -53,6 +63,7 @@ export default function ContactForm() {
             id="firstName"
             name="firstName"
             required
+            maxLength={80}
             className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
@@ -65,6 +76,7 @@ export default function ContactForm() {
             id="lastName"
             name="lastName"
             required
+            maxLength={80}
             className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
@@ -79,6 +91,7 @@ export default function ContactForm() {
           name="email"
           type="email"
           required
+          maxLength={254}
           className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
@@ -108,6 +121,7 @@ export default function ContactForm() {
           name="message"
           required
           rows={5}
+          maxLength={5000}
           className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
@@ -122,8 +136,8 @@ export default function ContactForm() {
           className="mt-1 h-4 w-4"
         />
         <label htmlFor="privacy" className="ml-3 text-sm text-gray-600">
-          <span className="mr-1 text-accent">*</span>
-          J&apos;accepte que mes données soient traitées conformément à la politique de confidentialité.
+          <span className="mr-1 text-accent">*</span> J&apos;accepte que mes données soient traitées conformément à la
+          politique de confidentialité.
         </label>
       </div>
 
