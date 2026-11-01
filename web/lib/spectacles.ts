@@ -21,9 +21,9 @@ function reviveSpectacleDates<T extends { dateSpectacle: Date; heureSpectacle: D
  * une par date/heure — on ne garde ici que la plus proche à venir pour chaque titre.
  */
 const getUpcomingSpectaclesByTitleCached = unstable_cache(
-  async (limit: number): Promise<Spectacle[]> => {
+  async (siteId: string, limit: number): Promise<Spectacle[]> => {
     const upcoming = await prisma.spectacle.findMany({
-      where: { dateSpectacle: { gte: startOfTodayUTC() } },
+      where: { siteId, status: 'PUBLISHED', deletedAt: null, dateSpectacle: { gte: startOfTodayUTC() } },
       orderBy: [{ dateSpectacle: 'asc' }, { heureSpectacle: 'asc' }],
     });
 
@@ -38,11 +38,12 @@ const getUpcomingSpectaclesByTitleCached = unstable_cache(
     return nextPerTitle;
   },
   ['spectacles-upcoming-by-title'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 export async function getUpcomingSpectaclesByTitle(limit: number): Promise<Spectacle[]> {
-  const result = await getUpcomingSpectaclesByTitleCached(limit);
+  const siteId = process.env.SITE_ID ?? '';
+  const result = await getUpcomingSpectaclesByTitleCached(siteId, limit);
   return result.map(reviveSpectacleDates);
 }
 
@@ -51,19 +52,20 @@ export async function getUpcomingSpectaclesByTitle(limit: number): Promise<Spect
  * spectacle peut apparaître plusieurs fois si ses prochaines séances sont les plus proches.
  */
 const getNextUpcomingOccurrencesCached = unstable_cache(
-  async (limit: number): Promise<Spectacle[]> => {
+  async (siteId: string, limit: number): Promise<Spectacle[]> => {
     return prisma.spectacle.findMany({
-      where: { dateSpectacle: { gte: startOfTodayUTC() } },
+      where: { siteId, status: 'PUBLISHED', deletedAt: null, dateSpectacle: { gte: startOfTodayUTC() } },
       orderBy: [{ dateSpectacle: 'asc' }, { heureSpectacle: 'asc' }],
       take: limit,
     });
   },
   ['spectacles-next-occurrences'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 export async function getNextUpcomingOccurrences(limit: number): Promise<Spectacle[]> {
-  const result = await getNextUpcomingOccurrencesCached(limit);
+  const siteId = process.env.SITE_ID ?? '';
+  const result = await getNextUpcomingOccurrencesCached(siteId, limit);
   return result.map(reviveSpectacleDates);
 }
 
@@ -72,8 +74,8 @@ export async function getNextUpcomingOccurrences(limit: number): Promise<Spectac
  * grille paginée de /programmation.
  */
 const getUpcomingSpectaclesPageCached = unstable_cache(
-  async (page: number, limit: number) => {
-    const where = { dateSpectacle: { gte: startOfTodayUTC() } };
+  async (siteId: string, page: number, limit: number) => {
+    const where = { siteId, status: 'PUBLISHED', deletedAt: null, dateSpectacle: { gte: startOfTodayUTC() } };
     const [items, total] = await Promise.all([
       prisma.spectacle.findMany({
         where,
@@ -86,11 +88,12 @@ const getUpcomingSpectaclesPageCached = unstable_cache(
     return { items, total, totalPages: Math.max(1, Math.ceil(total / limit)) };
   },
   ['spectacles-upcoming-page'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 export async function getUpcomingSpectaclesPage(page: number, limit: number) {
-  const result = await getUpcomingSpectaclesPageCached(page, limit);
+  const siteId = process.env.SITE_ID ?? '';
+  const result = await getUpcomingSpectaclesPageCached(siteId, page, limit);
   return { ...result, items: result.items.map(reviveSpectacleDates) };
 }
 
@@ -98,15 +101,16 @@ export async function getUpcomingSpectaclesPage(page: number, limit: number) {
  * Une occurrence précise, pour la page détail /programmation/[id].
  */
 const getSpectacleByIdCached = unstable_cache(
-  async (id: number): Promise<Spectacle | null> => {
-    return prisma.spectacle.findUnique({ where: { id } });
+  async (siteId: string, id: number): Promise<Spectacle | null> => {
+    return prisma.spectacle.findFirst({ where: { id, siteId, status: 'PUBLISHED', deletedAt: null } });
   },
   ['spectacle-by-id'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 export async function getSpectacleById(id: number): Promise<Spectacle | null> {
-  const result = await getSpectacleByIdCached(id);
+  const siteId = process.env.SITE_ID ?? '';
+  const result = await getSpectacleByIdCached(siteId, id);
   return result ? reviveSpectacleDates(result) : null;
 }
 
@@ -115,18 +119,19 @@ export async function getSpectacleById(id: number): Promise<Spectacle | null> {
  * (landing page publicitaire adressée par titre plutôt que par id).
  */
 const getNextOccurrenceByTitleCached = unstable_cache(
-  async (title: string): Promise<Spectacle | null> => {
+  async (siteId: string, title: string): Promise<Spectacle | null> => {
     return prisma.spectacle.findFirst({
-      where: { title, dateSpectacle: { gte: startOfTodayUTC() } },
+      where: { siteId, status: 'PUBLISHED', deletedAt: null, title, dateSpectacle: { gte: startOfTodayUTC() } },
       orderBy: [{ dateSpectacle: 'asc' }, { heureSpectacle: 'asc' }],
     });
   },
   ['spectacle-next-by-title'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 export async function getNextOccurrenceByTitle(title: string): Promise<Spectacle | null> {
-  const result = await getNextOccurrenceByTitleCached(title);
+  const siteId = process.env.SITE_ID ?? '';
+  const result = await getNextOccurrenceByTitleCached(siteId, title);
   return result ? reviveSpectacleDates(result) : null;
 }
 
@@ -138,13 +143,13 @@ export const getPhotosForCategory = unstable_cache(
   async (categoryId: number | null, limit: number) => {
     if (!categoryId) return [];
     return prisma.photoAdditionnelle.findMany({
-      where: { categoryId },
-      orderBy: { id: 'asc' },
+      where: { categoryId, deletedAt: null },
+      orderBy: { sortOrder: 'asc' },
       take: limit,
     });
   },
   ['photos-for-category'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 /**
@@ -152,19 +157,20 @@ export const getPhotosForCategory = unstable_cache(
  * détail réellement utile — inutile d'indexer des séances déjà passées).
  */
 const getUpcomingSpectacleIdsForSitemapCached = unstable_cache(
-  async () => {
+  async (siteId: string) => {
     return prisma.spectacle.findMany({
-      where: { dateSpectacle: { gte: startOfTodayUTC() } },
+      where: { siteId, status: 'PUBLISHED', deletedAt: null, dateSpectacle: { gte: startOfTodayUTC() } },
       select: { id: true, dateSpectacle: true },
       orderBy: { dateSpectacle: 'asc' },
     });
   },
   ['spectacle-ids-for-sitemap'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 export async function getUpcomingSpectacleIdsForSitemap() {
-  const result = await getUpcomingSpectacleIdsForSitemapCached();
+  const siteId = process.env.SITE_ID ?? '';
+  const result = await getUpcomingSpectacleIdsForSitemapCached(siteId);
   return result.map((s) => ({ ...s, dateSpectacle: new Date(s.dateSpectacle) }));
 }
 
@@ -173,17 +179,19 @@ export async function getUpcomingSpectacleIdsForSitemap() {
  * sans requête supplémentaire par mois).
  */
 const getAllSpectaclesForCalendarCached = unstable_cache(
-  async () => {
+  async (siteId: string) => {
     return prisma.spectacle.findMany({
+      where: { siteId, status: 'PUBLISHED', deletedAt: null },
       select: { id: true, title: true, dateSpectacle: true, heureSpectacle: true },
       orderBy: { dateSpectacle: 'asc' },
     });
   },
   ['spectacles-all-for-calendar'],
-  { revalidate: REVALIDATE_SECONDS }
+  { revalidate: REVALIDATE_SECONDS, tags: ['spectacles'] }
 );
 
 export async function getAllSpectaclesForCalendar() {
-  const result = await getAllSpectaclesForCalendarCached();
+  const siteId = process.env.SITE_ID ?? '';
+  const result = await getAllSpectaclesForCalendarCached(siteId);
   return result.map(reviveSpectacleDates);
 }
