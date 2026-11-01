@@ -26,39 +26,60 @@ model User {
 }
 
 model Artiste {
-  id        Int      @id @default(autoincrement())
-  name      String
-  photo     String
-  createdAt DateTime @default(now()) @map("created_at")
+  id          Int       @id @default(autoincrement())
+  name        String
+  photo       String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  // colonnes ajoutées — migration A
+  siteId      String    @map("site_id")
+  description String?
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
+  @@index([siteId])
   @@map("artiste")
 }
 
 model CategorieSpectacle {
-  id                   Int                  @id @default(autoincrement())
-  code                 String               @unique
-  label                String
+  id     Int    @id @default(autoincrement())
+  code   String @unique
+  label  String
+  // colonne ajoutée — migration A
+  siteId String @map("site_id")
+
   spectacles           Spectacle[]
   photosAdditionnelles PhotoAdditionnelle[]
 
+  @@index([siteId])
   @@map("category_spectacle")
 }
 
 model Spectacle {
-  id             Int                 @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   title          String
   img            String
-  heroImg        String?             @map("hero_img")
+  heroImg        String?   @map("hero_img")
   description    String
-  dateSpectacle  DateTime            @map("date_spectacle") @db.Date
-  heureSpectacle DateTime            @map("heure_spectacle") @db.Time
+  dateSpectacle  DateTime  @map("date_spectacle") @db.Date
+  heureSpectacle DateTime  @map("heure_spectacle") @db.Time
   lieu           String
-  lienSpectacle  String?             @map("lien_spectacle")
-  categoryId     Int?                @map("category_id")
-  category       CategorieSpectacle? @relation(fields: [categoryId], references: [id])
-  avis           Avis[]
+  lienSpectacle  String?   @map("lien_spectacle")
+  categoryId     Int?      @map("category_id")
+  // colonnes ajoutées — migration A
+  siteId         String    @map("site_id")
+  status         String    @default("PUBLISHED")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+  createdById    Int?      @map("created_by_id")
+  updatedById    Int?      @map("updated_by_id")
+
+  category CategorieSpectacle? @relation(fields: [categoryId], references: [id])
+  avis     Avis[]
 
   @@index([categoryId])
+  @@index([siteId, dateSpectacle])
+  @@index([siteId, status])
   @@map("spectacle")
 }
 
@@ -75,20 +96,30 @@ model Avis {
 }
 
 model Lieu {
-  id        Int     @id @default(autoincrement())
-  imagePath String  @map("image_path")
-  isMain    Boolean @default(false) @map("is_main")
+  id        Int       @id @default(autoincrement())
+  imagePath String    @map("image_path")
+  isMain    Boolean   @default(false) @map("is_main")
+  // colonnes ajoutées — migration A
+  siteId    String    @map("site_id")
+  sortOrder Int       @default(0) @map("sort_order")
+  deletedAt DateTime? @map("deleted_at")
 
+  @@index([siteId, sortOrder])
   @@map("lieu")
 }
 
 model PhotoAdditionnelle {
-  id         Int                 @id @default(autoincrement())
-  imagePath  String              @map("image_path")
-  categoryId Int?                @map("category_id")
-  createdAt  DateTime            @default(now()) @map("created_at")
-  category   CategorieSpectacle? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  id         Int       @id @default(autoincrement())
+  imagePath  String    @map("image_path")
+  categoryId Int?      @map("category_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  // colonnes ajoutées — migration A
+  sortOrder  Int       @default(0) @map("sort_order")
+  deletedAt  DateTime? @map("deleted_at")
 
+  category CategorieSpectacle? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId, sortOrder])
   @@map("photo_addictionnel")
 }
 
@@ -96,6 +127,8 @@ model Settings {
   key       String   @id
   value     String?
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  // colonne ajoutée — migration A
+  siteId    String   @map("site_id")
 
   @@map("settings")
 }
