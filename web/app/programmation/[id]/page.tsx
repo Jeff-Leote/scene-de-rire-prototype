@@ -140,6 +140,7 @@ export default async function SpectacleDetailPage({ params }: Props) {
               {spectacle.lienSpectacle ? (
                 <BookingLink
                   href={spectacle.lienSpectacle}
+                  spectacleId={spectacle.id}
                   className="block w-full rounded bg-accent py-3 text-center font-bold text-white transition duration-300 hover:bg-accent-hover"
                 >
                   Réserver maintenant

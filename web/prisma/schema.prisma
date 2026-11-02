@@ -132,3 +132,16 @@ model Settings {
 
   @@map("settings")
 }
+
+// Table ajoutée — migration B du dashboard
+model BookingClickDaily {
+  id          String   @id @default(cuid())
+  siteId      String   @map("site_id")
+  spectacleId Int?     @map("spectacle_id")
+  day         DateTime @db.Date
+  count       Int      @default(0)
+
+  // L'unicité NULLS NOT DISTINCT est gérée par la migration du dashboard
+  @@index([siteId, day])
+  @@map("booking_click_daily")
+}
