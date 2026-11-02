@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from 'crypto';
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
-const ALLOWED_TAGS = ['spectacles', 'artistes', 'lieu'] as const;
+const ALLOWED_TAGS = ['spectacles', 'artistes', 'lieu', 'page-accueil', 'page-le-lieu'] as const;
 type AllowedTag = (typeof ALLOWED_TAGS)[number];
 
 function isValidSecret(received: string, expected: string): boolean {
