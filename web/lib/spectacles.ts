@@ -195,3 +195,22 @@ export async function getAllSpectaclesForCalendar() {
   const result = await getAllSpectaclesForCalendarCached(siteId);
   return result.map(reviveSpectacleDates);
 }
+
+/**
+ * Spectacles ciblés par leurs identifiants (carrousel piloté par des blocs).
+ * Filtre ceux qui n'existent pas ou ne sont pas publiés ; pas de cache — les IDs
+ * changent à chaque publication de page, le cache de page suffit.
+ */
+export async function getSpectaclesByIds(ids: number[]): Promise<Spectacle[]> {
+  if (ids.length === 0) return [];
+  const siteId = process.env.SITE_ID ?? '';
+  const spectacles = await prisma.spectacle.findMany({
+    where: { id: { in: ids }, siteId, status: 'PUBLISHED', deletedAt: null },
+  });
+  // Restitue l'ordre défini dans le bloc
+  const indexed = new Map(spectacles.map((s) => [s.id, s]));
+  return ids.flatMap((id) => {
+    const s = indexed.get(id);
+    return s ? [reviveSpectacleDates(s)] : [];
+  });
+}

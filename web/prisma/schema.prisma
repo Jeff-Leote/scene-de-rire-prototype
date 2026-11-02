@@ -145,3 +145,38 @@ model BookingClickDaily {
   @@index([siteId, day])
   @@map("booking_click_daily")
 }
+
+// Tables ajoutées — migration B du dashboard (lecture seule depuis le site public)
+
+enum PageVersionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  siteId    String   @map("site_id")
+  slug      String
+  title     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  versions PageVersion[]
+
+  @@unique([siteId, slug])
+  @@map("page")
+}
+
+model PageVersion {
+  id          String            @id @default(cuid())
+  pageId      String            @map("page_id")
+  status      PageVersionStatus @default(DRAFT)
+  blocks      Json              @default("[]") @db.JsonB
+  createdAt   DateTime          @default(now()) @map("created_at")
+  publishedAt DateTime?         @map("published_at")
+
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, status])
+  @@map("page_version")
+}

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { getGalleryLieuImages } from '@/lib/lieu';
+import { getPublishedPageVersion, type TexteContent, type ImageContent } from '@/lib/pages';
 import CTA from '@/components/CTA';
 
 export const metadata: Metadata = {
@@ -12,7 +13,46 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function LeLieuPage() {
+// ---------------------------------------------------------------------------
+// Composants de rendu de blocs
+// ---------------------------------------------------------------------------
+
+function TexteBlockSection({ content }: { content: TexteContent }) {
+  return (
+    <section className="bg-black py-16">
+      <div className="mx-auto max-w-[1280px] px-4 md:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          {content.title && <h2 className="mb-6 text-3xl font-bold text-accent">{content.title}</h2>}
+          <p className="text-lg leading-relaxed md:text-xl">{content.text}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ImageBlockSection({ content }: { content: ImageContent }) {
+  return (
+    <section className="bg-gray-950 py-8">
+      <div className="mx-auto max-w-[1280px] px-4 md:px-8">
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+          <Image
+            src={content.path}
+            alt={content.alt ?? ''}
+            fill
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            className="object-cover"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Contenu codé en dur (repli si aucune version publiée)
+// ---------------------------------------------------------------------------
+
+async function LeLieuContenuDur() {
   const galleryImages = await getGalleryLieuImages();
 
   return (
@@ -221,7 +261,55 @@ export default async function LeLieuPage() {
           </div>
         </div>
       </section>
+    </>
+  );
+}
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+export default async function LeLieuPage() {
+  const lieuVersion = await getPublishedPageVersion('le-lieu');
+
+  // Si des blocs ont été publiés depuis le dashboard, on les rend
+  const visibleBlocks = (lieuVersion?.blocks ?? []).filter((b) => b.visible);
+
+  if (visibleBlocks.length > 0) {
+    return (
+      <>
+        <section className="relative h-[500px] w-full overflow-hidden md:h-[700px]">
+          <Image
+            src="/assets/img/banniere lieu.webp"
+            alt="L'Espace Comédie Lille - scène et salle"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-top opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+          <div className="relative mx-auto flex h-full max-w-[1280px] flex-col justify-end px-4 pb-8 md:px-8">
+            <h1 className="mb-4 text-4xl font-bold text-accent md:text-5xl lg:text-6xl">
+              Bienvenue à L&apos;Espace Comédie
+            </h1>
+          </div>
+        </section>
+
+        {visibleBlocks.map((block, i) => {
+          if (block.type === 'texte') return <TexteBlockSection key={i} content={block.content as TexteContent} />;
+          if (block.type === 'image') return <ImageBlockSection key={i} content={block.content as ImageContent} />;
+          return null;
+        })}
+
+        <CTA />
+      </>
+    );
+  }
+
+  // Repli : contenu codé en dur (aucune version publiée)
+  return (
+    <>
+      <LeLieuContenuDur />
       <CTA />
     </>
   );
